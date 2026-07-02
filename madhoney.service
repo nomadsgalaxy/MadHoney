@@ -1,0 +1,22 @@
+[Unit]
+Description=MadHoney — Discord honeypot + verification bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# EDIT these two for your server:
+User=madhoney
+WorkingDirectory=/opt/madhoney
+ExecStart=/usr/bin/node bot.js
+Restart=on-failure
+RestartSec=5
+# .env is read by the app (dotenv); no EnvironmentFile needed.
+
+# Light hardening:
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MadHoney - Discord anti-spam that bots walk into</title>
+<meta name="description" content="MadHoney is a honeypot + captcha verification bot for Discord. Spam bots trap themselves and get banned; humans click Verify and get in.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🍯%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0b0d; --panel:#12141a; --panel2:#171a21; --line:#262b34;
+  --honey:#ffb31a; --honey-deep:#cf8c00; --sting:#ff5b4d;
+  --ink:#f2ede2; --dim:#9a948a;
+  --display:"Bricolage Grotesque",sans-serif; --body:"Instrument Sans",sans-serif; --mono:"Spline Sans Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--honey);text-decoration:none}
+::selection{background:var(--honey);color:#111}
+
+/* honeycomb backdrop */
+body::before{content:"";position:fixed;inset:0;z-index:-2;
+  background-image:url("data:image/svg+xml,%3Csvg width='56' height='97' viewBox='0 0 56 97' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffb31a' stroke-opacity='.05' stroke-width='1.5'%3E%3Cpath d='M28 8 52 22v28L28 64 4 50V22z'/%3E%3Cpath d='M28 72 52 86v28L28 128 4 114V86z'/%3E%3Cpath d='M0-24 24-10v28L0 32l-24-14v-28zM56-24 80-10v28L56 32 32 18v-28z'/%3E%3C/g%3E%3C/svg%3E");}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(60rem 40rem at 70% -10%,rgba(255,179,26,.13),transparent 60%),
+             radial-gradient(50rem 30rem at 0% 110%,rgba(255,91,77,.05),transparent 60%);}
+
+.wrap{max-width:1060px;margin:0 auto;padding:0 1.4rem}
+
+/* hazard tape */
+.tape{height:14px;background:repeating-linear-gradient(-45deg,var(--honey) 0 22px,#101010 22px 44px)}
+.tape.thin{height:8px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:10;background:rgba(10,11,13,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:1.6rem;height:64px}
+.wordmark{font-family:var(--display);font-weight:800;font-size:1.25rem;color:var(--ink);letter-spacing:-.02em}
+.wordmark b{color:var(--honey);font-weight:800}
+nav .links{display:flex;gap:1.4rem;margin-left:auto;align-items:center}
+nav .links a{color:var(--dim);font-weight:500;font-size:.95rem}
+nav .links a:hover{color:var(--ink)}
+.btn{display:inline-block;padding:.68rem 1.35rem;border-radius:8px;font-weight:600;font-family:var(--body);border:0;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn.primary{background:var(--honey);color:#141005;box-shadow:0 0 0 1px var(--honey-deep),0 8px 28px -10px rgba(255,179,26,.55)}
+.btn.primary:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--honey),0 14px 34px -10px rgba(255,179,26,.7)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.ghost:hover{box-shadow:inset 0 0 0 1px var(--honey);color:var(--honey)}
+.btn.sm{padding:.5rem 1rem;font-size:.9rem}
+
+/* hero */
+header{position:relative;padding:6.5rem 0 5rem;overflow:hidden}
+header .kicker{font-family:var(--mono);font-weight:700;font-size:.8rem;letter-spacing:.22em;text-transform:uppercase;color:var(--honey);animation:rise .7s .05s both}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,7vw,4.6rem);line-height:1.02;letter-spacing:-.03em;margin:.6rem 0 1.2rem;max-width:13ch;animation:rise .7s .15s both}
+h1 em{font-style:normal;color:var(--honey);position:relative;white-space:nowrap}
+h1 em::after{content:"";position:absolute;left:0;right:0;bottom:.06em;height:.14em;background:repeating-linear-gradient(-45deg,var(--honey) 0 8px,transparent 8px 16px);opacity:.6}
+header p.sub{font-size:1.15rem;color:var(--dim);max-width:54ch;margin:0 0 2rem;animation:rise .7s .25s both}
+header p.sub b{color:var(--ink)}
+.cta-row{display:flex;gap:.8rem;flex-wrap:wrap;animation:rise .7s .35s both}
+.stats{display:flex;gap:2.6rem;margin-top:3rem;flex-wrap:wrap;animation:rise .7s .45s both}
+.stat .n{font-family:var(--mono);font-weight:700;font-size:1.9rem;color:var(--honey)}
+.stat .l{font-size:.85rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+/* diagonal tape across hero */
+.hero-tape{position:absolute;right:-16rem;top:9rem;width:44rem;transform:rotate(-14deg);opacity:.9;pointer-events:none;filter:drop-shadow(0 10px 30px rgba(0,0,0,.5))}
+.hero-tape .tape{box-shadow:0 0 0 2px #0a0b0d}
+.hero-tape .label{background:#101010;color:var(--honey);font-family:var(--mono);font-weight:700;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;text-align:center;padding:.28rem 0;border-block:2px solid var(--honey)}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* sections */
+section{padding:4.5rem 0}
+.eyebrow{font-family:var(--mono);font-weight:700;font-size:.75rem;letter-spacing:.24em;text-transform:uppercase;color:var(--honey)}
+h2{font-family:var(--display);font-weight:800;font-size:clamp(1.7rem,4vw,2.5rem);letter-spacing:-.02em;margin:.4rem 0 2rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.5rem;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+.step:hover{border-color:var(--honey-deep);transform:translateY(-3px)}
+.step .num{font-family:var(--display);font-weight:800;font-size:3.4rem;line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--honey);opacity:.85}
+.step h3{font-family:var(--display);font-weight:600;font-size:1.2rem;margin:.7rem 0 .4rem}
+.step p{color:var(--dim);margin:0;font-size:.96rem}
+.step p b, .fcard p b{color:var(--ink)}
+.step::after{content:"";position:absolute;right:-30px;top:-30px;width:90px;height:90px;
+  background:radial-gradient(circle,rgba(255,179,26,.13),transparent 70%)}
+
+/* banner showcase */
+.showcase{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:2rem;display:grid;grid-template-columns:1.1fr .9fr;gap:2rem;align-items:center}
+.showcase img{width:100%;border-radius:10px;border:1px solid var(--line);box-shadow:0 18px 50px -18px rgba(0,0,0,.8)}
+.showcase h3{font-family:var(--display);font-weight:800;font-size:1.5rem;margin:0 0 .6rem}
+.showcase p{color:var(--dim)}
+code{font-family:var(--mono);font-size:.88em;background:#0f1216;border:1px solid var(--line);border-radius:5px;padding:.1em .4em;color:var(--honey)}
+
+/* features */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+.fcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.4rem 1.5rem;transition:border-color .2s}
+.fcard:hover{border-color:var(--honey-deep)}
+.fcard .ico{font-size:1.5rem}
+.fcard h3{font-family:var(--display);font-weight:600;font-size:1.1rem;margin:.5rem 0 .3rem}
+.fcard p{color:var(--dim);margin:0;font-size:.95rem}
+
+/* get started */
+.start{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:2.4rem;position:relative;overflow:hidden}
+.start ol{margin:0 0 1.6rem;padding-left:1.2rem;color:var(--dim);font-size:1.02rem}
+.start li{margin:.55rem 0}
+.start li b{color:var(--ink)}
+.warn{display:flex;gap:.7rem;background:rgba(255,91,77,.07);border:1px solid rgba(255,91,77,.35);border-radius:10px;padding:.85rem 1rem;font-size:.92rem;color:var(--dim);margin-top:1.4rem}
+.warn b{color:var(--sting)}
+
+/* footer */
+footer{border-top:1px solid var(--line);padding:2.6rem 0 3.2rem;color:var(--dim);font-size:.92rem}
+footer .cols{display:flex;gap:3rem;flex-wrap:wrap;justify-content:space-between}
+footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;letter-spacing:.04em}
+
+@media (max-width:800px){
+  .grid3,.grid2,.showcase{grid-template-columns:1fr}
+  nav .links a:not(.btn){display:none}
+  .hero-tape{display:none}
+  header{padding:4rem 0 3.5rem}
+}
+</style>
+</head>
+<body>
+
+<div class="tape thin"></div>
+<nav><div class="wrap">
+  <a class="wordmark" href="/">🍯 Mad<b>Honey</b></a>
+  <div class="links">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#start">Get started</a>
+    <a href="https://github.com/nomadsgalaxy/MadHoney">GitHub</a>
+    <a class="btn ghost sm" href="/login">Dashboard</a>
+    <a class="btn primary sm" href="%%INVITE%%">Add to Discord</a>
+  </div>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="hero-tape"><div class="tape"></div><div class="label">do not post · do not post · do not post · do not post</div><div class="tape"></div></div>
+  <div class="kicker">Honeypot anti-spam for Discord</div>
+  <h1>Spam bots <em>ban themselves.</em></h1>
+  <p class="sub">MadHoney doesn't try to recognize spam. It rearranges your server so
+  <b>only a bot would ever step on the tripwire</b>. Humans click Verify, read a captcha, and get in.
+  Bots post in the decoy channel and get banned, messages wiped, before anyone wakes up.</p>
+  <div class="cta-row">
+    <a class="btn primary" href="%%INVITE%%">＋ Add to Discord, it's free</a>
+    <a class="btn ghost" href="/login">Open the dashboard</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="n">%%GUILDS%%</div><div class="l">servers protected</div></div>
+    <div class="stat"><div class="n">%%BANS%%</div><div class="l">spammers trapped</div></div>
+    <div class="stat"><div class="n">~5 min</div><div class="l">to full setup</div></div>
+  </div>
+</div></header>
+
+<div class="tape"></div>
+
+<section id="how"><div class="wrap">
+  <div class="eyebrow">The mechanism</div>
+  <h2>Three moves. Zero guesswork.</h2>
+  <div class="grid3">
+    <div class="step"><div class="num">01</div><h3>Gate</h3>
+      <p>Every channel is hidden behind a <b>verified role</b>. A new account sees exactly two things: your rules channel… and one decoy.</p></div>
+    <div class="step"><div class="num">02</div><h3>Verify</h3>
+      <p>Humans click <b>Verify</b>, read an image captcha, type the code, and the whole server unlocks. Takes about ten seconds. No DMs, no third-party site.</p></div>
+    <div class="step"><div class="num">03</div><h3>Trap</h3>
+      <p>The decoy is named like a real channel (<b>#general-2</b>) and it's the only place an unverified account can post. Spam bots post everywhere they can, so they post there first. <b>Instant ban</b>, plus their last 7 days of messages get deleted. Verified humans never even see it.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="showcase">
+    <img src="/sample-banner.png" alt="Example honeypot warning banner generated by MadHoney">
+    <div>
+      <div class="eyebrow">Banner designer</div>
+      <h3>No human has an excuse.</h3>
+      <p>MadHoney generates the hazard banner that sits pinned in the honeypot: your headline,
+      body text, colors, fonts, even your community's logo. Design it with
+      <code>/madhoney banner</code> or in the dashboard. The one you're looking at is rendered live by the bot.</p>
+    </div>
+  </div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="eyebrow">Everything included</div>
+  <h2>Small bot. Sharp teeth.</h2>
+  <div class="grid2">
+    <div class="fcard"><div class="ico">🧭</div><h3>One-command setup</h3>
+      <p><code>/madhoney setup</code> walks you through role and channel pickers, then <code>/madhoney deploy</code> grandfathers existing members, posts the panels, and gates your channels. There's a dry-run before anything changes.</p></div>
+    <div class="fcard"><div class="ico">🧾</div><h3>Mod-log with Undo</h3>
+      <p>Every ban is reported to a staff channel: who, when, and what they posted. One-click <b>Unban</b> button if a curious human tripped the wire.</p></div>
+    <div class="fcard"><div class="ico">🌐</div><h3>Cross-server ban sharing</h3>
+      <p>Opt in, and accounts caught by other MadHoney servers are banned the moment they join yours. Off by default. Sharing works both directions, and an Undo removes them from the pool.</p></div>
+    <div class="fcard"><div class="ico">🕶️</div><h3>Doesn't read your messages</h3>
+      <p>The trap fires on <b>where</b> a message was posted, never on what it says. No external database, no analytics. Staff and owners are always exempt.</p></div>
+    <div class="fcard"><div class="ico">🖥️</div><h3>Web dashboard</h3>
+      <p>Log in with Discord and manage any server where you have <b>Manage Server</b>: config, verify message, banner designer, deploy actions, and the ban log.</p></div>
+    <div class="fcard"><div class="ico">🛠️</div><h3>Source Available</h3>
+      <p>Read it, fork it, self-host it. One Node process, three files of state. <a href="https://github.com/nomadsgalaxy/MadHoney">github.com/nomadsgalaxy/MadHoney</a> · OCL v1.1 + SWAtt.</p></div>
+  </div>
+</div></section>
+
+<section id="start"><div class="wrap">
+  <div class="start">
+    <div class="eyebrow">Get started</div>
+    <h2>Armed in five minutes.</h2>
+    <ol>
+      <li><b><a href="%%INVITE%%">Invite MadHoney</a></b> and grant the requested permissions.</li>
+      <li>Create a <b>Verified</b> role (MadHoney's role must sit <b>above</b> it) and a decoy channel like <b>#general-2</b>.</li>
+      <li>Run <b><code>/madhoney setup</code></b> and pick the role, your rules channel, the decoy, and an optional staff log channel.</li>
+      <li>Run <b><code>/madhoney deploy</code></b> and click through: grandfather → post panels → gate (dry-run, then apply).</li>
+    </ol>
+    <a class="btn primary" href="%%INVITE%%">＋ Add MadHoney to your server</a>
+    <a class="btn ghost" href="/login">or set it up from the dashboard</a>
+    <div class="warn"><span>⚠️</span><span><b>Using Discord Onboarding?</b> Make sure it does NOT auto-grant the verified role, otherwise the captcha is a decoration.</span></div>
+  </div>
+</div></section>
+
+<div class="tape"></div>
+<footer><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="wordmark">🍯 Mad<b>Honey</b></div>
+      <p>Honeypot + captcha verification for Discord.<br>Made with 🧡 by <a href="https://github.com/nomadsgalaxy">Nomads Galaxy</a>.</p>
+    </div>
+    <div>
+      <b style="color:var(--ink)">Product</b><br>
+      <a href="%%INVITE%%">Invite the bot</a><br>
+      <a href="/login">Dashboard</a><br>
+      <a href="#how">How it works</a>
+    </div>
+    <div>
+      <b style="color:var(--ink)">Project</b><br>
+      <a href="https://github.com/nomadsgalaxy/MadHoney">Source on GitHub</a><br>
+      <a href="https://github.com/nomadsgalaxy/MadHoney#self-hosting">Self-hosting guide</a><br>
+      <a href="https://github.com/nomadsgalaxy/MadHoney/blob/main/LICENSE.md">License (OCL v1.1 + SWAtt)</a>
+    </div>
+  </div>
+  <div class="attribution">BUILT ON MADHONEY BY NOMADS GALAXY · OCL V1.1 + SWATT V1</div>
+</div></footer>
+
+</body>
+</html>

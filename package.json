@@ -1,0 +1,16 @@
+{
+  "name": "madhoney",
+  "version": "1.0.0",
+  "description": "Honeypot + captcha verification bot for Discord",
+  "type": "module",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "scripts": {
+    "start": "node bot.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.0",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  }
+}

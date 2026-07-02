@@ -1,0 +1,5 @@
+node_modules/
+.env
+guilds.json
+bans.jsonl
+bot.log
