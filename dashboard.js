@@ -227,7 +227,7 @@ ${[
       }
 
       // ---- public assets ----
-      if (url.pathname === '/logo.svg?v=2' || url.pathname === '/logo.png') {
+      if (url.pathname === '/logo.svg' || url.pathname === '/logo.png') {
         const type = url.pathname.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
         res.writeHead(200, { 'content-type': type, 'cache-control': 'public, max-age=86400' });
         return res.end(readFileSync(new URL('.' + url.pathname, import.meta.url)));
