@@ -42,5 +42,9 @@ assert.ok(png(renderCaptcha('AB3DE')), 'captcha renders a PNG');
 assert.ok(png(await renderBanner({})), 'default banner renders a PNG');
 assert.ok(png(await renderBanner({ title: 'STOP', text: 'x '.repeat(200), font: 'monospace', logoUrl: 'not-a-url' })),
   'long text + bad logo URL still renders');
+assert.ok(png(await renderBanner({
+  text: 'Verify in #rules or ping @Staff about it.',
+  mentionMode: 'role', roleColors: { '@staff': '#e91e63' },
+})), 'mention pills render');
 
 console.log('ok');

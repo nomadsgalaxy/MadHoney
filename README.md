@@ -41,6 +41,15 @@ have Manage Server shows up.
 **Onboarding gotcha:** if your server uses Discord Onboarding, make sure it
 does not auto-grant the verified role. Otherwise the captcha is a decoration.
 
+### Accessibility
+
+A honeypot is a visual trap. Members who rely on text-to-speech or a screen
+reader can't always tell a decoy channel from a real one, so we don't
+recommend honeypot anti-spam for servers that cater to visually impaired
+communities. If you run one anyway, state plainly in your rules that a
+honeypot exists and which channel it is, so TTS users hear the warning too.
+Set up the log channel so an accidental ban is one click to undo.
+
 ### Naming the honeypot channel
 
 The trap works because bots can't tell it from a real channel. Good names:

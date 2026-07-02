@@ -13,13 +13,18 @@ const BUNDLED_LOGO = fileURLToPath(new URL('./logo.png', import.meta.url));
 
 export const DEFAULT_BANNER = {
   title: 'DO NOT POST IN THIS CHANNEL',
-  text: 'This channel is a trap for spam bots. Anything posted here triggers an instant, automated ban. Real humans: back away slowly.',
+  text: 'This channel is a trap for spam bots. Anything posted here triggers an instant, automated ban. Real humans: verify in #rules and back away slowly.',
   color: '#e9ecf1',   // body text
   accent: '#ffb31a',  // hazard stripes + title
   bg: '#0c0e11',
   font: 'sans-serif',
   logoUrl: '',        // '' -> bundled MadHoney logo, 'none' -> no logo
+  mentionColor: '#5865f2', // #channel / @role highlight (Discord blurple)
+  mentionMode: 'custom',   // 'custom' -> mentionColor for all; 'role' -> real role colors via opts.roleColors
 };
+
+// A word is a "mention" if it starts with # or @ (like #rules or @Staff).
+const MENTION = /^[#@][\w-]/;
 
 function wrap(ctx, text, maxWidth) {
   const words = String(text).split(/\s+/).filter(Boolean);
@@ -88,15 +93,42 @@ export async function renderBanner(opts = {}) {
     ctx.drawImage(logo, PAD, ly, logoW, logoW);
   }
 
+  // Draw a line word by word so #channel / @role tokens get a Discord-style
+  // colored pill. Color comes from opts.roleColors (mentionMode 'role', built
+  // by the caller from the guild) with mentionColor as the fallback.
+  const mentionColorFor = (word) => {
+    const token = word.match(/^[#@][\w-]+/)?.[0].toLowerCase();
+    return (o.mentionMode === 'role' && o.roleColors?.[token]) || o.mentionColor;
+  };
+  const drawLine = (line, y, baseColor, size) => {
+    let cx = textX;
+    const space = ctx.measureText(' ').width;
+    for (const word of line.split(' ')) {
+      const w = ctx.measureText(word).width;
+      if (MENTION.test(word)) {
+        const mc = mentionColorFor(word);
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = mc;
+        ctx.beginPath();
+        ctx.roundRect(cx - 5, y - size * 0.82 - 3, w + 10, size * 1.06 + 6, 6);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = mc;
+      } else {
+        ctx.fillStyle = baseColor;
+      }
+      ctx.fillText(word, cx, y);
+      cx += w + space;
+    }
+  };
+
   let y = (H - contentH) / 2 + 36;
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = o.accent;
   ctx.font = `bold 44px ${o.font}`;
-  for (const line of titleLines) { ctx.fillText(line, textX, y); y += 54; }
+  for (const line of titleLines) { drawLine(line, y, o.accent, 44); y += 54; }
   y += 16;
-  ctx.fillStyle = o.color;
   ctx.font = `26px ${o.font}`;
-  for (const line of bodyLines) { ctx.fillText(line, textX, y); y += 36; }
+  for (const line of bodyLines) { drawLine(line, y, o.color, 26); y += 36; }
 
   return canvas.toBuffer('image/png');
 }

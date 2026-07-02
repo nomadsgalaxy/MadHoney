@@ -30,10 +30,20 @@ export async function postVerifyPanel(guild, cfg) {
   return `Posted the Verify panel in #${ch.name}.`;
 }
 
+// Map '@rolename' -> the role's Discord color, for mentionMode 'role'.
+// Roles left on the default (no) color fall back to the custom mention color.
+export function roleColorMap(guild) {
+  const map = {};
+  for (const r of guild.roles.cache.values()) {
+    if (r.hexColor && r.hexColor !== '#000000') map['@' + r.name.toLowerCase()] = r.hexColor;
+  }
+  return map;
+}
+
 // Render the configured banner and post it in the honeypot channel.
 export async function postBanner(guild, cfg) {
   const ch = await textChannel(guild, cfg.honeypotChannelId, 'Honeypot');
-  const png = await renderBanner(cfg.banner ?? DEFAULT_BANNER);
+  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), roleColors: roleColorMap(guild) });
   try {
     const recent = await ch.messages.fetch({ limit: 50 });
     for (const m of recent.filter((m) => m.author.id === guild.client.user.id).values()) {

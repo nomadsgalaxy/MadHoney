@@ -8,7 +8,7 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, grandfather, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, grandfather, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 
 const PORT = Number(process.env.PORT || 8300);
@@ -132,6 +132,15 @@ ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
     <label>Accent (stripes + headline) <input type="color" name="banner_accent" value="${esc(b.accent)}"></label>
     <label>Text <input type="color" name="banner_color" value="${esc(b.color)}"></label>
     <label>Background <input type="color" name="banner_bg" value="${esc(b.bg)}"></label>
+  </div>
+  <div class="colors">
+    <label>Mention highlight <input type="color" name="banner_mentionColor" value="${esc(b.mentionColor)}">
+      <small>Anything written as #channel or @role gets a pill in this color.</small></label>
+    <label>@role coloring <select name="banner_mentionMode">
+      <option value="custom" ${b.mentionMode !== 'role' ? 'selected' : ''}>custom color (above)</option>
+      <option value="role" ${b.mentionMode === 'role' ? 'selected' : ''}>real role colors</option>
+    </select>
+      <small>"Real role colors" pulls each @role's color from Discord; #channels and colorless roles use the custom color.</small></label>
   </div>
   <div class="cols2">
     <label>Logo <input type="text" name="banner_logoUrl" value="${esc(b.logoUrl)}" placeholder="empty = MadHoney logo">
@@ -266,11 +275,11 @@ ${[
           // query params (banner_*) override the saved config so the form can
           // live-preview without saving
           const opts = { ...getGuild(guild.id)?.banner };
-          for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl']) {
+          for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl', 'mentionColor', 'mentionMode']) {
             const v = url.searchParams.get(`banner_${k}`);
             if (v !== null) opts[k] = v;
           }
-          const png = await renderBanner(opts);
+          const png = await renderBanner({ ...opts, roleColors: roleColorMap(guild) });
           res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
           return res.end(png);
         }
@@ -278,7 +287,7 @@ ${[
           const form = await body(req);
           if (form.has('banner_title') || form.has('banner_text')) {
             const banner = { ...DEFAULT_BANNER, ...getGuild(guild.id)?.banner };
-            for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl']) {
+            for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl', 'mentionColor', 'mentionMode']) {
               if (form.has(`banner_${k}`)) banner[k] = form.get(`banner_${k}`).trim();
             }
             saveGuild(guild.id, { banner });

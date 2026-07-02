@@ -13,7 +13,7 @@ import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { getGuild, saveGuild, logBan, bans, bannedElsewhere } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, grandfather, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, grandfather, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { startDashboard } from './dashboard.js';
 
 const EPH = { flags: MessageFlags.Ephemeral };
@@ -44,7 +44,10 @@ const command = new SlashCommandBuilder()
     .addStringOption((o) => o.setName('color').setDescription('Body text color, hex (default #e9ecf1)'))
     .addStringOption((o) => o.setName('bg').setDescription('Background color, hex (default #0c0e11)'))
     .addStringOption((o) => o.setName('font').setDescription('Font').addChoices(...FONTS.map((f) => ({ name: f, value: f }))))
-    .addStringOption((o) => o.setName('logo_url').setDescription('Logo URL (PNG/JPG). Empty = MadHoney logo, "none" = no logo')))
+    .addStringOption((o) => o.setName('logo_url').setDescription('Logo URL (PNG/JPG). Empty = MadHoney logo, "none" = no logo'))
+    .addStringOption((o) => o.setName('mention_color').setDescription('#channel/@role highlight color, hex (default #5865f2)'))
+    .addStringOption((o) => o.setName('mention_mode').setDescription('How to color @role mentions')
+      .addChoices({ name: 'custom color', value: 'custom' }, { name: 'real role colors', value: 'role' })))
   .addSubcommand((s) => s
     .setName('banshare').setDescription('Share bans with other MadHoney servers, or stay isolated')
     .addStringOption((o) => o.setName('mode').setDescription('shared = auto-ban users banned in other sharing servers').setRequired(true)
@@ -65,6 +68,7 @@ function setupContent(guild) {
     `**Ban sharing:** ${cfg.banShare ? 'shared 🌐' : 'isolated 🔒'} (change with \`/madhoney banshare\`)`,
     '',
     '⚠️ If you use Discord **Onboarding**, make sure it does NOT auto-grant the verified role, or the captcha is bypassable.',
+    '♿ Honeypots are visual traps - not recommended for servers serving visually impaired communities. At minimum, name the honeypot in your rules so text-to-speech users hear the warning.',
     'When all three are set, run **/madhoney deploy**.',
   ].join('\n');
 }
@@ -205,9 +209,13 @@ client.on(Events.InteractionCreate, async (i) => {
         };
         const logo = i.options.getString('logo_url');
         if (logo != null) banner.logoUrl = logo;
+        const mc = i.options.getString('mention_color');
+        if (mc) banner.mentionColor = mc;
+        const mm = i.options.getString('mention_mode');
+        if (mm) banner.mentionMode = mm;
         await i.deferReply(EPH);
         saveGuild(i.guildId, { banner });
-        const png = await renderBanner(banner);
+        const png = await renderBanner({ ...banner, roleColors: roleColorMap(i.guild) });
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId('mh_post_banner').setLabel('Post to honeypot channel').setStyle(ButtonStyle.Primary),
         );
