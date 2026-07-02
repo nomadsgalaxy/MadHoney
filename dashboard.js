@@ -84,9 +84,9 @@ function body(req) {
 }
 
 export function startDashboard(client) {
-  // Administrator - see the note in bot.js: channel gating needs it in practice.
+  // Minimum viable permission set - see the note in bot.js.
   const inviteUrl = () =>
-    `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=8`;
+    `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536836`;
 
   function guildPage(guild, sess, msg = '') {
     const cfg = getGuild(guild.id) ?? {};

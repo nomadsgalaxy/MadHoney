@@ -384,10 +384,11 @@ client.on(Events.GuildMemberAdd, async (member) => {
 client.once(Events.ClientReady, async (c) => {
   await c.application.commands.set([command]);
   console.log(`MadHoney armed as ${c.user.tag} in ${c.guilds.cache.size} guild(s). /madhoney setup to begin.`);
-  // Administrator: gating edits permission overwrites on every channel, and
-  // Discord only lets a bot set overwrites for permissions it already holds
-  // in that channel. Granular grants break on channels with custom overwrites.
-  console.log(`Invite: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot+applications.commands&permissions=8`);
+  // Minimum viable: Manage Roles (verified role + channel overwrites), Ban
+  // Members, View Channels, Send Messages, Attach Files, Read Message History.
+  // If gating a specific channel fails, that channel denies the bot access -
+  // grant it View/Send there (or gate it by hand).
+  console.log(`Invite: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot+applications.commands&permissions=268536836`);
   if (process.env.CLIENT_ID) {
     startDashboard(client);
     if (!process.env.CLIENT_SECRET) console.log('Dashboard up in landing-only mode - set CLIENT_SECRET in .env to enable login.');
