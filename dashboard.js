@@ -24,7 +24,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 function layout(title, body) {
   return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
-<link rel="icon" href="/logo.svg?v=2" type="image/svg+xml">
+<link rel="icon" href="/logo.svg?v=3" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -102,7 +102,7 @@ export function startDashboard(client) {
     const recent = bans(guild.id).slice(-15).reverse()
       .map((x) => `${x.at}  ${x.unbanned ? 'UNBAN' : 'ban  '}  ${esc(x.tag ?? x.id)}  ${esc(x.channel ?? '')}`).join('\n') || '(none yet)';
     return layout(`MadHoney - ${guild.name}`, `
-<h1><img src="/logo.svg?v=2" alt="MadHoney"><span>${esc(guild.name)}</span></h1>
+<h1><img src="/logo.svg?v=3" alt="MadHoney"><span>${esc(guild.name)}</span></h1>
 <p><a href="/">← servers</a></p>
 ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <div class="card"><h2>Configuration</h2>
@@ -257,7 +257,7 @@ ${[
               : `<li>${esc(g.name)} - <a href="${inviteUrl()}&guild_id=${g.id}">invite MadHoney</a></li>`;
           }).join('');
         return html(layout('MadHoney', `
-<h1><img src="/logo.svg?v=2" alt="">Mad<span>Honey</span></h1>
+<h1><img src="/logo.svg?v=3" alt="">Mad<span>Honey</span></h1>
 <p>Hi ${esc(sess.user.username)} · <a href="/logout">log out</a></p>
 <div class="card"><h2>Your servers</h2><ul>${rows || '<li>No servers where you have Manage Server.</li>'}</ul></div>`));
       }
