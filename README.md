@@ -81,8 +81,11 @@ Dev Portal checklist:
   want the spam text copied into log reports (then set `MESSAGE_CONTENT=on`).
 - OAuth2 → Redirects: add `https://your-dashboard-domain/callback` if you run
   the dashboard.
-- Invite the bot with the URL it prints on startup. It needs Manage Roles,
-  Manage Channels and Ban Members, plus normal read/send/attach.
+- Invite the bot with the URL it prints on startup. The URL asks for
+  Administrator: gating edits permission overwrites on every channel, and
+  Discord only lets a bot set overwrites for permissions it already holds in
+  that specific channel, so granular grants fail on channels with custom
+  overwrites (a #rules channel usually has them).
 
 ### Run it 24/7 (systemd)
 
