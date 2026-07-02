@@ -10,6 +10,7 @@ import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans } from './store.js';
 import { postVerifyPanel, postBanner, gateChannels, grandfather, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
+import { TERMS, PRIVACY } from './legal.js';
 
 const PORT = Number(process.env.PORT || 8300);
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://127.0.0.1:${PORT}`).replace(/\/$/, '');
@@ -57,7 +58,7 @@ function layout(title, body) {
   .stripes{height:12px;border-radius:4px;background:repeating-linear-gradient(-45deg,var(--honey) 0 18px,#111 18px 36px);margin-bottom:1.1rem}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
 </style><div class="stripes"></div>${body}
-<p><small>Built on <a href="https://github.com/nomadsgalaxy/MadHoney">MadHoney</a> by Nomads Galaxy · OCL v1.1 + SWAtt v1</small></p></html>`;
+<p><small>Built on <a href="https://github.com/nomadsgalaxy/MadHoney">MadHoney</a> by Nomads Galaxy · OCL v1.1 + SWAtt v1 · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></small></p></html>`;
 }
 
 function cookies(req) {
@@ -225,6 +226,10 @@ ${[
         sessions.delete(cookies(req).sid);
         return redirect('/', { 'set-cookie': 'sid=; Path=/; Max-Age=0' });
       }
+
+      // ---- legal pages ----
+      if (url.pathname === '/terms') return html(layout('MadHoney - Terms of Service', TERMS));
+      if (url.pathname === '/privacy') return html(layout('MadHoney - Privacy Policy', PRIVACY));
 
       // ---- public assets ----
       if (url.pathname === '/logo.svg' || url.pathname === '/logo.png') {
