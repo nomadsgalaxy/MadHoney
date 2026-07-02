@@ -44,8 +44,8 @@ nav .wrap{display:flex;align-items:center;gap:1.6rem;height:64px}
 .wordmark{font-family:var(--display);font-weight:800;font-size:1.25rem;color:var(--ink);letter-spacing:-.02em;display:flex;align-items:center;gap:.55rem}
 .wordmark b{color:var(--honey);font-weight:800}
 .wordmark img{height:30px;width:auto}
-.hero-logo{position:absolute;right:4rem;top:11rem;width:270px;opacity:.92;transform:rotate(6deg);
-  filter:drop-shadow(0 24px 60px rgba(255,179,26,.28));animation:rise .9s .5s both}
+.hero-logo{position:absolute;right:5rem;top:8.5rem;width:320px;rotate:6deg;
+  filter:drop-shadow(0 24px 70px rgba(255,179,26,.35));animation:rise .9s .5s both}
 nav .links{display:flex;gap:1.4rem;margin-left:auto;align-items:center}
 nav .links a{color:var(--dim);font-weight:500;font-size:.95rem}
 nav .links a:hover{color:var(--ink)}
@@ -68,10 +68,6 @@ header p.sub b{color:var(--ink)}
 .stats{display:flex;gap:2.6rem;margin-top:3rem;flex-wrap:wrap;animation:rise .7s .45s both}
 .stat .n{font-family:var(--mono);font-weight:700;font-size:1.9rem;color:var(--honey)}
 .stat .l{font-size:.85rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
-/* diagonal tape across hero */
-.hero-tape{position:absolute;right:-16rem;top:9rem;width:44rem;transform:rotate(-14deg);opacity:.9;pointer-events:none;filter:drop-shadow(0 10px 30px rgba(0,0,0,.5))}
-.hero-tape .tape{box-shadow:0 0 0 2px #0a0b0d}
-.hero-tape .label{background:#101010;color:var(--honey);font-family:var(--mono);font-weight:700;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;text-align:center;padding:.28rem 0;border-block:2px solid var(--honey)}
 @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 
 /* sections */
@@ -119,7 +115,7 @@ footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;l
 @media (max-width:800px){
   .grid3,.grid2,.showcase{grid-template-columns:1fr}
   nav .links a:not(.btn){display:none}
-  .hero-tape,.hero-logo{display:none}
+  .hero-logo{display:none}
   header{padding:4rem 0 3.5rem}
 }
 @media (max-width:1150px){.hero-logo{width:190px;right:1.5rem}}
@@ -141,7 +137,6 @@ footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;l
 </div></nav>
 
 <header><div class="wrap">
-  <div class="hero-tape"><div class="tape"></div><div class="label">do not post · do not post · do not post · do not post</div><div class="tape"></div></div>
   <img class="hero-logo" src="/logo.svg" alt="MadHoney bee logo">
   <div class="kicker">Honeypot anti-spam for Discord</div>
   <h1>Spam bots <em>ban themselves.</em></h1>
