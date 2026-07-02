@@ -2,9 +2,14 @@
 // title, body text, colors, font, and an optional logo image (by URL).
 // Returns a PNG Buffer. Pure rendering - no Discord I/O.
 import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { fileURLToPath } from 'node:url';
 
 // Generic families always resolve; the named ones fall back via fontconfig.
 export const FONTS = ['sans-serif', 'serif', 'monospace', 'DejaVu Sans', 'Liberation Sans', 'Liberation Serif'];
+
+// Bundled MadHoney bee - the default banner logo. Set logoUrl to a URL for
+// your own, or 'none' for no logo at all.
+const BUNDLED_LOGO = fileURLToPath(new URL('./logo.png', import.meta.url));
 
 export const DEFAULT_BANNER = {
   title: 'DO NOT POST IN THIS CHANNEL',
@@ -13,7 +18,7 @@ export const DEFAULT_BANNER = {
   accent: '#ffb31a',  // hazard stripes + title
   bg: '#0c0e11',
   font: 'sans-serif',
-  logoUrl: '',
+  logoUrl: '',        // '' -> bundled MadHoney logo, 'none' -> no logo
 };
 
 function wrap(ctx, text, maxWidth) {
@@ -57,8 +62,9 @@ export async function renderBanner(opts = {}) {
   const measure = createCanvas(W, 100).getContext('2d');
   measure.font = `26px ${o.font}`;
   let logo = null;
-  if (o.logoUrl) {
-    try { logo = await loadImage(o.logoUrl); } catch { /* bad URL - render without logo */ }
+  const logoSrc = o.logoUrl === 'none' ? null : (o.logoUrl || BUNDLED_LOGO);
+  if (logoSrc) {
+    try { logo = await loadImage(logoSrc); } catch { /* bad URL - render without logo */ }
   }
   const logoW = logo ? 150 : 0;
   const textX = PAD + (logo ? logoW + PAD : 0);

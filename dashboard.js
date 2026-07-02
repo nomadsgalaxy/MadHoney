@@ -22,22 +22,42 @@ const LANDING = readFileSync(new URL('./landing.html', import.meta.url), 'utf8')
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function layout(title, body) {
-  return `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)}</title><style>
-  :root{--honey:#ffb31a;--bg:#0c0e11;--card:#161a20;--ink:#e9ecf1;--dim:#9aa3ad;--line:#2a313b}
-  body{font:15px/1.55 system-ui;background:var(--bg);color:var(--ink);max-width:860px;margin:0 auto;padding:1rem}
-  a{color:var(--honey)} h1,h2{line-height:1.2} h1 span{color:var(--honey)}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1.1rem 1.3rem;margin:1rem 0}
-  label{display:block;margin:.65rem 0;font-weight:600}
-  input[type=text],textarea,select{display:block;width:100%;padding:.45rem;margin-top:.15rem;background:#0f1216;color:var(--ink);border:1px solid var(--line);border-radius:6px;font:inherit}
+  return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)}</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--honey:#ffb31a;--bg:#0a0b0d;--card:#12141a;--ink:#f2ede2;--dim:#9a948a;--line:#262b34}
+  *{box-sizing:border-box}
+  body{font:15px/1.55 "Instrument Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);max-width:880px;margin:0 auto;padding:1rem}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='27.7128' height='48' viewBox='0 0 27.7128 48'%3E%3Cpath d='M0 8L13.8564 0l13.8564 8M0 8v16l13.8564 8 13.8564-8M13.8564 32v16' fill='none' stroke='%23ffb31a' stroke-opacity='.045' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-size:27.7128px 48px}
+  a{color:var(--honey);text-decoration:none} a:hover{text-decoration:underline}
+  h1,h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;line-height:1.2;letter-spacing:-.02em} h1 span{color:var(--honey)}
+  h1 img{height:38px;vertical-align:-8px;margin-right:.4rem}
+  h2{font-size:1.15rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem;margin:1rem 0}
+  label{display:block;margin:.7rem 0;font-weight:600}
+  input[type=text],textarea,select{display:block;width:100%;padding:.5rem;margin-top:.2rem;background:#0f1216;color:var(--ink);border:1px solid var(--line);border-radius:7px;font:inherit}
+  input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--honey)}
+  input[type=color]{appearance:none;-webkit-appearance:none;width:100%;height:38px;padding:3px;margin-top:.2rem;background:#0f1216;border:1px solid var(--line);border-radius:7px;cursor:pointer}
+  input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+  input[type=color]::-webkit-color-swatch{border:none;border-radius:4px}
+  input[type=color]:hover{border-color:var(--honey)}
+  .colors{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem}
+  .cols2{display:grid;grid-template-columns:2fr 1fr;gap:.9rem}
+  @media (max-width:640px){.colors,.cols2{grid-template-columns:1fr}}
   small{display:block;font-weight:400;color:var(--dim)}
-  .btn{display:inline-block;padding:.5rem 1rem;border:0;border-radius:6px;background:var(--honey);color:#111;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;margin:.2rem .3rem .2rem 0}
+  .btn{display:inline-block;padding:.55rem 1.1rem;border:0;border-radius:7px;background:var(--honey);color:#141005;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;margin:.2rem .3rem .2rem 0;transition:transform .12s}
+  .btn:hover{transform:translateY(-1px);text-decoration:none}
   .btn.grey{background:#39414c;color:var(--ink)} .btn.red{background:#d64545;color:#fff}
-  pre{background:#0f1216;border:1px solid var(--line);padding:.8rem;border-radius:6px;white-space:pre-wrap;overflow-x:auto}
-  .stripes{height:10px;border-radius:3px;background:repeating-linear-gradient(45deg,var(--honey) 0 18px,#111 18px 36px);margin-bottom:1rem}
+  pre{background:#0f1216;border:1px solid var(--line);padding:.8rem;border-radius:7px;white-space:pre-wrap;overflow-x:auto}
+  .stripes{height:12px;border-radius:4px;background:repeating-linear-gradient(-45deg,var(--honey) 0 18px,#111 18px 36px);margin-bottom:1.1rem}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
 </style><div class="stripes"></div>${body}
-<p><small>Built on <a href="https://github.com/nomadsgalaxy/MadHoney">MadHoney</a> by Nomads Galaxy · OCL v1.1 + SWAtt v1</small></p>`;
+<p><small>Built on <a href="https://github.com/nomadsgalaxy/MadHoney">MadHoney</a> by Nomads Galaxy · OCL v1.1 + SWAtt v1</small></p></html>`;
 }
 
 function cookies(req) {
@@ -82,7 +102,7 @@ export function startDashboard(client) {
     const recent = bans(guild.id).slice(-15).reverse()
       .map((x) => `${x.at}  ${x.unbanned ? 'UNBAN' : 'ban  '}  ${esc(x.tag ?? x.id)}  ${esc(x.channel ?? '')}`).join('\n') || '(none yet)';
     return layout(`MadHoney - ${guild.name}`, `
-<h1>🍯 <span>${esc(guild.name)}</span></h1>
+<h1><img src="/logo.svg" alt="MadHoney"><span>${esc(guild.name)}</span></h1>
 <p><a href="/">← servers</a></p>
 ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <div class="card"><h2>Configuration</h2>
@@ -103,17 +123,36 @@ ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <button class="btn">Save</button>
 </form></div>
 <div class="card"><h2>Honeypot banner</h2>
-<img class="banner" src="/g/${guild.id}/banner.png?${Date.now()}" alt="banner preview">
-<form method="post" action="/g/${guild.id}/save">
+<small>Live preview - it re-renders as you tweak. Save, then post it from Actions below.</small>
+<img class="banner" id="bannerPreview" src="/g/${guild.id}/banner.png?${Date.now()}" alt="banner preview" style="margin-top:.6rem">
+<form method="post" action="/g/${guild.id}/save" id="bannerForm">
   <label>Headline <input type="text" name="banner_title" value="${esc(b.title)}"></label>
   <label>Body <textarea name="banner_text" rows="2">${esc(b.text)}</textarea></label>
-  <label>Accent (stripes + headline) <input type="text" name="banner_accent" value="${esc(b.accent)}"></label>
-  <label>Text color <input type="text" name="banner_color" value="${esc(b.color)}"></label>
-  <label>Background <input type="text" name="banner_bg" value="${esc(b.bg)}"></label>
-  <label>Font <select name="banner_font">${FONTS.map((f) => `<option ${f === b.font ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
-  <label>Logo URL (optional) <input type="text" name="banner_logoUrl" value="${esc(b.logoUrl)}"><small>Direct PNG/JPG link, drawn on the left.</small></label>
+  <div class="colors">
+    <label>Accent (stripes + headline) <input type="color" name="banner_accent" value="${esc(b.accent)}"></label>
+    <label>Text <input type="color" name="banner_color" value="${esc(b.color)}"></label>
+    <label>Background <input type="color" name="banner_bg" value="${esc(b.bg)}"></label>
+  </div>
+  <div class="cols2">
+    <label>Logo <input type="text" name="banner_logoUrl" value="${esc(b.logoUrl)}" placeholder="empty = MadHoney logo">
+      <small>Direct PNG/JPG URL for your own logo, or type <b>none</b> for no logo.</small></label>
+    <label>Font <select name="banner_font">${FONTS.map((f) => `<option ${f === b.font ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+  </div>
   <button class="btn">Save banner</button>
-</form></div>
+</form>
+<script>
+(() => {
+  const form = document.getElementById('bannerForm'), img = document.getElementById('bannerPreview');
+  let t;
+  form.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      const p = new URLSearchParams(new FormData(form));
+      img.src = '/g/${guild.id}/banner.png?' + p.toString();
+    }, 250);
+  });
+})();
+</script></div>
 <div class="card"><h2>Actions</h2>
 <small>Run in order 1 → 4 on first deploy. Each one is safe to re-run later.</small>
 <form method="post" action="/g/${guild.id}/action">
@@ -178,7 +217,13 @@ ${[
         return redirect('/', { 'set-cookie': 'sid=; Path=/; Max-Age=0' });
       }
 
-      // ---- public sample banner (shown on the landing page) ----
+      // ---- public assets ----
+      if (url.pathname === '/logo.svg' || url.pathname === '/logo.png') {
+        const type = url.pathname.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+        res.writeHead(200, { 'content-type': type, 'cache-control': 'public, max-age=86400' });
+        return res.end(readFileSync(new URL('.' + url.pathname, import.meta.url)));
+      }
+      // sample banner shown on the landing page
       if (url.pathname === '/sample-banner.png') {
         const png = await renderBanner({});
         res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=3600' });
@@ -203,7 +248,7 @@ ${[
               : `<li>${esc(g.name)} - <a href="${inviteUrl()}&guild_id=${g.id}">invite MadHoney</a></li>`;
           }).join('');
         return html(layout('MadHoney', `
-<h1>🍯 Mad<span>Honey</span></h1>
+<h1><img src="/logo.svg" alt="">Mad<span>Honey</span></h1>
 <p>Hi ${esc(sess.user.username)} · <a href="/logout">log out</a></p>
 <div class="card"><h2>Your servers</h2><ul>${rows || '<li>No servers where you have Manage Server.</li>'}</ul></div>`));
       }
@@ -218,8 +263,15 @@ ${[
         if (!guild) return html(layout('MadHoney', `<h1>Not here yet</h1><p><a href="${inviteUrl()}&guild_id=${m[1]}">Invite MadHoney to this server</a> first.</p>`), 404);
 
         if (m[2] === '/banner.png') {
-          const png = await renderBanner(getGuild(guild.id)?.banner ?? {});
-          res.writeHead(200, { 'content-type': 'image/png' });
+          // query params (banner_*) override the saved config so the form can
+          // live-preview without saving
+          const opts = { ...getGuild(guild.id)?.banner };
+          for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl']) {
+            const v = url.searchParams.get(`banner_${k}`);
+            if (v !== null) opts[k] = v;
+          }
+          const png = await renderBanner(opts);
+          res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
           return res.end(png);
         }
         if (m[2] === '/save' && req.method === 'POST') {

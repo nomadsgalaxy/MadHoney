@@ -44,7 +44,7 @@ const command = new SlashCommandBuilder()
     .addStringOption((o) => o.setName('color').setDescription('Body text color, hex (default #e9ecf1)'))
     .addStringOption((o) => o.setName('bg').setDescription('Background color, hex (default #0c0e11)'))
     .addStringOption((o) => o.setName('font').setDescription('Font').addChoices(...FONTS.map((f) => ({ name: f, value: f }))))
-    .addStringOption((o) => o.setName('logo_url').setDescription('Logo image URL (PNG/JPG), shown at the left')))
+    .addStringOption((o) => o.setName('logo_url').setDescription('Logo URL (PNG/JPG). Empty = MadHoney logo, "none" = no logo')))
   .addSubcommand((s) => s
     .setName('banshare').setDescription('Share bans with other MadHoney servers, or stay isolated')
     .addStringOption((o) => o.setName('mode').setDescription('shared = auto-ban users banned in other sharing servers').setRequired(true)
