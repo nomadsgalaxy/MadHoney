@@ -10,7 +10,7 @@ import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans, trappedCount } from './store.js';
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { honeypotMode } from './trap.js';
-import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
+import { renderBanner, DEFAULT_BANNER, FONTS, CREDIT_LINE } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
 
 const PORT = Number(process.env.PORT || 8300);
@@ -373,6 +373,8 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <label>Distortion <select name="banner_distort">
     ${[[0, 'None (clean)'], [1, 'Light'], [2, 'Medium'], [3, 'Heavy']].map(([v, l]) => `<option value="${v}" ${Number(b.distort ?? 0) === v ? 'selected' : ''}>${l}</option>`).join('')}
   </select><small>Garbles the text captcha-style so OCR bots can't read the warning and skip the trap. Higher = harder for machines (and slightly harder for humans). Preview it above before you post.</small></label>
+  <label class="toggle"><input type="checkbox" name="banner_showcredit" ${b.credit ? 'checked' : ''}>
+    <span>Add a "protected by MadHoney" credit line<small>⚠️ Off by default on purpose. It prints the <b>same</b> line on every MadHoney banner - a fingerprint bots could use to recognize and skip your honeypot. Leave it off for the best protection.</small></span></label>
   <button class="btn">Save banner</button>
 </form>
 <script>
@@ -674,6 +676,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             const v = url.searchParams.get(`banner_${k}`);
             if (v !== null) opts[k] = v;
           }
+          opts.credit = url.searchParams.get('banner_showcredit') ? CREDIT_LINE : '';
           const png = await renderBanner({ ...opts, roleColors: roleColorMap(guild) });
           res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
           return res.end(png);
@@ -685,6 +688,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl', 'mentionColor', 'mentionMode', 'distort']) {
               if (form.has(`banner_${k}`)) banner[k] = form.get(`banner_${k}`).trim();
             }
+            banner.credit = form.get('banner_showcredit') === 'on' ? CREDIT_LINE : '';
             saveGuild(guild.id, { banner });
             return html(await guildPage(guild, sess, 'Banner saved. Post it from Actions (or /madhoney deploy in Discord).', 'banner'));
           }

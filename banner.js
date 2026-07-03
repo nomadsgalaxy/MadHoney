@@ -21,9 +21,14 @@ export const DEFAULT_BANNER = {
   logoUrl: '',        // '' -> bundled MadHoney logo, 'none' -> no logo
   mentionColor: '#5865f2', // #channel / @role highlight (Discord blurple)
   mentionMode: 'custom',   // 'custom' -> mentionColor for all; 'role' -> real role colors via opts.roleColors
-  credit: 'protected by https://madhoney.nomadsgalaxy.com', // small footer line
+  credit: '',              // optional footer line; OFF by default - a fixed credit string is a fingerprint (see CREDIT_LINE)
   distort: 0,              // 0 none .. 3 heavy: garble the text against OCR/bot detection
 };
+
+// The optional credit line. It's OFF by default on purpose: a string that's
+// identical on every MadHoney banner is a crib - detect it once and you can
+// skip every MadHoney honeypot. Admins can opt in, but they're warned.
+export const CREDIT_LINE = 'protected by https://madhoney.nomadsgalaxy.com';
 
 // A word is a "mention" if it starts with # or @ (like #rules or @Staff).
 const MENTION = /^[#@][\w-]/;
@@ -185,6 +190,13 @@ export async function renderBanner(opts = {}) {
     ctx.fillStyle = o.color;
     ctx.fillText(o.credit, W - PAD - ctx.measureText(o.credit).width, H - STRIPE - 10);
     ctx.globalAlpha = 1;
+  }
+
+  // Always add a faint, unique speckle so two servers with identical settings
+  // never produce byte-identical images - defeats fingerprinting by image hash.
+  for (let i = 0; i < 50; i++) {
+    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.045})`;
+    ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1);
   }
 
   return canvas.toBuffer('image/png');
