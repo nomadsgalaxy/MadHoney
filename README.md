@@ -61,6 +61,12 @@ have Manage Server shows up.
 **Onboarding gotcha:** if your server uses Discord Onboarding, make sure it
 does not auto-grant the verified role. Otherwise the captcha is a decoration.
 
+**Verification is optional but recommended.** You can turn it off in the
+dashboard to run the honeypot on its own, without the captcha gate. Only do
+this if you understand the trade-off: with verification off the honeypot isn't
+hidden from your members, so a human could post in it and get banned, and only
+the warning banner protects them.
+
 ### Accessibility
 
 A honeypot is a visual trap. Members who rely on text-to-speech or a screen

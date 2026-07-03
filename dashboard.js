@@ -160,6 +160,8 @@ function layout(title, body, opts = {}) {
   details.guide .gb li{margin:.45rem 0}
   details.guide .gb b{color:var(--ink)}
   details.guide .tip{background:#0f1216;border:1px solid var(--line);border-radius:8px;padding:.55rem .8rem;margin:.55rem 0;line-height:1.5}
+  .warnbox{background:rgba(214,69,69,.1);border:1px solid rgba(214,69,69,.45);border-radius:8px;padding:.6rem .85rem;margin:.3rem 0 .2rem;font-size:.9rem;line-height:1.5;color:#ffb3aa}
+  .warnbox b{color:#fff}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
   footer.f{margin-top:2rem;color:var(--dim);font-size:.85rem;border-top:1px solid var(--line);padding-top:1rem}
 </style>
@@ -216,7 +218,7 @@ export function startDashboard(client) {
     const cfg = getGuild(guild.id) ?? {};
     const msgAt = (key) => (msg && at === key ? `<pre style="margin-top:.6rem">${esc(msg)}</pre>` : '');
     // standing health warning: catches the classic "bot role below verified role" mistake
-    const problem = cfg.verifiedRoleId ? await preflight(guild, cfg).catch((e) => e.message) : null;
+    const problem = (cfg.verificationEnabled !== false && cfg.verifiedRoleId) ? await preflight(guild, cfg).catch((e) => e.message) : null;
     const b = { ...DEFAULT_BANNER, ...cfg.banner };
     const roles = guild.roles.cache.filter((r) => !r.managed && r.id !== guild.id)
       .sort((a, z) => z.position - a.position);
@@ -231,11 +233,15 @@ export function startDashboard(client) {
     const icon = guild.iconURL?.({ size: 128 });
     const avatar = icon ? `<img class="savatar" src="${icon}" alt="">` : `<span class="savatar">${esc([...guild.name][0]?.toUpperCase() ?? '#')}</span>`;
     const roleName = cfg.verifiedRoleId ? (roles.get(cfg.verifiedRoleId)?.name ?? 'set') : null;
-    const configured = cfg.verifiedRoleId && cfg.verifyChannelId && cfg.honeypotChannelId;
+    const verifyOn = cfg.verificationEnabled !== false; // default on
+    // With verification off there's no verified role/gate to require - just the honeypot.
+    const configured = cfg.honeypotChannelId && (!verifyOn || (cfg.verifiedRoleId && cfg.verifyChannelId));
     const chips = [
       configured ? '<span class="chip on"><b>🍯 Armed</b></span>' : '<span class="chip off">Needs setup</span>',
       `<span class="chip">Trapped here <b>${trappedHere}</b></span>`,
-      roleName ? `<span class="chip">Verified role <b>${esc(roleName)}</b></span>` : '',
+      verifyOn
+        ? (roleName ? `<span class="chip">Verified role <b>${esc(roleName)}</b></span>` : '')
+        : '<span class="chip off">⚠️ Verification OFF</span>',
       `<span class="chip ${cfg.banShare ? 'on' : 'off'}">Universal list <b>${cfg.banShare ? 'ON' : 'off'}</b></span>`,
     ].filter(Boolean).join('');
 
@@ -256,7 +262,9 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <details class="card guide" ${configured ? '' : 'open'}>
 <summary><b>📋 Best practices &amp; setup guide</b></summary>
 <div class="gb">
-<p>MadHoney hides your server behind a verified role and leaves one decoy channel open for spam bots. Set it up in this order:</p>
+<p><b>Why MadHoney works this way.</b> A spam bot never posts once - it blasts every channel it can reach and pings @everyone if it can, and every message leaves that channel marked unread. Banning the bot and deleting the spam doesn't clear those unread markers, so you're left with a whole server flagged for spam nobody should have seen. MadHoney catches the bot in one place before it can touch the rest of your server.</p>
+<p>Bots aren't smart, and the design leans on that: gate every channel behind the verified role and the only place an unverified account can post is the honeypot. Name it like a real channel (<code>general-2</code>) and an indiscriminate bot walks straight in. Its only content is an image - a human reads the warning and backs off, but a bot can't parse a picture, so it posts anyway and trips the trap. The verified role hides the honeypot from anyone who passed the captcha, so <b>no real member ever gets caught</b>. That's why verification is the recommended setup - it's what keeps humans out of the trap.</p>
+<p><b>Set it up in this order:</b></p>
 <ol>
 <li><b>Verified role first.</b> Create a role (e.g. "Verified") in Server Settings → Roles, then drag the <b>MadHoney</b> role ABOVE it. If MadHoney's role sits below the verified role, gating and grandfathering fail with a permission error - this is the single most common mistake.</li>
 <li><b>Configure below.</b> Pick the verified role, your verify channel (usually <code>#rules</code>), and a honeypot channel. Optionally add a staff role and a log channel.</li>
@@ -289,8 +297,11 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <label>Dashboard admin role (optional) <select name="adminRoleId">${roleOpts(cfg.adminRoleId)}</select>
     <small>Dashboard access WITHOUT the honeypot exemption - for helpers.</small></label>
   </div>
-  <div class="subh">Verify message</div>
-  <label><textarea name="verifyText" rows="3">${esc(cfg.verifyText || DEFAULT_VERIFY_TEXT)}</textarea>
+  <div class="subh">Verification</div>
+  <label class="toggle"><input type="checkbox" name="verificationEnabled" ${verifyOn ? 'checked' : ''}>
+    <span>Require members to verify <b style="color:var(--honey)">(recommended)</b><small>This is the whole point of MadHoney. It gates your channels behind the verified role so the honeypot is the <b>only</b> place an unverified account can post, and it hides the honeypot from real members so no human ever gets caught. Turn this off and the honeypot still bans, but it's visible to everyone, so a member could wander in and get banned - you'd be relying only on the warning banner.</small></span></label>
+  ${!verifyOn ? '<div class="warnbox">⚠️ <b>Verification is OFF.</b> The honeypot is not hidden from your members, so a human could post in it and get banned. Only the warning banner protects them. We strongly recommend turning verification back on.</div>' : ''}
+  <label>Verify message <textarea name="verifyText" rows="3" ${verifyOn ? '' : 'disabled'}>${esc(cfg.verifyText || DEFAULT_VERIFY_TEXT)}</textarea>
     <small>Shown above the Verify button.</small></label>
   <div class="subh">Universal ban list</div>
   <label class="toggle"><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''}>
@@ -629,6 +640,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             if (form.has(k)) patch[k] = form.get(k).trim();
           }
           patch.banShare = form.get('banShare') === 'on';
+          patch.verificationEnabled = form.get('verificationEnabled') === 'on';
           if (patch.verifyChannelId && patch.verifyChannelId === patch.honeypotChannelId) {
             return html(await guildPage(guild, sess, '❌ Verify and honeypot must be different channels - not saved.', 'config'));
           }
