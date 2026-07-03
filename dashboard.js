@@ -36,8 +36,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 function layout(title, body, opts = {}) {
   const invite = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536852`;
   const navRight = opts.user
-    ? `<span class="navuser">${esc(opts.user)}</span><a href="/logout">Log out</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add<span class="lg"> server</span></a>`
-    : `<a href="/login">Log in</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add<span class="lg"> to Discord</span></a>`;
+    ? `<a href="/stats">Stats</a><span class="navuser">${esc(opts.user)}</span><a href="/logout">Log out</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add<span class="lg"> server</span></a>`
+    : `<a href="/stats">Stats</a><a href="/login">Log in</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add<span class="lg"> to Discord</span></a>`;
   return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
 <link rel="icon" href="/logo.svg?v=3" type="image/svg+xml">
@@ -537,6 +537,113 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
 </script>`, { user: sess.user.username });
   }
 
+  // Public statistics page. Aggregates the ban log into headline numbers and a
+  // 30-day trap-activity chart. Logged-in users also see their own servers.
+  async function statsPage(sess) {
+    const rows = bans();
+    const trapped = trappedCount(rows);
+    const servers = client.guilds.cache.size;
+    // daily catches (ban events, excluding unban reversals), last 30 days
+    const DAY = 86400000;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const start = today.getTime() - 29 * DAY;
+    const buckets = new Map();
+    for (let t = start; t <= today.getTime(); t += DAY) buckets.set(new Date(t).toISOString().slice(0, 10), 0);
+    let last30 = 0;
+    for (const b of rows) {
+      if (b.unbanned) continue;
+      const day = String(b.at).slice(0, 10);
+      if (buckets.has(day)) { buckets.set(day, buckets.get(day) + 1); last30++; }
+    }
+    const series = [...buckets.entries()].map(([d, c]) => ({ d, c }));
+    const max = Math.max(1, ...series.map((s) => s.c));
+
+    // chart geometry (viewBox coords; SVG scales to container width)
+    const W = 760, H = 260, padL = 34, padR = 14, padT = 14, padB = 30;
+    const plotW = W - padL - padR, plotH = H - padT - padB, n = series.length;
+    const xAt = (i) => padL + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+    const yAt = (v) => padT + (1 - v / max) * plotH;
+    const pts = series.map((s, i) => [xAt(i), yAt(s.c)]);
+    const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('');
+    const area = `M${xAt(0).toFixed(1)},${(padT + plotH).toFixed(1)} ${line.replace(/^M/, 'L')} L${xAt(n - 1).toFixed(1)},${(padT + plotH).toFixed(1)} Z`;
+    const yTicks = [0, 0.5, 1].map((f) => Math.round(max * f));
+    const grid = yTicks.map((v) => `<line x1="${padL}" x2="${W - padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}" class="grid"/><text x="${padL - 6}" y="${(yAt(v) + 4).toFixed(1)}" class="ytick">${v}</text>`).join('');
+    const xLabels = series.map((s, i) => (i % 7 === 0 || i === n - 1)
+      ? `<text x="${xAt(i).toFixed(1)}" y="${H - 8}" class="xtick">${s.d.slice(5)}</text>` : '').join('');
+    const dots = series.map((s, i) => JSON.stringify({ x: +xAt(i).toFixed(1), y: +yAt(s.c).toFixed(1), d: s.d, c: s.c }));
+
+    const mine = sess ? sess.guilds
+      .filter((g) => client.guilds.cache.has(g.id))
+      .map((g) => ({ name: g.name, n: trappedCount(bans(g.id)), armed: !!getGuild(g.id)?.honeypotChannelId }))
+      .filter((g) => sess.guilds.length)
+      .sort((a, z) => z.n - a.n) : [];
+
+    return layout('MadHoney - Statistics', `
+<style>
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin:.4rem 0 1.2rem}
+  @media(max-width:640px){.stat-row{grid-template-columns:1fr}}
+  .stat-tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem}
+  .stat-tile .n{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2.3rem;color:var(--honey);line-height:1}
+  .stat-tile .l{color:var(--dim);font-size:.85rem;margin-top:.3rem;text-transform:uppercase;letter-spacing:.06em}
+  .chartwrap{position:relative}
+  svg.chart{width:100%;height:auto;display:block}
+  svg.chart .grid{stroke:var(--line);stroke-width:1}
+  svg.chart .ytick,svg.chart .xtick{fill:var(--dim);font:400 11px "Instrument Sans",sans-serif}
+  svg.chart .ytick{text-anchor:end}svg.chart .xtick{text-anchor:middle}
+  svg.chart .area{fill:var(--honey);opacity:.14}
+  svg.chart .line{fill:none;stroke:var(--honey);stroke-width:2}
+  svg.chart .cross{stroke:var(--honey);stroke-width:1;opacity:0;stroke-dasharray:3 3}
+  svg.chart .cdot{fill:var(--honey);stroke:var(--card);stroke-width:2;opacity:0}
+  .ctip{position:absolute;pointer-events:none;background:#0f1216;border:1px solid var(--line);border-radius:7px;padding:.35rem .55rem;font-size:.8rem;opacity:0;transform:translate(-50%,-120%);white-space:nowrap}
+  .ctip b{color:var(--honey)}
+</style>
+<h1 style="margin:1rem 0 .2rem">📊 MadHoney statistics</h1>
+<p style="color:var(--dim);margin:0 0 1rem">Live numbers across every server running MadHoney.</p>
+<div class="stat-row">
+  <div class="stat-tile"><div class="n">${trapped.toLocaleString('en-US')}</div><div class="l">Spammers trapped</div></div>
+  <div class="stat-tile"><div class="n">${servers.toLocaleString('en-US')}</div><div class="l">Servers protected</div></div>
+  <div class="stat-tile"><div class="n">${last30.toLocaleString('en-US')}</div><div class="l">Caught in last 30 days</div></div>
+</div>
+<div class="card"><h2>Honeypot catches · last 30 days</h2>
+<div class="chartwrap">
+<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Honeypot catches per day over the last 30 days">
+  ${grid}
+  <path class="area" d="${area}"/>
+  <path class="line" d="${line}"/>
+  ${xLabels}
+  <line class="cross" id="cx" y1="${padT}" y2="${padT + plotH}"/>
+  <circle class="cdot" id="cd" r="4"/>
+</svg>
+<div class="ctip" id="ctip"></div>
+</div>
+<small style="color:var(--dim)">Each catch is one honeypot ban event across the network. Deduplicated unique spammers are shown in the tile above.</small>
+</div>
+${sess && mine.length ? `<div class="card"><h2>Your servers</h2>
+<table class="btable"><tr><td class="k">Server</td><td class="k">Status</td><td class="k">Trapped</td></tr>
+${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? '<span class="badge un">armed</span>' : '<span class="k">setup</span>'}</td><td>${g.n}</td></tr>`).join('')}
+</table></div>` : ''}
+<script>
+(() => {
+  const pts = [${dots.join(',')}];
+  const svg = document.querySelector('svg.chart'), cx = document.getElementById('cx'), cd = document.getElementById('cd'), tip = document.getElementById('ctip'), wrap = document.querySelector('.chartwrap');
+  if (!svg || !pts.length) return;
+  const vb = ${W};
+  svg.addEventListener('mousemove', (e) => {
+    const r = svg.getBoundingClientRect();
+    const vx = (e.clientX - r.left) / r.width * vb;
+    let best = pts[0]; for (const p of pts) if (Math.abs(p.x - vx) < Math.abs(best.x - vx)) best = p;
+    cx.setAttribute('x1', best.x); cx.setAttribute('x2', best.x); cx.style.opacity = 1;
+    cd.setAttribute('cx', best.x); cd.setAttribute('cy', best.y); cd.style.opacity = 1;
+    tip.style.opacity = 1;
+    tip.style.left = (best.x / vb * r.width) + 'px';
+    tip.style.top = (best.y / ${H} * r.height) + 'px';
+    tip.innerHTML = '<b>' + best.c + '</b> caught<br>' + best.d;
+  });
+  svg.addEventListener('mouseleave', () => { cx.style.opacity = cd.style.opacity = tip.style.opacity = 0; });
+})();
+</script>`, sess ? { user: sess.user.username } : {});
+  }
+
   const server = createServer(async (req, res) => {
     const html = (s, code = 200, headers = {}) => { res.writeHead(code, { 'content-type': 'text/html; charset=utf-8', ...headers }); res.end(s); };
     const redirect = (to, headers = {}) => { res.writeHead(302, { location: to, ...headers }); res.end(); };
@@ -587,13 +694,19 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
       if (url.pathname === '/terms') return html(layout('MadHoney - Terms of Service', TERMS));
       if (url.pathname === '/privacy') return html(layout('MadHoney - Privacy Policy', PRIVACY));
 
+      // ---- public stats ----
+      if (url.pathname === '/stats') {
+        const sess = session(req);
+        return html(await statsPage(sess), 200);
+      }
+
       // ---- SEO ----
       if (url.pathname === '/robots.txt') {
         res.writeHead(200, { 'content-type': 'text/plain' });
-        return res.end(`User-agent: *\nAllow: /$\nAllow: /terms\nAllow: /privacy\nDisallow: /g/\nDisallow: /login\nDisallow: /callback\nSitemap: ${PUBLIC_URL}/sitemap.xml\n`);
+        return res.end(`User-agent: *\nAllow: /$\nAllow: /stats\nAllow: /terms\nAllow: /privacy\nDisallow: /g/\nDisallow: /login\nDisallow: /callback\nSitemap: ${PUBLIC_URL}/sitemap.xml\n`);
       }
       if (url.pathname === '/sitemap.xml') {
-        const pages = ['/', '/terms', '/privacy'];
+        const pages = ['/', '/stats', '/terms', '/privacy'];
         res.writeHead(200, { 'content-type': 'application/xml' });
         return res.end(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map((p) => `<url><loc>${PUBLIC_URL}${p}</loc><changefreq>weekly</changefreq></url>`).join('\n')}\n</urlset>\n`);
       }
