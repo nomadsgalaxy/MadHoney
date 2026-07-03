@@ -768,10 +768,15 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
       if (url.pathname === '/') {
         const sess = session(req);
         if (!sess) {
+          const dl = curLocale;
+          const picker = `<select class="langsel" onchange="document.cookie='mh_lang='+this.value+';path=/;max-age=31536000';location.reload()" aria-label="${esc(t('dash.lang', dl))}">${SUPPORTED.map((c) => `<option value="${c}" ${c === dl ? 'selected' : ''}>${esc(LOCALE_NAMES[c])}</option>`).join('')}</select>`;
           return html(LANDING
+            .replace(/%%L_([\w.]+)%%/g, (_, k) => t('landing.' + k, dl)) // values carry intentional HTML — do not esc()
+            .replaceAll('%%LANG%%', dl)
+            .replaceAll('%%LANGPICKER%%', picker)
             .replaceAll('%%INVITE%%', inviteUrl())
-            .replaceAll('%%GUILDS%%', String(client.guilds.cache.size))
-            .replaceAll('%%BANS%%', trappedCount().toLocaleString('en-US')));
+            .replaceAll('%%GUILDS%%', client.guilds.cache.size.toLocaleString(dl))
+            .replaceAll('%%BANS%%', trappedCount().toLocaleString(dl)));
         }
         const manageable = [];
         for (const g of sess.guilds) {

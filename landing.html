@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="%%LANG%%">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MadHoney — Free Discord Anti-Spam Bot (Honeypot + Captcha Verification)</title>
-<meta name="description" content="MadHoney is a free honeypot and captcha verification bot for Discord. It gates your channels behind a verified role so spam bots trap themselves and get banned, while humans just click Verify. Open dashboard, one-command setup.">
+<title>%%L_title%%</title>
+<meta name="description" content="%%L_metaDesc%%">
 <meta name="keywords" content="Discord anti-spam bot, Discord honeypot bot, Discord captcha verification, Discord verification bot, stop spam bots Discord, Discord anti raid, free Discord bot">
 <link rel="canonical" href="https://madhoney.nomadsgalaxy.com/">
 <meta name="theme-color" content="#ffb31a">
@@ -77,6 +77,8 @@ nav .links a:hover{color:var(--ink)}
 .btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
 .btn.ghost:hover{box-shadow:inset 0 0 0 1px var(--honey);color:var(--honey)}
 .btn.sm{padding:.5rem 1rem;font-size:.9rem}
+.langsel{background:#0f1216;color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:.4rem .55rem;font:inherit;font-size:.9rem;cursor:pointer}
+.langsel:hover{border-color:var(--honey);color:var(--ink)}
 
 /* hero */
 header{position:relative;padding:6.5rem 0 5rem;overflow:hidden}
@@ -158,72 +160,66 @@ footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;l
 <nav><div class="wrap">
   <a class="wordmark" href="/"><img src="/logo.svg?v=3" alt=""><span>Mad<b>Honey</b></span></a>
   <div class="links">
-    <a href="#how">How it works</a>
-    <a href="#features">Features</a>
-    <a href="#start">Get started</a>
+    <a href="#how">%%L_navHow%%</a>
+    <a href="#features">%%L_navFeatures%%</a>
+    <a href="#start">%%L_navStart%%</a>
     <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">GitHub</a>
-    <a class="btn ghost sm" href="/login">Dashboard</a>
-    <a class="btn primary sm" href="%%INVITE%%" target="_blank" rel="noopener">Add to Discord</a>
+    <a class="btn ghost sm" href="/login">%%L_navDashboard%%</a>
+    <a class="btn primary sm" href="%%INVITE%%" target="_blank" rel="noopener">%%L_navAdd%%</a>
+    %%LANGPICKER%%
   </div>
 </div></nav>
 
 <header><div class="wrap">
   <img class="hero-logo" src="/logo.svg?v=3" alt="MadHoney bee logo">
-  <div class="kicker">Honeypot anti-spam for Discord</div>
-  <h1>Spam bots <em>ban themselves.</em></h1>
-  <p class="sub">MadHoney doesn't try to recognize spam. It wires up your server so
-  <b>only a bot would ever trigger the trap</b>. Humans click Verify, read a captcha, and get in.
-  Bots post in the decoy channel and get banned, messages wiped, before anyone wakes up.</p>
+  <div class="kicker">%%L_kicker%%</div>
+  <h1>%%L_h1%%</h1>
+  <p class="sub">%%L_heroSub%%</p>
   <div class="cta-row">
-    <a class="btn primary" href="%%INVITE%%" target="_blank" rel="noopener">＋ Add to Discord, it's free</a>
-    <a class="btn ghost" href="/login">Open the dashboard</a>
+    <a class="btn primary" href="%%INVITE%%" target="_blank" rel="noopener">%%L_ctaAdd%%</a>
+    <a class="btn ghost" href="/login">%%L_ctaDash%%</a>
   </div>
   <div class="stats">
-    <div class="stat"><div class="n">%%GUILDS%%</div><div class="l">servers protected</div></div>
-    <div class="stat"><div class="n">%%BANS%%</div><div class="l">spammers trapped</div></div>
-    <div class="stat"><div class="n">~5 min</div><div class="l">to full setup</div></div>
+    <div class="stat"><div class="n">%%GUILDS%%</div><div class="l">%%L_statServers%%</div></div>
+    <div class="stat"><div class="n">%%BANS%%</div><div class="l">%%L_statSpammers%%</div></div>
+    <div class="stat"><div class="n">~5 min</div><div class="l">%%L_statSetupL%%</div></div>
   </div>
-  <p style="margin:1rem 0 0"><a href="/stats" style="font-family:var(--mono);font-size:.85rem;letter-spacing:.04em">See live stats →</a></p>
+  <p style="margin:1rem 0 0"><a href="/stats" style="font-family:var(--mono);font-size:.85rem;letter-spacing:.04em">%%L_seeStats%%</a></p>
 </div></header>
 
 <div class="tape"></div>
 
 <section id="why"><div class="wrap">
-  <div class="eyebrow">Why it matters</div>
-  <h2>One bot. Unread dots everywhere.</h2>
-  <p class="lead">A spam bot never posts just once. It blasts every channel it can reach and tries to
-  ping <b>@everyone</b> on the way through. Every message lights up that channel with an unread marker,
-  and here's the part that stings: ban the bot and delete the spam, and those unread dots usually
-  <b>stay</b>. You come back to a whole server flagged with "new messages" for spam nobody should have
-  seen. <b>MadHoney's job is to stop that before it starts</b> - to catch the bot in one place, before it
-  can touch the rest of your server.</p>
+  <div class="eyebrow">%%L_whyEyebrow%%</div>
+  <h2>%%L_whyH2%%</h2>
+  <p class="lead">%%L_whyLead%%</p>
 </div></section>
 
 <section id="how"><div class="wrap">
-  <div class="eyebrow">The mechanism</div>
-  <h2>Three moves. Zero guesswork.</h2>
+  <div class="eyebrow">%%L_howEyebrow%%</div>
+  <h2>%%L_howH2%%</h2>
   <div class="grid3">
-    <div class="step"><div class="num">01</div><h3>Gate</h3>
-      <p>Every channel is hidden behind a <b>verified role</b>. A new account sees exactly two things: your rules channel… and one decoy.</p></div>
-    <div class="step"><div class="num">02</div><h3>Verify</h3>
-      <p>Humans click <b>Verify</b>, read an image captcha, type the code, and the whole server unlocks. Takes about ten seconds. No DMs, no third-party site.</p></div>
-    <div class="step"><div class="num">03</div><h3>Trap</h3>
-      <p>The decoy is named like a real channel (<b>#general-2</b>) and it's the only place an unverified account can post. Spam bots post everywhere they can, so they post there first. <b>Instant ban</b>, plus their last 7 days of messages get deleted. Verified humans never even see it.</p></div>
+    <div class="step"><div class="num">01</div><h3>%%L_step1H%%</h3>
+      <p>%%L_step1P%%</p></div>
+    <div class="step"><div class="num">02</div><h3>%%L_step2H%%</h3>
+      <p>%%L_step2P%%</p></div>
+    <div class="step"><div class="num">03</div><h3>%%L_step3H%%</h3>
+      <p>%%L_step3P%%</p></div>
   </div>
 </div></section>
 
 <section id="why-it-works"><div class="wrap">
-  <div class="eyebrow">The thinking</div>
-  <h2>Bots aren't smart. That's the whole plan.</h2>
+  <div class="eyebrow">%%L_thinkEyebrow%%</div>
+  <h2>%%L_thinkH2%%</h2>
   <div class="grid2">
-    <div class="fcard"><div class="ico">🚪</div><h3>They post anywhere</h3>
-      <p>A spam bot doesn't pick targets. It dumps its message in every channel it can see and pings <b>@everyone</b> if it can. Gate everything behind the verified role and the only door left open is the honeypot.</p></div>
-    <div class="fcard"><div class="ico">🎣</div><h3>The name is the bait</h3>
-      <p>Name the decoy like a normal channel (<code>general-2</code>, <code>chat-2</code>) and an indiscriminate bot walks straight in. It looks like just another place to spam.</p></div>
-    <div class="fcard"><div class="ico">🖼️</div><h3>They can't read the warning</h3>
-      <p>The honeypot's only content is an image. A human reads "don't post here" and backs off; a bot can't parse a picture, so it posts anyway and trips the trap.</p></div>
-    <div class="fcard"><div class="ico">🙈</div><h3>No human gets caught</h3>
-      <p>The verified role hides the honeypot from everyone who passed the captcha. Real members never even see the channel, so the only thing that ever lands in it is a bot.</p></div>
+    <div class="fcard"><div class="ico">🚪</div><h3>%%L_f1H%%</h3>
+      <p>%%L_f1P%%</p></div>
+    <div class="fcard"><div class="ico">🎣</div><h3>%%L_f2H%%</h3>
+      <p>%%L_f2P%%</p></div>
+    <div class="fcard"><div class="ico">🖼️</div><h3>%%L_f3H%%</h3>
+      <p>%%L_f3P%%</p></div>
+    <div class="fcard"><div class="ico">🙈</div><h3>%%L_f4H%%</h3>
+      <p>%%L_f4P%%</p></div>
   </div>
 </div></section>
 
@@ -231,65 +227,55 @@ footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;l
   <div class="showcase">
     <img src="/sample-banner.png" alt="Example honeypot warning banner generated by MadHoney">
     <div>
-      <div class="eyebrow">Banner designer</div>
-      <h3>No human has an excuse.</h3>
-      <p>MadHoney generates the hazard banner that sits pinned in the honeypot: your headline,
-      body text, colors, fonts, even your community's logo. Design it with
-      <code>/madhoney banner</code> or in the dashboard. The one you're looking at is rendered live by the bot.</p>
+      <div class="eyebrow">%%L_showEyebrow%%</div>
+      <h3>%%L_showH3%%</h3>
+      <p>%%L_showP%%</p>
     </div>
   </div>
 </div></section>
 
 <section id="features"><div class="wrap">
-  <div class="eyebrow">Everything included</div>
-  <h2>Small wasp, quick sting.</h2>
+  <div class="eyebrow">%%L_featEyebrow%%</div>
+  <h2>%%L_featH2%%</h2>
   <div class="grid2">
-    <div class="fcard"><div class="ico">🧭</div><h3>One-command setup</h3>
-      <p><code>/madhoney setup</code> walks you through role and channel pickers, then <code>/madhoney deploy</code> grandfathers existing members, posts the panels, and gates your channels. There's a dry-run before anything changes.</p></div>
-    <div class="fcard"><div class="ico">🧾</div><h3>Mod-log with Undo</h3>
-      <p>Every ban is reported to a staff channel: who, when, and what they posted. One-click <b>Unban</b> button if a curious human tripped the wire.</p></div>
-    <div class="fcard"><div class="ico">🌐</div><h3>Universal ban list</h3>
-      <p>Every honeypot catch, across every server, lands on one list. Opt in and known spammers are banned the moment they join yours (or all at once with Ban from List). Opt out anytime - your own catches stay yours. An Undo removes a user from the list everywhere.</p></div>
-    <div class="fcard"><div class="ico">🕶️</div><h3>Doesn't read your messages</h3>
-      <p>The trap fires on <b>where</b> a message was posted, never on what it says. No external database, no analytics. Staff and owners are always exempt.</p></div>
-    <div class="fcard"><div class="ico">🖥️</div><h3>Web dashboard</h3>
-      <p>Log in with Discord and manage any server where you have <b>Manage Server</b>: config, verify message, banner designer, deploy actions, and the ban log.</p></div>
-    <div class="fcard"><div class="ico">🛠️</div><h3>Source Available</h3>
-      <p>Read it, fork it, self-host it. One Node process, three files of state. <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">github.com/nomadsgalaxy/MadHoney</a> · OCL v1.1 + SWAtt.</p></div>
+    <div class="fcard"><div class="ico">🧭</div><h3>%%L_feat1H%%</h3>
+      <p>%%L_feat1P%%</p></div>
+    <div class="fcard"><div class="ico">🧾</div><h3>%%L_feat2H%%</h3>
+      <p>%%L_feat2P%%</p></div>
+    <div class="fcard"><div class="ico">🌐</div><h3>%%L_feat3H%%</h3>
+      <p>%%L_feat3P%%</p></div>
+    <div class="fcard"><div class="ico">🕶️</div><h3>%%L_feat4H%%</h3>
+      <p>%%L_feat4P%%</p></div>
+    <div class="fcard"><div class="ico">🖥️</div><h3>%%L_feat5H%%</h3>
+      <p>%%L_feat5P%%</p></div>
+    <div class="fcard"><div class="ico">🛠️</div><h3>%%L_feat6H%%</h3>
+      <p>%%L_feat6P%%</p></div>
   </div>
 </div></section>
 
 <section id="start"><div class="wrap">
   <div class="start">
-    <div class="eyebrow">Get started</div>
-    <h2>Armed in five minutes.</h2>
+    <div class="eyebrow">%%L_startEyebrow%%</div>
+    <h2>%%L_startH2%%</h2>
     <ol>
-      <li><b><a href="%%INVITE%%" target="_blank" rel="noopener">Invite MadHoney</a></b> and grant the requested permissions.</li>
-      <li>Create a <b>Verified</b> role (MadHoney's role must sit <b>above</b> it) and a decoy channel like <b>#general-2</b>.</li>
-      <li>Run <b><code>/madhoney setup</code></b> and pick the role, your rules channel, the decoy, and an optional staff log channel.</li>
-      <li>Run <b><code>/madhoney deploy</code></b> and click through: grandfather → post panels → gate (dry-run, then apply).</li>
+      <li>%%L_startLi1%%</li>
+      <li>%%L_startLi2%%</li>
+      <li>%%L_startLi3%%</li>
+      <li>%%L_startLi4%%</li>
     </ol>
-    <a class="btn primary" href="%%INVITE%%" target="_blank" rel="noopener">＋ Add MadHoney to your server</a>
-    <a class="btn ghost" href="/login">or set it up from the dashboard</a>
-    <div class="warn"><span>⚠️</span><span><b>Using Discord Onboarding?</b> Make sure it does NOT auto-grant the verified role, otherwise the captcha is a decoration.</span></div>
-    <div class="warn"><span>♿</span><span><b>A note on accessibility.</b> A honeypot is a visual trap, and members who rely on
-    text-to-speech or a screen reader can't always tell a decoy from a real channel. We don't recommend honeypot
-    anti-spam for servers that cater to visually impaired communities. If you run one anyway, it's imperative that
-    your rules state plainly that a honeypot channel exists and which channel it is, so TTS users hear the warning
-    too. A human who trips it can always be unbanned from the log channel, but don't let your most vulnerable
-    members be the ones who find the tripwire.</span></div>
+    <a class="btn primary" href="%%INVITE%%" target="_blank" rel="noopener">%%L_startAdd%%</a>
+    <a class="btn ghost" href="/login">%%L_startDash%%</a>
+    <div class="warn"><span>⚠️</span><span>%%L_warnOnboard%%</span></div>
+    <div class="warn"><span>♿</span><span>%%L_warnA11y%%</span></div>
   </div>
 </div></section>
 
 <section id="support"><div class="wrap">
   <div class="donate">
-    <div class="eyebrow">Free forever</div>
-    <h2 style="margin:.4rem 0 .8rem">Hosted for free. Always will be.</h2>
-    <p class="lead">MadHoney is free to add and free to run. No paywalls, no premium tier, nothing locked
-    behind an upgrade. Running the bot and dashboard does cost real money for servers and hosting, though.
-    If MadHoney keeps your community clean, chipping in helps cover those costs and keeps it free for
-    <b>everyone</b>.</p>
-    <a class="btn primary kofi" href="https://ko-fi.com/nomadsgalaxy" target="_blank" rel="noopener">☕ Support MadHoney on Ko-fi</a>
+    <div class="eyebrow">%%L_donateEyebrow%%</div>
+    <h2 style="margin:.4rem 0 .8rem">%%L_donateH2%%</h2>
+    <p class="lead">%%L_donateLead%%</p>
+    <a class="btn primary kofi" href="https://ko-fi.com/nomadsgalaxy" target="_blank" rel="noopener">%%L_donateKofi%%</a>
   </div>
 </div></section>
 
@@ -298,21 +284,21 @@ footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;l
   <div class="cols">
     <div>
       <div class="wordmark"><img src="/logo.svg?v=3" alt=""><span>Mad<b>Honey</b></span></div>
-      <p>Honeypot + captcha verification for Discord.<br>Made with 🧡 by <a href="https://nomadsgalaxy.com" target="_blank" rel="noopener">Nomads Galaxy</a>.</p>
+      <p>%%L_footTagline%%</p>
     </div>
     <div>
-      <b style="color:var(--ink)">Product</b><br>
-      <a href="%%INVITE%%" target="_blank" rel="noopener">Invite the bot</a><br>
-      <a href="/login">Dashboard</a><br>
-      <a href="/stats">Live stats</a><br>
-      <a href="#how">How it works</a><br>
-      <a href="https://ko-fi.com/nomadsgalaxy" target="_blank" rel="noopener">Donate on Ko-fi</a>
+      <b style="color:var(--ink)">%%L_footProduct%%</b><br>
+      <a href="%%INVITE%%" target="_blank" rel="noopener">%%L_footInvite%%</a><br>
+      <a href="/login">%%L_navDashboard%%</a><br>
+      <a href="/stats">%%L_footStats%%</a><br>
+      <a href="#how">%%L_footHow%%</a><br>
+      <a href="https://ko-fi.com/nomadsgalaxy" target="_blank" rel="noopener">%%L_footDonate%%</a>
     </div>
     <div>
-      <b style="color:var(--ink)">Project</b><br>
-      <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">Source on GitHub</a><br>
-      <a href="https://github.com/nomadsgalaxy/MadHoney#self-hosting" target="_blank" rel="noopener">Self-hosting guide</a><br>
-      <a href="https://github.com/nomadsgalaxy/MadHoney/blob/main/LICENSE.md" target="_blank" rel="noopener">License (OCL v1.1 + SWAtt)</a>
+      <b style="color:var(--ink)">%%L_footProject%%</b><br>
+      <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">%%L_footSource%%</a><br>
+      <a href="https://github.com/nomadsgalaxy/MadHoney#self-hosting" target="_blank" rel="noopener">%%L_footSelfhost%%</a><br>
+      <a href="https://github.com/nomadsgalaxy/MadHoney/blob/main/LICENSE.md" target="_blank" rel="noopener">%%L_footLicense%%</a>
     </div>
     <div>
       <b style="color:var(--ink)">Legal</b><br>
