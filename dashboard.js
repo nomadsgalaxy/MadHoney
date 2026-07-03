@@ -340,6 +340,7 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   </select><small>Harder = longer code and more OCR-defeating distortion. Raise it if bots start solving your captcha; lower it if real members struggle.</small></label>
   <label>Verify message <textarea name="verifyText" rows="3" ${verifyOn ? '' : 'disabled'}>${esc(cfg.verifyText || DEFAULT_VERIFY_TEXT)}</textarea>
     <small>Shown above the Verify button.</small></label>
+  ${SELF_HOSTED ? '' : '<label><small>ℹ️ A small "protected by MadHoney" credit line is shown on your <b>verify panel</b> (not the honeypot banner). Want it gone? MadHoney is free and open - self-host it (SELF_HOSTED=true) and you can remove it.</small></label>'}
   <div class="subh">Universal ban list</div>
   <label class="toggle"><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''}>
     <span>Apply the universal ban list to this server<small>Every honeypot catch across all MadHoney servers feeds one list. ON: users on it are banned when they join here (use "Ban from List" below to apply it retroactively). OFF: this server acts only on its own catches - which it keeps either way.</small></span></label>
@@ -379,7 +380,7 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   ${SELF_HOSTED
     ? `<label class="toggle"><input type="checkbox" name="banner_hidecredit" ${b.hideCredit ? 'checked' : ''}>
     <span>Hide the "protected by MadHoney" credit line<small>You're self-hosting, so this is your call. The credit shows as a small link on your <b>verify panel</b> (not on the honeypot banner, so the decoy stays generic).</small></span></label>`
-    : '<label><small>ℹ️ A small "protected by MadHoney" credit line is shown on your <b>verify panel</b> (not the honeypot banner). Want it gone? MadHoney is free and open - self-host it (SELF_HOSTED=true) and you can remove it.</small></label>'}
+    : ''}
   <button class="btn">Save banner</button>
 </form>
 <script>
