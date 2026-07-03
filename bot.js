@@ -13,7 +13,7 @@ import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { getGuild, saveGuild, logBan, bans, bannedElsewhere } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, grandfather, syncBans, roleColorMap, DEFAULT_VERIFY_TEXT, ASSETS_VERSION } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, ungateChannels, grandfather, syncBans, roleColorMap, DEFAULT_VERIFY_TEXT, ASSETS_VERSION } from './actions.js';
 import { startDashboard } from './dashboard.js';
 
 const EPH = { flags: MessageFlags.Ephemeral };
@@ -129,6 +129,7 @@ function deployPanel(guild) {
       new ButtonBuilder().setCustomId('mh_post_banner').setLabel('3 Post honeypot banner').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('mh_gate_dry').setLabel('4 Gate (dry run)').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('mh_gate_apply').setLabel('4 Gate APPLY').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId('mh_ungate').setLabel('↩ Restore').setStyle(ButtonStyle.Secondary),
     )] : [],
     ...EPH,
   };
@@ -304,6 +305,7 @@ client.on(Events.InteractionCreate, async (i) => {
       mh_post_banner: (g, cfg) => postBanner(g, cfg),
       mh_gate_dry: (g, cfg) => gateChannels(g, cfg, false),
       mh_gate_apply: (g, cfg) => gateChannels(g, cfg, true),
+      mh_ungate: (g, cfg) => ungateChannels(g, cfg),
     };
     if (i.isButton() && (deployActions[i.customId] || i.customId === 'mh_grandfather')) {
       const cfg = getGuild(i.guildId);

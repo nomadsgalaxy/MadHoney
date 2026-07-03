@@ -94,11 +94,20 @@ export async function gateChannels(guild, cfg, apply = false) {
     else plan[target].push(ch);
   }
 
+  // Granting the verified role View on a category cascades to its children.
+  // A private (admin/staff) channel under a gated category that only blocks
+  // @everyone would inherit that allow and become visible to verified members.
+  // Explicitly deny the verified role on those so admin channels stay hidden.
+  const gatedCatIds = new Set(plan.gate.filter((c) => c.type === ChannelType.GuildCategory).map((c) => c.id));
+  const protect = plan.skip.filter((c) => c.parentId && gatedCatIds.has(c.parentId) &&
+    !c.permissionOverwrites.cache.get(role.id)?.deny.has(PermissionFlagsBits.ViewChannel));
+
   const name = (c) => `${c.type === ChannelType.GuildCategory ? '▸' : '#'}${c.name}`;
   const lines = [
     `GATE behind "${role.name}" (${plan.gate.length}): ${plan.gate.map(name).join(', ') || '(none)'}`,
     `STAYS PUBLIC (verify gateway): ${plan.keep.map(name).join(', ') || '(none)'}`,
     `HONEYPOT (open to everyone, hidden from verified): ${plan.honeypot.map(name).join(', ') || '(none)'}`,
+    `KEEP ADMIN CHANNELS HIDDEN (${protect.length}): ${protect.map(name).join(', ') || '(none)'}`,
     `SKIP already private (${plan.skip.length})`,
   ];
   if (plan.noaccess.length) {
@@ -125,7 +134,51 @@ export async function gateChannels(guild, cfg, apply = false) {
       await ch.permissionOverwrites.edit(role, { ViewChannel: false }, { reason: 'MadHoney: hide honeypot from verified' });
     });
   }
+  for (const ch of protect) {
+    await tryEdit(ch, () => ch.permissionOverwrites.edit(role, { ViewChannel: false }, { reason: 'MadHoney: keep admin channel hidden from verified' }));
+  }
+  // Remember what we changed so "Restore" can reverse exactly these, and no
+  // admin channels we never touched.
+  saveGuild(guild.id, { gatedChannels: [...plan.gate, ...plan.keep, ...plan.honeypot, ...protect].map((c) => c.id) });
   return `Gated. ${ok} channels updated, ${failed.length} failed${plan.noaccess.length ? `, ${plan.noaccess.length} unreachable` : ''}.${failed.length ? '\nFailed: ' + failed.join(', ') : ''}\n${lines.join('\n')}`;
+}
+
+// Reverse gating: clear the ViewChannel overwrites MadHoney added on the
+// channels it gated, returning them to their pre-gate (inherited) visibility.
+// Only touches channels MadHoney recorded gating - admin channels it never
+// changed are left alone.
+export async function ungateChannels(guild, cfg) {
+  const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
+  const everyone = guild.roles.everyone;
+  let ids = cfg.gatedChannels ?? [];
+  let note = '';
+  if (!ids.length) {
+    // No record (older gate): fall back to ORPHANED channels - @everyone denied
+    // View and no role grants View, so nobody can see them (half-gate damage).
+    // Admin channels grant a mod role View, so they're left alone.
+    const channels = await guild.channels.fetch();
+    ids = channels.filter((ch) => {
+      if (!ch) return false;
+      const ow = ch.permissionOverwrites.cache;
+      const everyoneDenied = ow.get(everyone.id)?.deny.has(PermissionFlagsBits.ViewChannel);
+      const someRoleAllows = [...ow.values()].some((o) => o.id !== everyone.id && o.allow.has(PermissionFlagsBits.ViewChannel));
+      return everyoneDenied && !someRoleAllows;
+    }).map((ch) => ch.id);
+    if (!ids.length) throw new Error('Nothing to restore - no channels I gated on record, and none look orphaned.');
+    note = ' (recovered orphaned channels - no gate record existed)';
+  }
+  let ok = 0; const failed = [];
+  for (const id of ids) {
+    const ch = await guild.channels.fetch(id).catch(() => null);
+    if (!ch) continue;
+    try {
+      await ch.permissionOverwrites.edit(everyone, { ViewChannel: null, SendMessages: null }, { reason: 'MadHoney: restore pre-gate visibility' });
+      if (role) await ch.permissionOverwrites.edit(role, { ViewChannel: null }, { reason: 'MadHoney: restore pre-gate visibility' });
+      ok++;
+    } catch (e) { failed.push(`#${ch.name} (${e.message})`); }
+  }
+  saveGuild(guild.id, { gatedChannels: [] });
+  return `Restored ${ok} channels to their pre-gate visibility${note}${failed.length ? `, ${failed.length} failed: ${failed.join(', ')}` : '.'}`;
 }
 
 // Grandfather: add the verified role to every existing non-bot member so the

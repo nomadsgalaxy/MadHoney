@@ -8,7 +8,7 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, grandfather, syncBans, preflight, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, ungateChannels, grandfather, syncBans, preflight, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
 
@@ -217,6 +217,8 @@ ${[
     'Prints exactly which channels WOULD be hidden behind the verified role - changes nothing. Always run this first.'],
   ['gate_apply', 'red', '4 · Gate channels (APPLY)',
     'Does it for real: every public channel becomes visible only to verified members; the verify channel stays public (it’s the gateway); the honeypot stays open to unverified accounts but is hidden from verified ones. Already-private staff channels are untouched. Undo by editing channel permissions in Discord.'],
+  ['ungate', 'grey', '↩ Restore channels (undo gating)',
+    'Reverses the gate: clears the view overwrites MadHoney added and returns those channels to how they looked before. Only touches channels MadHoney gated - admin channels it never changed are left alone. Use this if a gate went wrong.'],
   ['ban_sync', 'grey', '5 · Ban from shared list',
     'Bans every user on the active shared ban list right now, instead of waiting for them to join. Needs ban sharing turned ON above. Users already banned here are skipped; an Undo from the log channel still reverses any of them.'],
 ].map(([val, cls, label, desc]) =>
@@ -389,6 +391,7 @@ ${[
             post_banner: () => postBanner(guild, cfg),
             gate_dry: () => gateChannels(guild, cfg, false),
             gate_apply: () => gateChannels(guild, cfg, true),
+            ungate: () => ungateChannels(guild, cfg),
           };
           const act = acts[form.get('do')];
           if (!act) return html(await guildPage(guild, sess, 'Unknown action.', 'actions'), 400);
