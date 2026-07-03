@@ -89,8 +89,11 @@ export function startDashboard(client) {
   const inviteUrl = () =>
     `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536836`;
 
-  function guildPage(guild, sess, msg = '') {
+  // `at` anchors the result: the message renders inside that card and the
+  // form's action fragment scrolls the browser back to it after a POST.
+  function guildPage(guild, sess, msg = '', at = 'top') {
     const cfg = getGuild(guild.id) ?? {};
+    const msgAt = (key) => (msg && at === key ? `<pre style="margin-top:.6rem">${esc(msg)}</pre>` : '');
     const b = { ...DEFAULT_BANNER, ...cfg.banner };
     const roles = guild.roles.cache.filter((r) => !r.managed && r.id !== guild.id)
       .sort((a, z) => z.position - a.position);
@@ -104,10 +107,10 @@ export function startDashboard(client) {
       .map((x) => `${x.at}  ${x.unbanned ? 'UNBAN' : 'ban  '}  ${esc(x.tag ?? x.id)}  ${esc(x.channel ?? '')}`).join('\n') || '(none yet)';
     return layout(`MadHoney - ${guild.name}`, `
 <h1><img src="/logo.svg?v=3" alt="MadHoney"><span>${esc(guild.name)}</span></h1>
-<p><a href="/">← servers</a></p>
-${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
-<div class="card"><h2>Configuration</h2>
-<form method="post" action="/g/${guild.id}/save">
+<p><a href="/">← servers</a> · <a href="/g/${guild.id}?refresh=1" title="Re-fetch roles, channels and members from Discord">⟳ refresh data</a></p>
+${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
+<div class="card" id="config"><h2>Configuration</h2>${msgAt('config')}
+<form method="post" action="/g/${guild.id}/save#config">
   <label>Verified role <select name="verifiedRoleId">${roleOpts(cfg.verifiedRoleId)}</select>
     <small>Granted after the captcha. Create one in Discord first if needed (e.g. "Verified"). MadHoney's own role must sit ABOVE it.</small></label>
   <label>Verify channel <select name="verifyChannelId">${chanOpts(cfg.verifyChannelId)}</select>
@@ -123,10 +126,10 @@ ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
     <small>ON: users banned by other sharing servers are auto-banned when they join yours. OFF: fully isolated.</small></label>
   <button class="btn">Save</button>
 </form></div>
-<div class="card"><h2>Honeypot banner</h2>
+<div class="card" id="banner"><h2>Honeypot banner</h2>${msgAt('banner')}
 <small>Live preview - it re-renders as you tweak. Save, then post it from Actions below.</small>
 <img class="banner" id="bannerPreview" src="/g/${guild.id}/banner.png?${Date.now()}" alt="banner preview" style="margin-top:.6rem">
-<form method="post" action="/g/${guild.id}/save" id="bannerForm">
+<form method="post" action="/g/${guild.id}/save#banner" id="bannerForm">
   <label>Headline <input type="text" name="banner_title" value="${esc(b.title)}"></label>
   <label>Body <textarea name="banner_text" rows="2">${esc(b.text)}</textarea></label>
   <div class="colors">
@@ -163,9 +166,9 @@ ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   });
 })();
 </script></div>
-<div class="card"><h2>Actions</h2>
+<div class="card" id="actions"><h2>Actions</h2>${msgAt('actions')}
 <small>Run in order 1 → 4 on first deploy. Each one is safe to re-run later.</small>
-<form method="post" action="/g/${guild.id}/action">
+<form method="post" action="/g/${guild.id}/action#actions">
 ${[
   ['grandfather', 'grey', '1 · Grandfather members',
     'Gives the verified role to every human already in the server, so gating never locks out existing members. Bots are skipped, members who already have the role are skipped. Needs MadHoney’s role positioned ABOVE the verified role.'],
@@ -296,7 +299,7 @@ ${[
               if (form.has(`banner_${k}`)) banner[k] = form.get(`banner_${k}`).trim();
             }
             saveGuild(guild.id, { banner });
-            return html(guildPage(guild, sess, 'Banner saved. Post it from Actions (or /madhoney deploy in Discord).'));
+            return html(guildPage(guild, sess, 'Banner saved. Post it from Actions (or /madhoney deploy in Discord).', 'banner'));
           }
           const patch = {};
           for (const k of ['verifiedRoleId', 'staffRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText']) {
@@ -304,16 +307,16 @@ ${[
           }
           patch.banShare = form.get('banShare') === 'on';
           if (patch.verifyChannelId && patch.verifyChannelId === patch.honeypotChannelId) {
-            return html(guildPage(guild, sess, '❌ Verify and honeypot must be different channels - not saved.'));
+            return html(guildPage(guild, sess, '❌ Verify and honeypot must be different channels - not saved.', 'config'));
           }
           saveGuild(guild.id, patch);
-          return html(guildPage(guild, sess, 'Saved.'));
+          return html(guildPage(guild, sess, 'Saved.', 'config'));
         }
         if (m[2] === '/action' && req.method === 'POST') {
           const form = await body(req);
           const cfg = getGuild(guild.id);
           if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
-            return html(guildPage(guild, sess, '❌ Finish configuration first (role + both channels).'));
+            return html(guildPage(guild, sess, '❌ Finish configuration first (role + both channels).', 'actions'));
           }
           const acts = {
             post_verify: () => postVerifyPanel(guild, cfg),
@@ -323,9 +326,13 @@ ${[
             grandfather: () => grandfather(guild, cfg),
           };
           const act = acts[form.get('do')];
-          if (!act) return html(guildPage(guild, sess, 'Unknown action.'), 400);
+          if (!act) return html(guildPage(guild, sess, 'Unknown action.', 'actions'), 400);
           const result = await act().catch((e) => `❌ ${e.message}`);
-          return html(guildPage(guild, sess, result));
+          return html(guildPage(guild, sess, result, 'actions'));
+        }
+        if (url.searchParams.get('refresh')) {
+          await Promise.all([guild.roles.fetch(), guild.channels.fetch()]).catch(() => {});
+          return html(guildPage(guild, sess, 'Refreshed roles and channels from Discord.'));
         }
         return html(guildPage(guild, sess));
       }
