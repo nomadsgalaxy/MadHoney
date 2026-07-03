@@ -137,9 +137,8 @@ export async function classifyChannels(guild, cfg) {
         ch.permissionOverwrites.cache.get(r.id)?.allow.has(PermissionFlagsBits.ViewChannel));
       kind = adminRoleSees ? 'admin' : 'private';
     }
-    list.push({ id: ch.id, name: ch.name, kind, isCategory: ch.type === ChannelType.GuildCategory, parentId: ch.parentId, canManage });
+    list.push({ id: ch.id, name: ch.name, kind, isCategory: ch.type === ChannelType.GuildCategory, parentId: ch.parentId, position: ch.rawPosition ?? 0, canManage });
   }
-  // stable order: categories keep their children grouped by Discord position
   return list;
 }
 
@@ -157,26 +156,30 @@ export async function classifyChannels(guild, cfg) {
 //  2. VISIBILITY: a channel already hidden from @everyone that the bot has no
 //     override on is invisible to the bot - it can't edit what it can't see.
 //     Report those as needs-access instead of failing mid-edit.
-export async function gateChannels(guild, cfg, apply = false, only = null) {
+// `sel` selects what to do with each channel:
+//   null                 -> gate every currently-public channel (blanket)
+//   [id, id, ...]         -> gate exactly these (legacy)
+//   { gate:[], public:[] } -> gate these, force-public these, leave the rest
+export async function gateChannels(guild, cfg, apply = false, sel = null) {
   const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
   if (!role) throw new Error('Verified role not found - re-run setup.');
   const everyone = guild.roles.everyone;
   const me = await guild.members.fetchMe();
   const channels = await guild.channels.fetch();
-  const pick = only ? new Set(only) : null;
+  const gateSet = sel ? new Set(Array.isArray(sel) ? sel : sel.gate ?? []) : null;
+  const publicSet = new Set(!sel || Array.isArray(sel) ? [] : sel.public ?? []);
 
   const plan = { gate: [], keep: [], honeypot: [], skip: [], noaccess: [] };
   for (const ch of channels.values()) {
     if (!ch) continue;
-    // With an explicit selection, gate exactly the chosen channels; otherwise
-    // fall back to "every currently-public channel".
-    const wantGate = pick ? pick.has(ch.id) : ch.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel);
+    const wantGate = gateSet ? gateSet.has(ch.id) : ch.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel);
     const target = ch.id === cfg.honeypotChannelId ? 'honeypot'
       : ch.id === cfg.verifyChannelId ? 'keep'
       : wantGate ? 'gate'
+      : publicSet.has(ch.id) ? 'keep' // explicitly forced back to public
       : 'skip';
     // The bot must be able to see AND manage roles on a channel to gate it.
-    if (target !== 'skip' && !ch.permissionsFor(me).has(PermissionFlagsBits.ViewChannel)) plan.noaccess.push(ch);
+    if ((target === 'gate' || target === 'keep') && !ch.permissionsFor(me).has(PermissionFlagsBits.ViewChannel)) plan.noaccess.push(ch);
     else plan[target].push(ch);
   }
 
@@ -223,9 +226,17 @@ export async function gateChannels(guild, cfg, apply = false, only = null) {
   for (const ch of protect) {
     await tryEdit(ch, () => ch.permissionOverwrites.edit(role, { ViewChannel: false }, { reason: 'MadHoney: keep admin channel hidden from verified' }));
   }
-  // Remember what we changed so "Restore" can reverse exactly these, and no
-  // admin channels we never touched.
-  saveGuild(guild.id, { gatedChannels: [...plan.gate, ...plan.keep, ...plan.honeypot, ...protect].map((c) => c.id) });
+  // Remember what we changed (for Restore) and how each channel was treated,
+  // so a future re-scan reflects the admin's manual moves instead of just the
+  // auto-detection.
+  const treatment = { ...cfg.channelTreatment };
+  for (const c of plan.gate) treatment[c.id] = 'gate';
+  for (const c of plan.keep) if (c.id !== cfg.verifyChannelId) treatment[c.id] = 'public';
+  for (const c of plan.skip) treatment[c.id] = 'leave';
+  saveGuild(guild.id, {
+    gatedChannels: [...plan.gate, ...plan.keep, ...plan.honeypot, ...protect].map((c) => c.id),
+    channelTreatment: treatment,
+  });
   return `Gated. ${ok} channels updated, ${failed.length} failed${plan.noaccess.length ? `, ${plan.noaccess.length} unreachable` : ''}.${failed.length ? '\nFailed: ' + failed.join(', ') : ''}\n${lines.join('\n')}`;
 }
 

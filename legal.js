@@ -71,8 +71,8 @@ dashboard at madhoney.nomadsgalaxy.com, operated by Nomads Galaxy.</small></p>
 <h2>What we store</h2>
 <p>Two files, and that's the whole database:</p>
 <p><b>Server configuration</b> - for each server: the chosen role and channel
-IDs, your verify message, banner design settings, and whether ban sharing is
-on.</p>
+IDs, your verify message, banner design settings, your per-channel gating
+choices, and whether ban sharing is on.</p>
 <p><b>Ban log</b> - when the honeypot bans someone (or an admin undoes a
 ban): the Discord user ID, username, server ID, channel name, and timestamp.
 Ban entries are what powers the log channel, the dashboard's ban list, and

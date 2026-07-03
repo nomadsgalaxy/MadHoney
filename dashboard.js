@@ -99,20 +99,25 @@ function layout(title, body) {
   .badge.ban{background:rgba(214,69,69,.16);color:#ff8a7d}
   .badge.un{background:rgba(123,216,143,.14);color:#7bd88f}
   .empty{color:var(--dim);padding:.4rem 0}
-  /* gate picker */
-  .clist{margin:.3rem 0 0}
-  .crow{display:flex;align-items:center;gap:.6rem;padding:.32rem .5rem;border-radius:7px;font-weight:500}
-  .crow:hover{background:#0f1216}
-  .crow input{width:17px;height:17px;accent-color:var(--honey);flex:0 0 auto;margin:0}
-  .crow.cat{font-weight:700;color:var(--ink);margin-top:.3rem}
-  .crow.disabled{opacity:.5}
-  .gsec{border:1px solid var(--line);border-radius:11px;padding:.8rem 1rem;margin:.9rem 0}
-  .gsec>.gh{display:flex;justify-content:space-between;align-items:center;gap:.6rem}
-  .gsec .gh b{font-family:"Bricolage Grotesque",sans-serif}
-  .gsec .toggle-all{font-size:.8rem;color:var(--honey);cursor:pointer;background:none;border:0;font-weight:600}
-  .gsec small{margin:.15rem 0 .4rem}
-  .gsec.pub{border-color:rgba(255,179,26,.35)}
-  .gsec.adm{border-color:rgba(214,69,69,.4)}
+  /* gate board */
+  .legend{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;color:var(--dim);font-size:.82rem;margin:.2rem 0 .8rem}
+  .kdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 .15rem 0 .6rem;vertical-align:middle}
+  .kdot:first-child{margin-left:0}
+  .kdot.public{background:#ffb31a}.kdot.private{background:#6c7683}.kdot.admin{background:#d64545}
+  .board{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:.4rem 0}
+  @media(max-width:720px){.board{grid-template-columns:1fr}}
+  .zcol{background:#0f1216;border:1px solid var(--line);border-radius:11px;padding:.6rem .7rem;display:flex;flex-direction:column}
+  .zcol .zh b{font-family:"Bricolage Grotesque",sans-serif;font-size:.95rem}
+  .zcol small{margin:.1rem 0 .5rem;min-height:2.4em}
+  .drop{flex:1;min-height:90px;border:1.5px dashed var(--line);border-radius:9px;padding:.4rem;display:flex;flex-direction:column;gap:.35rem;transition:border-color .12s,background .12s}
+  .drop.over{border-color:var(--honey);background:rgba(255,179,26,.06)}
+  .zempty{color:var(--dim);font-size:.8rem;text-align:center;padding:1.2rem .5rem}
+  .chip2{display:flex;align-items:center;gap:.4rem;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.35rem .5rem;font-size:.85rem;cursor:grab;user-select:none}
+  .chip2:hover{border-color:var(--honey)}
+  .chip2.iscat{background:#171b22;font-weight:700}
+  .chip2.dragging{opacity:.4}
+  .chip2 .cn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chip2 .ctag{font-size:.62rem;letter-spacing:.04em;color:var(--dim);text-transform:uppercase;flex:0 0 auto;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .info{display:flex;gap:.6rem;align-items:center;padding:.3rem .5rem;color:var(--dim)}
   .stripes{height:12px;border-radius:4px;background:repeating-linear-gradient(-45deg,var(--honey) 0 18px,#111 18px 36px);margin-bottom:1.1rem}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
@@ -325,48 +330,85 @@ ${recent ? `<table class="btable">${recent}</table>` : '<div class="empty">No ba
         <div class="crumbs"><a href="/g/${guild.id}">← ${esc(guild.name)}</a></div></div></div>
         <div class="card"><p>Finish <a href="/g/${guild.id}#config">configuration</a> first - I need the verified role, verify channel and honeypot channel.</p></div>`);
     }
-    const chans = await classifyChannels(guild, cfg);
-    const gated = new Set(cfg.gatedChannels ?? []);
-    const firstRun = gated.size === 0;
+    const chans = (await classifyChannels(guild, cfg)).sort((a, z) => a.position - z.position);
+    const override = cfg.channelTreatment ?? {};
+    // Default zone from detection, then apply the admin's saved manual moves.
+    const defaultZone = (c) => (c.kind === 'public' ? 'gate' : 'leave');
+    const zoneOf = (c) => override[c.id] ?? defaultZone(c);
 
-    const row = (c, defChecked) => {
-      const checked = c.canManage && (firstRun ? defChecked : gated.has(c.id)) ? 'checked' : '';
-      const badge = !c.canManage ? ' <span class="badge ban">can\'t access</span>' : '';
-      return `<label class="crow ${c.isCategory ? 'cat' : ''} ${c.canManage ? '' : 'disabled'}">
-        <input type="checkbox" name="ch" value="${c.id}" ${checked} ${c.canManage ? '' : 'disabled'}>
-        <span>${c.isCategory ? '▸ ' : '# '}${esc(c.name)}${badge}</span></label>`;
-    };
-    const section = (cls, title, hint, kind, defChecked) => {
-      const items = chans.filter((c) => c.kind === kind);
-      if (!items.length) return '';
-      return `<div class="gsec ${cls}"><div class="gh"><b>${title} <span class="count">${items.length}</span></b>
-        <button type="button" class="toggle-all" data-kind="${kind}">toggle all</button></div>
-        <small>${hint}</small><div class="clist" data-kind="${kind}">${items.map((c) => row(c, defChecked)).join('')}</div></div>`;
-    };
     const verify = chans.find((c) => c.kind === 'verify');
     const honeypot = chans.find((c) => c.kind === 'honeypot');
+    const draggable = chans.filter((c) => c.kind !== 'verify' && c.kind !== 'honeypot' && c.canManage);
+    const locked = chans.filter((c) => !c.canManage && c.kind !== 'verify' && c.kind !== 'honeypot');
+
+    const catName = (id) => chans.find((c) => c.id === id)?.name;
+    const chip = (c) => {
+      const tag = c.isCategory ? '<span class="ctag">CATEGORY</span>'
+        : c.parentId ? `<span class="ctag">${esc(catName(c.parentId) ?? '')}</span>` : '';
+      const kindDot = `<span class="kdot ${c.kind}" title="detected: ${c.kind}"></span>`;
+      return `<div class="chip2 ${c.isCategory ? 'iscat' : ''}" draggable="true" data-id="${c.id}" data-cat="${c.parentId ?? ''}" data-type="${c.isCategory ? 'category' : 'channel'}" data-kind="${c.kind}">${kindDot}<span class="cn">${c.isCategory ? '▸ ' : '# '}${esc(c.name)}</span>${tag}</div>`;
+    };
+    const zone = (id, title, hint) =>
+      `<div class="zcol"><div class="zh"><b>${title}</b></div><small>${hint}</small>
+        <div class="drop" data-zone="${id}">${draggable.filter((c) => zoneOf(c) === id).map(chip).join('') || '<div class="zempty">drag channels here</div>'}</div></div>`;
 
     return layout(`MadHoney - Gate ${guild.name}`, `
 <div class="ghead"><div class="gtitle"><h1>Gate channels</h1>
   <div class="crumbs"><a href="/g/${guild.id}">← ${esc(guild.name)}</a> · <a href="/g/${guild.id}/gate">⟳ re-scan</a></div></div></div>
 ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <div class="card">
-<p>MadHoney scanned this server and sorted every channel below. <b>Tick the ones to hide behind the verified role</b> (public channels are pre-selected). Unticked channels are left exactly as they are. When applied: verify stays public, the honeypot stays open to unverified, and any admin channel under a gated category is explicitly kept hidden.</p>
-<form method="post" action="/g/${guild.id}/gate">
-${section('pub', '🌐 Public channels', 'Standard channels anyone can currently see. These are what you normally gate.', 'public', true)}
-${section('', '🔒 Private / restricted', 'Already hidden from @everyone (not admin). Usually leave these alone - tick only if you want the verified role added.', 'private', false)}
-${section('adm', '🛡️ Admin / staff channels', 'Hidden from @everyone AND a mod/staff role can see them. Leave unticked unless you know what you\'re doing.', 'admin', false)}
-<div class="info">✅ Verify gateway (stays public): <b style="color:var(--ink);margin-left:.3rem">#${verify ? esc(verify.name) : '?'}</b></div>
+<p><b>Drag channels between the columns</b> to choose what MadHoney does with each (or tap a channel to cycle it). The colored dot shows what MadHoney auto-detected - if it guessed wrong, just move the channel. <b>Dragging a category moves all its channels with it</b>, like Discord. Your moves are saved, so the next scan remembers them.</p>
+<div class="legend"><span class="kdot public"></span>public <span class="kdot private"></span>private <span class="kdot admin"></span>admin/staff</div>
+<form method="post" action="/g/${guild.id}/gate" id="gateForm">
+<div class="board">
+  ${zone('gate', '🔒 Gate', 'Hidden behind the verified role. Unverified accounts can\'t see these.')}
+  ${zone('public', '🌐 Keep public', 'Stays visible to everyone, verified or not.')}
+  ${zone('leave', '⬜ Leave as-is', 'MadHoney won\'t touch these at all.')}
+</div>
+<div class="info">✅ Verify gateway (always public): <b style="color:var(--ink);margin-left:.3rem">#${verify ? esc(verify.name) : '?'}</b></div>
 <div class="info">🍯 Honeypot (open to unverified, hidden from verified): <b style="color:var(--ink);margin-left:.3rem">#${honeypot ? esc(honeypot.name) : '?'}</b></div>
-<button class="btn" style="margin-top:1rem">Apply gating to selected</button>
+${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access ${locked.length} channel(s) (hidden from me): ${locked.map((c) => '#' + esc(c.name)).join(', ')}. Grant the MadHoney role View there, or temporarily give it Administrator.</div>` : ''}
+<button class="btn" style="margin-top:1rem">Apply</button>
 <a class="btn grey" href="/g/${guild.id}" style="margin-top:1rem">Cancel</a>
-</form></div>
+</form>
+<form method="post" action="/g/${guild.id}/gate" style="margin-top:.4rem"><input type="hidden" name="do" value="reset">
+  <button class="btn grey" style="background:none;box-shadow:none;color:var(--dim);padding-left:0">↺ Reset to auto-detected</button></form>
+</div>
 <script>
-document.querySelectorAll('.toggle-all').forEach((b) => b.addEventListener('click', () => {
-  const boxes = [...document.querySelectorAll('.clist[data-kind="' + b.dataset.kind + '"] input:not([disabled])')];
-  const anyOff = boxes.some((x) => !x.checked);
-  boxes.forEach((x) => { x.checked = anyOff; });
-}));
+(() => {
+  let drag;
+  const wire = (c) => {
+    c.addEventListener('dragstart', () => { drag = c; setTimeout(() => c.classList.add('dragging'), 0); });
+    c.addEventListener('dragend', () => { c.classList.remove('dragging'); drag = null; });
+    c.addEventListener('click', () => { // tap-to-cycle (touch fallback)
+      const zones = ['gate', 'public', 'leave'];
+      const cur = c.closest('.drop').dataset.zone;
+      moveTo(c, document.querySelector('.drop[data-zone="' + zones[(zones.indexOf(cur) + 1) % 3] + '"]'));
+    });
+  };
+  const moveTo = (c, dropzone) => {
+    dropzone.querySelector('.zempty')?.remove();
+    dropzone.appendChild(c);
+    if (c.dataset.type === 'category') // categories carry their channels, like Discord
+      document.querySelectorAll('.chip2[data-cat="' + c.dataset.id + '"]').forEach((ch) => dropzone.appendChild(ch));
+  };
+  document.querySelectorAll('.chip2').forEach(wire);
+  document.querySelectorAll('.drop').forEach((z) => {
+    z.addEventListener('dragover', (e) => { e.preventDefault(); z.classList.add('over'); });
+    z.addEventListener('dragleave', () => z.classList.remove('over'));
+    z.addEventListener('drop', (e) => { e.preventDefault(); z.classList.remove('over'); if (drag) moveTo(drag, z); });
+  });
+  document.getElementById('gateForm').addEventListener('submit', () => {
+    document.querySelectorAll('input.zin').forEach((i) => i.remove());
+    for (const zn of ['gate', 'public']) {
+      document.querySelectorAll('.drop[data-zone="' + zn + '"] .chip2').forEach((c) => {
+        const i = document.createElement('input');
+        i.type = 'hidden'; i.className = 'zin'; i.name = zn; i.value = c.dataset.id;
+        document.getElementById('gateForm').appendChild(i);
+      });
+    }
+  });
+})();
 </script>`);
   }
 
@@ -560,8 +602,11 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
           const cfg = getGuild(guild.id);
           if (req.method === 'POST') {
             const form = await body(req);
-            const ids = form.getAll('ch');
-            const result = await gateChannels(guild, cfg, true, ids).catch((e) => `❌ ${e.message}`);
+            if (form.get('do') === 'reset') {
+              saveGuild(guild.id, { channelTreatment: {} });
+              return html(await gatePage(guild, sess, 'Cleared manual moves - channels are back to auto-detected placement.'));
+            }
+            const result = await gateChannels(guild, cfg, true, { gate: form.getAll('gate'), public: form.getAll('public') }).catch((e) => `❌ ${e.message}`);
             return html(await gatePage(guild, sess, result));
           }
           return html(await gatePage(guild, sess));

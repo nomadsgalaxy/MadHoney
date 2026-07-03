@@ -27,7 +27,10 @@ OCL v1.1 + SWAtt.
    with Manage Server are always exempt) and a log channel where each ban is
    reported with an Undo button.
 4. Optionally design the warning image with `/madhoney banner` (title, text,
-   colors, font, your logo).
+   colors, font, your logo). On the dashboard, the gate step opens a
+   drag-and-drop board: MadHoney classifies each channel (public / private /
+   admin) and you drag any it misjudged into the right column. Your moves are
+   saved and reused on the next scan.
 5. Run `/madhoney deploy` and click through in order: grandfather existing
    members, post the Verify panel, post the banner, then gate the channels.
    Gating has a dry run; nothing changes until you hit APPLY.
