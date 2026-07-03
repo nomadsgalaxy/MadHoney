@@ -26,8 +26,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 function layout(title, body, opts = {}) {
   const invite = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536852`;
   const navRight = opts.user
-    ? `<span class="navuser">${esc(opts.user)}</span><a href="/logout">Log out</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add server</a>`
-    : `<a href="/login">Log in</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add to Discord</a>`;
+    ? `<span class="navuser">${esc(opts.user)}</span><a href="/logout">Log out</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add<span class="lg"> server</span></a>`
+    : `<a href="/login">Log in</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add<span class="lg"> to Discord</span></a>`;
   return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
 <link rel="icon" href="/logo.svg?v=3" type="image/svg+xml">
@@ -48,10 +48,11 @@ function layout(title, body, opts = {}) {
   nav .wm img{height:26px;width:auto}
   nav .wm b{color:var(--honey)}
   nav .navr{margin-left:auto;display:flex;align-items:center;gap:.9rem;font-size:.9rem;min-width:0}
-  nav .navr>a{color:var(--dim)} nav .navr>a:hover{color:var(--ink);text-decoration:none}
+  nav .navr>a{color:var(--dim);white-space:nowrap} nav .navr>a:hover{color:var(--ink);text-decoration:none}
+  nav .navr .btn.sm{white-space:nowrap}
   nav .navuser{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:12ch}
   .navtape{height:5px;background:repeating-linear-gradient(-45deg,var(--honey) 0 14px,#101010 14px 28px)}
-  @media(max-width:520px){nav .navuser{display:none} nav .navr{gap:.7rem}}
+  @media(max-width:520px){nav .navuser{display:none} nav .navr{gap:.7rem} nav .navr .lg{display:none} nav .nin{gap:.5rem} nav .wm span{display:none}}
   a{color:var(--honey);text-decoration:none} a:hover{text-decoration:underline}
   h1,h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;line-height:1.2;letter-spacing:-.02em} h1 span{color:var(--honey)}
   h1 img{height:38px;vertical-align:-8px;margin-right:.4rem}
@@ -71,6 +72,7 @@ function layout(title, body, opts = {}) {
   .btn{display:inline-block;padding:.55rem 1.1rem;border:0;border-radius:7px;background:var(--honey);color:#141005;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;margin:.2rem .3rem .2rem 0;transition:transform .12s}
   .btn:hover{transform:translateY(-1px);text-decoration:none}
   .btn.grey{background:#39414c;color:var(--ink)} .btn.red{background:#d64545;color:#fff}
+  .btn.sm{padding:.42rem .85rem;font-size:.85rem}
   pre{background:#0f1216;border:1px solid var(--line);padding:.8rem;border-radius:7px;white-space:pre-wrap;overflow-x:auto}
   progress{width:100%;height:14px;accent-color:var(--honey);margin-top:.6rem}
   .slist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.7rem;list-style:none;padding:0;margin:.4rem 0 0}
