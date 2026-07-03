@@ -28,5 +28,39 @@
   },
   "common": {
     "broke": "Něco se pokazilo - zkus to znovu."
+  },
+  "reply": {
+    "needManageServer": "Pro ovládání MadHoney potřebuješ oprávnění **Spravovat server**.",
+    "noHoneypotYet": "Zatím není nastavený žádný honeypot kanál - nejdřív spusť `/madhoney setup`.",
+    "banshareOn": "🌐 **Sdílení banů ZAPNUTO** - uživatelé na univerzálním seznamu banů MadHoney (chycení honeypotem kteréhokoli serveru) jsou při připojení sem automaticky zabanováni. Spusť `/madhoney bansync`, abys zabanoval(a) i všechny, kdo už na seznamu jsou.",
+    "banshareOff": "🔒 **Izolováno** - tento server reaguje jen na vlastní úlovky honeypotu. (Tvoje úlovky ale nadále doplňují univerzální seznam pro servery, které se zapojí.)",
+    "modeArmed": "🍯 **Honeypot je nastražen.** Účty, které něco napíší do honeypotu, jsou okamžitě zabanovány.",
+    "modeReview": "⏸ **Honeypot nastaven na pozdržení ke kontrole.** Příspěvky v honeypotu se místo okamžitého banu nahlásí do tvého log kanálu s tlačítky Zabanovat / Zamítnout - rozhodne moderátor. Nedoporučuje se pro rušné servery a vyžaduje to nastavený log kanál.",
+    "modeDisarmed": "⭘ **Honeypot je vypnut.** Past je vypnutá - dokud ji znovu nenastražíš, nikdo nedostane ban.",
+    "modeReviewNoLog": "⚠️ Nemáš nastavený žádný log kanál, takže pozdržené příspěvky nemají kam jít. Nastav ho v sekci **Tým a log**.",
+    "unbanFailed": "Zrušení banu selhalo: {error}",
+    "banFailed": "Ban selhal: {error}"
+  },
+  "log": {
+    "reportBanned": "🍯 **Následující zpráva byla napsána do honeypotu** (<#{channel}>) **a uživatel byl zabanován.**",
+    "reportFailed": "🍯 **Následující zpráva byla napsána do honeypotu** (<#{channel}>) **a uživatel ⚠️ NEBYL zabanován (ban selhal - zkontroluj má oprávnění).**",
+    "user": "**Uživatel:** {tag} (`{id}`)",
+    "undoBtn": "Vrátit zpět - zrušit ban tohoto uživatele",
+    "reviewHeld": "⏸ **Pozdrženo ke kontrole.** {tag} (`{id}`) napsal(a) do honeypotu (<#{channel}>). **Zatím nebyl nikdo zabanován.**",
+    "jump": "[Přejít na zprávu]({url})",
+    "attach": "📎 {names}",
+    "banBtn": "Zabanovat",
+    "dismissBtn": "Zamítnout (žádná akce)",
+    "banshareReport": "🌐 **Automaticky zabanován při připojení** - tento uživatel je na univerzálním seznamu banů MadHoney (chycen honeypotem jiného serveru).",
+    "webhookAlert": "🪝 **Do honeypotu napsal webhook** (<#{channel}>) a jeho zpráva byla smazána. Webhooky nejsou členové, takže je nelze zabanovat - otevři **Nastavení serveru → Integrace → Webhooky** a smaž ty, které nepoznáváš.",
+    "appealForward": "📩 **Odvolání proti banu** - <@{id}> ({tag}, `{id}`) byl zabanován honeypotem a žádá tě, aby ses na to znovu podíval(a).",
+    "approveBtn": "Schválit a znovu pozvat",
+    "denyBtn": "Zamítnout",
+    "unbannedBy": "✅ **Ban zrušen** uživatelem {mod} - může se znovu připojit (pošli mu novou pozvánku; sdílení banů ho znovu nezabanuje).",
+    "bannedBy": "🔨 **Zabanován** uživatelem {mod}.",
+    "dismissedBy": "☑️ **Zamítnuto** uživatelem {mod} - žádná akce nebyla provedena.",
+    "approvedReinvited": "✅ **Schváleno** uživatelem {mod} - ban zrušen a znovu pozván.",
+    "approvedNoInvite": "✅ **Schváleno** uživatelem {mod} - ban zrušen (nepodařilo se automaticky vytvořit pozvánku).",
+    "deniedBy": "❌ **Zamítnuto** uživatelem {mod}."
   }
 }

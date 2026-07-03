@@ -28,5 +28,39 @@
   },
   "common": {
     "broke": "Något gick fel - försök igen."
+  },
+  "reply": {
+    "needManageServer": "Du behöver **Hantera server** för att använda MadHoney-kontrollerna.",
+    "noHoneypotYet": "Ingen honeypot-kanal är inställd än - kör `/madhoney setup` först.",
+    "banshareOn": "🌐 **Bandelning PÅ** - användare på den universella MadHoney-banlistan (fångade av någon servers honeypot) bannas automatiskt när de går med här. Kör `/madhoney bansync` för att även banna alla som redan finns på listan.",
+    "banshareOff": "🔒 **Isolerad** - den här servern agerar bara på sina egna honeypot-fångster. (Dina fångster matar fortfarande den universella listan för servrar som väljer att delta.)",
+    "modeArmed": "🍯 **Honeypot aktiverad.** Konton som postar i honeypotten bannas omedelbart.",
+    "modeReview": "⏸ **Honeypot inställd på att hållas för granskning.** Honeypot-inlägg rapporteras till din loggkanal med knapparna Banna / Avfärda i stället för en omedelbar banning - en moderator avgör. Rekommenderas inte för livliga servrar, och det kräver att en loggkanal är inställd.",
+    "modeDisarmed": "⭘ **Honeypot avaktiverad.** Fällan är av - ingen bannas förrän du aktiverar den igen.",
+    "modeReviewNoLog": "⚠️ Du har ingen loggkanal inställd, så hållna inlägg har ingenstans att ta vägen. Ställ in en under **Personal & logg**.",
+    "unbanFailed": "Avbanning misslyckades: {error}",
+    "banFailed": "Banning misslyckades: {error}"
+  },
+  "log": {
+    "reportBanned": "🍯 **Följande meddelande postades i honeypotten** (<#{channel}>) **och användaren har bannats.**",
+    "reportFailed": "🍯 **Följande meddelande postades i honeypotten** (<#{channel}>) **och användaren har ⚠️ INTE bannats (banning misslyckades - kontrollera mina behörigheter).**",
+    "user": "**Användare:** {tag} (`{id}`)",
+    "undoBtn": "Ångra - avbanna den här användaren",
+    "reviewHeld": "⏸ **Hålls för granskning.** {tag} (`{id}`) postade i honeypotten (<#{channel}>). **Ingen har bannats än.**",
+    "jump": "[Hoppa till meddelande]({url})",
+    "attach": "📎 {names}",
+    "banBtn": "Banna",
+    "dismissBtn": "Avfärda (ingen åtgärd)",
+    "banshareReport": "🌐 **Automatiskt bannad vid anslutning** - den här användaren finns på den universella MadHoney-banlistan (fångad av en annan servers honeypot).",
+    "webhookAlert": "🪝 **En webhook postade i honeypotten** (<#{channel}>) och dess meddelande raderades. Webhooks är inte medlemmar, så de kan inte bannas - öppna **Serverinställningar → Integrationer → Webhooks** och radera alla du inte känner igen.",
+    "appealForward": "📩 **Överklagan av banning** - <@{id}> ({tag}, `{id}`) bannades av honeypotten och ber dig att titta på det igen.",
+    "approveBtn": "Godkänn & bjud in igen",
+    "denyBtn": "Neka",
+    "unbannedBy": "✅ **Avbannad** av {mod} - de kan gå med igen (skicka dem en ny inbjudan; bandelning bannar dem inte på nytt).",
+    "bannedBy": "🔨 **Bannad** av {mod}.",
+    "dismissedBy": "☑️ **Avfärdad** av {mod} - ingen åtgärd vidtogs.",
+    "approvedReinvited": "✅ **Godkänd** av {mod} - avbannad och inbjuden igen.",
+    "approvedNoInvite": "✅ **Godkänd** av {mod} - avbannad (kunde inte skapa en inbjudan automatiskt).",
+    "deniedBy": "❌ **Nekad** av {mod}."
   }
 }

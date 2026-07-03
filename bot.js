@@ -278,10 +278,10 @@ client.on(Events.InteractionCreate, async (i) => {
         }
         const log = await guild.channels.fetch(cfg.logChannelId);
         await log.send({
-          content: `📩 **Ban appeal** - <@${i.user.id}> (${i.user.tag}, \`${i.user.id}\`) was banned by the honeypot and is asking you to take another look.`,
+          content: t('log.appealForward', loc, { id: i.user.id, tag: i.user.tag }),
           components: [new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId(`mh_appok_${gid}_${i.user.id}`).setLabel('Approve & re-invite').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId(`mh_appno_${gid}_${i.user.id}`).setLabel('Deny').setStyle(ButtonStyle.Danger),
+            new ButtonBuilder().setCustomId(`mh_appok_${gid}_${i.user.id}`).setLabel(t('log.approveBtn', loc)).setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`mh_appno_${gid}_${i.user.id}`).setLabel(t('log.denyBtn', loc)).setStyle(ButtonStyle.Danger),
           )],
         });
         recordAppeal(i.user.id, gid, epoch); // persist ONLY after it actually reached the mod team
@@ -297,7 +297,7 @@ client.on(Events.InteractionCreate, async (i) => {
     if (!i.inGuild()) return;
     const admin = i.isChatInputCommand() || i.customId?.startsWith('mh_');
     if (admin && !isManager(i)) {
-      if (i.isRepliable()) return i.reply({ content: 'You need **Manage Server** to use MadHoney controls.', ...EPH });
+      if (i.isRepliable()) return i.reply({ content: t('reply.needManageServer', getGuild(i.guildId)?.locale), ...EPH });
       return;
     }
 
@@ -315,12 +315,7 @@ client.on(Events.InteractionCreate, async (i) => {
       if (sub === 'banshare') {
         const shared = i.options.getString('mode') === 'shared';
         saveGuild(i.guildId, { banShare: shared });
-        return i.reply({
-          content: shared
-            ? '🌐 **Ban sharing ON** - users on the universal MadHoney ban list (caught by any server\'s honeypot) are auto-banned when they join here. Run `/madhoney bansync` to also ban everyone already on the list.'
-            : '🔒 **Isolated** - this server acts only on its own honeypot catches. (Your catches still feed the universal list for servers that opt in.)',
-          ...EPH,
-        });
+        return i.reply({ content: t(shared ? 'reply.banshareOn' : 'reply.banshareOff', getGuild(i.guildId)?.locale), ...EPH });
       }
       if (sub === 'bansync') {
         await i.deferReply(EPH);
@@ -338,17 +333,14 @@ client.on(Events.InteractionCreate, async (i) => {
       if (sub === 'arm' || sub === 'disarm' || sub === 'honeypot') {
         const mode = sub === 'arm' ? 'armed' : sub === 'disarm' ? 'disarmed' : i.options.getString('mode');
         const cfgNow = getGuild(i.guildId) ?? {};
+        const loc = cfgNow.locale;
         if (mode !== 'disarmed' && !cfgNow.honeypotChannelId) {
-          return i.reply({ content: 'No honeypot channel set yet - run `/madhoney setup` first.', ...EPH });
+          return i.reply({ content: t('reply.noHoneypotYet', loc), ...EPH });
         }
         saveGuild(i.guildId, { honeypotMode: mode });
-        const msg = {
-          armed: '🍯 **Honeypot armed.** Accounts that post in the honeypot are banned immediately.',
-          review: '⏸ **Honeypot set to hold for review.** Honeypot posts are reported to your log channel with Ban / Dismiss buttons instead of an instant ban - a mod decides. Not recommended for busy servers, and it needs a log channel set.',
-          disarmed: '⭘ **Honeypot disarmed.** The trap is off - nobody gets banned until you arm it again.',
-        }[mode];
-        const warn = mode === 'review' && !cfgNow.logChannelId ? '\n⚠️ You have no log channel set, so held posts have nowhere to go. Set one under **Staff & log**.' : '';
-        return i.reply({ content: msg + warn, ...EPH });
+        const msg = { armed: 'reply.modeArmed', review: 'reply.modeReview', disarmed: 'reply.modeDisarmed' }[mode];
+        const warn = mode === 'review' && !cfgNow.logChannelId ? '\n' + t('reply.modeReviewNoLog', loc) : '';
+        return i.reply({ content: t(msg, loc) + warn, ...EPH });
       }
       if (sub === 'banner') {
         const prev = getGuild(i.guildId)?.banner ?? {};
@@ -403,15 +395,16 @@ client.on(Events.InteractionCreate, async (i) => {
     // Unban button on a log-channel ban report
     if (i.isButton() && i.customId.startsWith('mh_unban_')) {
       const userId = i.customId.slice('mh_unban_'.length);
+      const uloc = getGuild(i.guildId)?.locale;
       try {
         await i.guild.bans.remove(userId, `MadHoney: unbanned by ${i.user.tag} via log channel`);
       } catch (e) {
-        return i.reply({ content: `Unban failed: ${e.message}`, ...EPH });
+        return i.reply({ content: t('reply.unbanFailed', uloc, { error: e.message }), ...EPH });
       }
       // reversal entry so ban-sharing servers stop acting on this ban
       logBan({ id: userId, guildId: i.guildId, channel: '(unban)', at: new Date().toISOString(), unbanned: true });
       return i.update({
-        content: i.message.content + `\n✅ **Unbanned** by ${i.user} - they can rejoin (send them a fresh invite; ban-share won't re-ban them).`,
+        content: i.message.content + '\n' + t('log.unbannedBy', uloc, { mod: `${i.user}` }),
         components: [],
       });
     }
@@ -424,13 +417,13 @@ client.on(Events.InteractionCreate, async (i) => {
       try {
         await i.guild.bans.create(userId, { reason: `MadHoney: approved from review by ${i.user.tag}`, deleteMessageSeconds: deleteDays * 24 * 60 * 60 });
       } catch (e) {
-        return i.reply({ content: `Ban failed: ${e.message}`, ...EPH });
+        return i.reply({ content: t('reply.banFailed', cfg.locale, { error: e.message }), ...EPH });
       }
       logBan({ id: userId, guildId: i.guildId, channel: '(review-ban)', at: new Date().toISOString() });
-      return i.update({ content: i.message.content + `\n🔨 **Banned** by ${i.user}.`, components: [] });
+      return i.update({ content: i.message.content + '\n' + t('log.bannedBy', cfg.locale, { mod: `${i.user}` }), components: [] });
     }
     if (i.isButton() && i.customId.startsWith('mh_review_dismiss_')) {
-      return i.update({ content: i.message.content + `\n☑️ **Dismissed** by ${i.user} - no action taken.`, components: [] });
+      return i.update({ content: i.message.content + '\n' + t('log.dismissedBy', getGuild(i.guildId)?.locale, { mod: `${i.user}` }), components: [] });
     }
 
     // Appeal approve / deny (clicked by a mod in the log channel)
@@ -439,7 +432,7 @@ client.on(Events.InteractionCreate, async (i) => {
       try {
         await i.guild.bans.remove(uid, `MadHoney: appeal approved by ${i.user.tag}`);
       } catch (e) {
-        return i.reply({ content: `Unban failed: ${e.message}`, ...EPH });
+        return i.reply({ content: t('reply.unbanFailed', getGuild(i.guildId)?.locale, { error: e.message }), ...EPH });
       }
       logBan({ id: uid, guildId: i.guildId, channel: '(appeal-approved)', at: new Date().toISOString(), unbanned: true });
       let invite = null;
@@ -451,12 +444,12 @@ client.on(Events.InteractionCreate, async (i) => {
       } catch { /* no invite perm - mod can send one manually */ }
       const aloc = getGuild(i.guildId)?.locale;
       client.users.send(uid, invite ? t('appeal.approvedInvite', aloc, { guild: i.guild.name, invite }) : t('appeal.approvedNoInvite', aloc, { guild: i.guild.name })).catch(() => {});
-      return i.update({ content: i.message.content + `\n✅ **Approved** by ${i.user} - unbanned${invite ? ' and re-invited' : " (couldn't auto-create an invite)"}.`, components: [] });
+      return i.update({ content: i.message.content + '\n' + (invite ? t('log.approvedReinvited', aloc, { mod: `${i.user}` }) : t('log.approvedNoInvite', aloc, { mod: `${i.user}` })), components: [] });
     }
     if (i.isButton() && i.customId.startsWith('mh_appno_')) {
       const [, , , uid] = i.customId.split('_');
       client.users.send(uid, t('appeal.denied', getGuild(i.guildId)?.locale, { guild: i.guild.name })).catch(() => {});
-      return i.update({ content: i.message.content + `\n❌ **Denied** by ${i.user}.`, components: [] });
+      return i.update({ content: i.message.content + '\n' + t('log.deniedBy', getGuild(i.guildId)?.locale, { mod: `${i.user}` }), components: [] });
     }
 
     if (i.isButton() && i.customId === 'mh_text') {
@@ -588,7 +581,7 @@ client.on(Events.MessageCreate, async (msg) => {
   if (msg.webhookId && cfg?.honeypotChannelId && msg.channelId === cfg.honeypotChannelId && honeypotMode(cfg) !== 'disarmed') {
     msg.delete().catch(() => {});
     console.log(`[${msg.guild.name}] deleted webhook post in honeypot (${msg.webhookId})`);
-    await logSend(msg.guild, cfg, { content: `🪝 **A webhook posted in the honeypot** (<#${cfg.honeypotChannelId}>) and its message was deleted. Webhooks aren't members, so they can't be banned - open **Server Settings → Integrations → Webhooks** and delete any you don't recognize.` }, 'normal');
+    await logSend(msg.guild, cfg, { content: t('log.webhookAlert', cfg.locale, { channel: cfg.honeypotChannelId }) }, 'normal');
     return;
   }
 
@@ -617,14 +610,14 @@ client.on(Events.MessageCreate, async (msg) => {
     if (!cfg.logChannelId) { console.log(`[${msg.guild.name}] review mode but no log channel - ignoring honeypot hit`); return; }
     await logSend(msg.guild, cfg, {
       content: [
-        `⏸ **Held for review.** ${msg.author.tag} (\`${msg.author.id}\`) posted in the honeypot (<#${cfg.honeypotChannelId}>). **Nobody has been banned yet.**`,
-        `[Jump to message](${msg.url})`,
+        t('log.reviewHeld', cfg.locale, { tag: msg.author.tag, id: msg.author.id, channel: cfg.honeypotChannelId }),
+        t('log.jump', cfg.locale, { url: msg.url }),
         quoted,
-        attachments ? `📎 ${attachments}` : null,
+        attachments ? t('log.attach', cfg.locale, { names: attachments }) : null,
       ].filter(Boolean).join('\n'),
       components: [new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`mh_review_ban_${msg.author.id}`).setLabel('Ban').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`mh_review_dismiss_${msg.author.id}`).setLabel('Dismiss (no action)').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`mh_review_ban_${msg.author.id}`).setLabel(t('log.banBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`mh_review_dismiss_${msg.author.id}`).setLabel(t('log.dismissBtn', cfg.locale)).setStyle(ButtonStyle.Secondary),
       )],
     }, 'critical');
     console.log(`[${msg.guild.name}] held ${msg.author.tag} (${msg.author.id}) for review`);
@@ -657,13 +650,13 @@ client.on(Events.MessageCreate, async (msg) => {
   // Report to the log channel (if configured) with an Unban escape hatch.
   await logSend(msg.guild, cfg, {
     content: [
-      `🍯 **The following message was posted in the honeypot** (<#${cfg.honeypotChannelId}>) **and the user has been ${banned ? 'banned' : '⚠️ NOT banned (ban failed - check my permissions)'}.**`,
-      `**User:** ${msg.author.tag} (\`${msg.author.id}\`)`,
+      t(banned ? 'log.reportBanned' : 'log.reportFailed', cfg.locale, { channel: cfg.honeypotChannelId }),
+      t('log.user', cfg.locale, { tag: msg.author.tag, id: msg.author.id }),
       quoted,
-      attachments ? `📎 ${attachments}` : null,
+      attachments ? t('log.attach', cfg.locale, { names: attachments }) : null,
     ].filter(Boolean).join('\n'),
     components: banned ? [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`mh_unban_${msg.author.id}`).setLabel('Undo - unban this user').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId(`mh_unban_${msg.author.id}`).setLabel(t('log.undoBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
     )] : [],
   }, 'critical');
 });
@@ -686,11 +679,11 @@ client.on(Events.GuildMemberAdd, async (member) => {
   if (!banned) return;
   await logSend(member.guild, cfg, {
     content: [
-      '🌐 **Auto-banned on join** - this user is on the universal MadHoney ban list (caught by another server\'s honeypot).',
-      `**User:** ${member.user.tag} (\`${member.id}\`)`,
+      t('log.banshareReport', cfg.locale),
+      t('log.user', cfg.locale, { tag: member.user.tag, id: member.id }),
     ].join('\n'),
     components: [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`mh_unban_${member.id}`).setLabel('Undo - unban this user').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId(`mh_unban_${member.id}`).setLabel(t('log.undoBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
     )],
   }, 'critical');
 });

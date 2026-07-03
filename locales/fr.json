@@ -28,5 +28,39 @@
   },
   "common": {
     "broke": "Une erreur est survenue - réessaie."
+  },
+  "reply": {
+    "needManageServer": "Tu as besoin de la permission **Gérer le serveur** pour utiliser les commandes de MadHoney.",
+    "noHoneypotYet": "Aucun salon honeypot n'est encore défini - lance d'abord `/madhoney setup`.",
+    "banshareOn": "🌐 **Partage des bannissements ACTIVÉ** - les utilisateurs figurant sur la liste de bannissement universelle MadHoney (piégés par le honeypot de n'importe quel serveur) sont automatiquement bannis lorsqu'ils rejoignent ce serveur. Lance `/madhoney bansync` pour bannir aussi tous ceux qui sont déjà sur la liste.",
+    "banshareOff": "🔒 **Isolé** - ce serveur n'agit que sur ses propres captures honeypot. (Tes captures alimentent tout de même la liste universelle pour les serveurs qui y adhèrent.)",
+    "modeArmed": "🍯 **Honeypot armé.** Les comptes qui publient dans le honeypot sont bannis immédiatement.",
+    "modeReview": "⏸ **Honeypot en attente de révision.** Les publications dans le honeypot sont signalées dans ton salon de journal avec des boutons Bannir / Ignorer au lieu d'un bannissement instantané - un modérateur décide. Déconseillé pour les serveurs très actifs, et nécessite un salon de journal défini.",
+    "modeDisarmed": "⭘ **Honeypot désarmé.** Le piège est désactivé - personne n'est banni tant que tu ne le réarmes pas.",
+    "modeReviewNoLog": "⚠️ Aucun salon de journal n'est défini, les publications en attente n'ont donc nulle part où aller. Définis-en un sous **Équipe & journal**.",
+    "unbanFailed": "Échec du débannissement : {error}",
+    "banFailed": "Échec du bannissement : {error}"
+  },
+  "log": {
+    "reportBanned": "🍯 **Le message suivant a été publié dans le honeypot** (<#{channel}>) **et l'utilisateur a été banni.**",
+    "reportFailed": "🍯 **Le message suivant a été publié dans le honeypot** (<#{channel}>) **et l'utilisateur n'a ⚠️ PAS été banni (échec du bannissement - vérifie mes permissions).**",
+    "user": "**Utilisateur :** {tag} (`{id}`)",
+    "undoBtn": "Annuler - débannir cet utilisateur",
+    "reviewHeld": "⏸ **En attente de révision.** {tag} (`{id}`) a publié dans le honeypot (<#{channel}>). **Personne n'a encore été banni.**",
+    "jump": "[Aller au message]({url})",
+    "attach": "📎 {names}",
+    "banBtn": "Bannir",
+    "dismissBtn": "Ignorer (aucune action)",
+    "banshareReport": "🌐 **Banni automatiquement à l'arrivée** - cet utilisateur figure sur la liste de bannissement universelle MadHoney (piégé par le honeypot d'un autre serveur).",
+    "webhookAlert": "🪝 **Un webhook a publié dans le honeypot** (<#{channel}>) et son message a été supprimé. Les webhooks ne sont pas des membres, ils ne peuvent donc pas être bannis - ouvre **Paramètres du serveur → Intégrations → Webhooks** et supprime ceux que tu ne reconnais pas.",
+    "appealForward": "📩 **Appel de bannissement** - <@{id}> ({tag}, `{id}`) a été banni par le honeypot et te demande d'y jeter un nouveau coup d'œil.",
+    "approveBtn": "Approuver & réinviter",
+    "denyBtn": "Refuser",
+    "unbannedBy": "✅ **Débanni** par {mod} - il peut revenir (envoie-lui une nouvelle invitation ; le partage des bannissements ne le rebannira pas).",
+    "bannedBy": "🔨 **Banni** par {mod}.",
+    "dismissedBy": "☑️ **Ignoré** par {mod} - aucune action prise.",
+    "approvedReinvited": "✅ **Approuvé** par {mod} - débanni et réinvité.",
+    "approvedNoInvite": "✅ **Approuvé** par {mod} - débanni (impossible de créer automatiquement une invitation).",
+    "deniedBy": "❌ **Refusé** par {mod}."
   }
 }

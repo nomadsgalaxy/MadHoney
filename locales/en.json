@@ -28,5 +28,39 @@
   },
   "common": {
     "broke": "Something broke - try again."
+  },
+  "reply": {
+    "needManageServer": "You need **Manage Server** to use MadHoney controls.",
+    "noHoneypotYet": "No honeypot channel set yet - run `/madhoney setup` first.",
+    "banshareOn": "🌐 **Ban sharing ON** - users on the universal MadHoney ban list (caught by any server's honeypot) are auto-banned when they join here. Run `/madhoney bansync` to also ban everyone already on the list.",
+    "banshareOff": "🔒 **Isolated** - this server acts only on its own honeypot catches. (Your catches still feed the universal list for servers that opt in.)",
+    "modeArmed": "🍯 **Honeypot armed.** Accounts that post in the honeypot are banned immediately.",
+    "modeReview": "⏸ **Honeypot set to hold for review.** Honeypot posts are reported to your log channel with Ban / Dismiss buttons instead of an instant ban - a mod decides. Not recommended for busy servers, and it needs a log channel set.",
+    "modeDisarmed": "⭘ **Honeypot disarmed.** The trap is off - nobody gets banned until you arm it again.",
+    "modeReviewNoLog": "⚠️ You have no log channel set, so held posts have nowhere to go. Set one under **Staff & log**.",
+    "unbanFailed": "Unban failed: {error}",
+    "banFailed": "Ban failed: {error}"
+  },
+  "log": {
+    "reportBanned": "🍯 **The following message was posted in the honeypot** (<#{channel}>) **and the user has been banned.**",
+    "reportFailed": "🍯 **The following message was posted in the honeypot** (<#{channel}>) **and the user has been ⚠️ NOT banned (ban failed - check my permissions).**",
+    "user": "**User:** {tag} (`{id}`)",
+    "undoBtn": "Undo - unban this user",
+    "reviewHeld": "⏸ **Held for review.** {tag} (`{id}`) posted in the honeypot (<#{channel}>). **Nobody has been banned yet.**",
+    "jump": "[Jump to message]({url})",
+    "attach": "📎 {names}",
+    "banBtn": "Ban",
+    "dismissBtn": "Dismiss (no action)",
+    "banshareReport": "🌐 **Auto-banned on join** - this user is on the universal MadHoney ban list (caught by another server's honeypot).",
+    "webhookAlert": "🪝 **A webhook posted in the honeypot** (<#{channel}>) and its message was deleted. Webhooks aren't members, so they can't be banned - open **Server Settings → Integrations → Webhooks** and delete any you don't recognize.",
+    "appealForward": "📩 **Ban appeal** - <@{id}> ({tag}, `{id}`) was banned by the honeypot and is asking you to take another look.",
+    "approveBtn": "Approve & re-invite",
+    "denyBtn": "Deny",
+    "unbannedBy": "✅ **Unbanned** by {mod} - they can rejoin (send them a fresh invite; ban-share won't re-ban them).",
+    "bannedBy": "🔨 **Banned** by {mod}.",
+    "dismissedBy": "☑️ **Dismissed** by {mod} - no action taken.",
+    "approvedReinvited": "✅ **Approved** by {mod} - unbanned and re-invited.",
+    "approvedNoInvite": "✅ **Approved** by {mod} - unbanned (couldn't auto-create an invite).",
+    "deniedBy": "❌ **Denied** by {mod}."
   }
 }

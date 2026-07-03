@@ -28,5 +28,39 @@
   },
   "common": {
     "broke": "Algo falló - inténtalo de nuevo."
+  },
+  "reply": {
+    "needManageServer": "Necesitas **Gestionar servidor** para usar los controles de MadHoney.",
+    "noHoneypotYet": "Aún no hay ningún canal honeypot configurado - ejecuta primero `/madhoney setup`.",
+    "banshareOn": "🌐 **Uso compartido de baneos ACTIVADO** - los usuarios de la lista universal de baneos de MadHoney (atrapados por el honeypot de cualquier servidor) se banean automáticamente al entrar aquí. Ejecuta `/madhoney bansync` para banear también a todos los que ya están en la lista.",
+    "banshareOff": "🔒 **Aislado** - este servidor actúa solo sobre sus propias capturas del honeypot. (Tus capturas siguen alimentando la lista universal para los servidores que se adhieren.)",
+    "modeArmed": "🍯 **Honeypot armado.** Las cuentas que publiquen en el honeypot se banean de inmediato.",
+    "modeReview": "⏸ **Honeypot configurado para retener y revisar.** Las publicaciones en el honeypot se informan en tu canal de registro con botones de Banear / Descartar en lugar de un baneo instantáneo - decide un moderador. No se recomienda para servidores con mucho movimiento, y requiere tener configurado un canal de registro.",
+    "modeDisarmed": "⭘ **Honeypot desarmado.** La trampa está desactivada - nadie será baneado hasta que la vuelvas a armar.",
+    "modeReviewNoLog": "⚠️ No tienes ningún canal de registro configurado, así que las publicaciones retenidas no tienen adónde ir. Configura uno en **Equipo y registro**.",
+    "unbanFailed": "Error al desbanear: {error}",
+    "banFailed": "Error al banear: {error}"
+  },
+  "log": {
+    "reportBanned": "🍯 **El siguiente mensaje se publicó en el honeypot** (<#{channel}>) **y el usuario ha sido baneado.**",
+    "reportFailed": "🍯 **El siguiente mensaje se publicó en el honeypot** (<#{channel}>) **y el usuario ⚠️ NO ha sido baneado (falló el baneo - revisa mis permisos).**",
+    "user": "**Usuario:** {tag} (`{id}`)",
+    "undoBtn": "Deshacer - desbanear a este usuario",
+    "reviewHeld": "⏸ **Retenido para revisión.** {tag} (`{id}`) publicó en el honeypot (<#{channel}>). **Todavía no se ha baneado a nadie.**",
+    "jump": "[Ir al mensaje]({url})",
+    "attach": "📎 {names}",
+    "banBtn": "Banear",
+    "dismissBtn": "Descartar (sin acción)",
+    "banshareReport": "🌐 **Baneado automáticamente al entrar** - este usuario está en la lista universal de baneos de MadHoney (atrapado por el honeypot de otro servidor).",
+    "webhookAlert": "🪝 **Un webhook publicó en el honeypot** (<#{channel}>) y su mensaje fue eliminado. Los webhooks no son miembros, así que no se pueden banear - abre **Configuración del servidor → Integraciones → Webhooks** y elimina los que no reconozcas.",
+    "appealForward": "📩 **Apelación de baneo** - <@{id}> ({tag}, `{id}`) fue baneado por el honeypot y te pide que lo revises de nuevo.",
+    "approveBtn": "Aprobar y reinvitar",
+    "denyBtn": "Denegar",
+    "unbannedBy": "✅ **Desbaneado** por {mod} - puede volver a unirse (envíale una invitación nueva; el uso compartido de baneos no lo volverá a banear).",
+    "bannedBy": "🔨 **Baneado** por {mod}.",
+    "dismissedBy": "☑️ **Descartado** por {mod} - no se tomó ninguna acción.",
+    "approvedReinvited": "✅ **Aprobado** por {mod} - desbaneado y reinvitado.",
+    "approvedNoInvite": "✅ **Aprobado** por {mod} - desbaneado (no se pudo crear una invitación automáticamente).",
+    "deniedBy": "❌ **Denegado** por {mod}."
   }
 }
