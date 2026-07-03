@@ -41,9 +41,9 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
 /* nav */
 nav{position:sticky;top:0;z-index:10;background:rgba(10,11,13,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 nav .wrap{display:flex;align-items:center;gap:1.6rem;height:64px}
-.wordmark{font-family:var(--display);font-weight:800;font-size:1.25rem;color:var(--ink);letter-spacing:-.02em;display:flex;align-items:center;gap:.55rem}
+.wordmark{font-family:var(--display);font-weight:800;font-size:1.25rem;color:var(--ink);letter-spacing:-.02em;display:inline-flex;align-items:center;gap:.5rem;white-space:nowrap}
 .wordmark b{color:var(--honey);font-weight:800}
-.wordmark img{height:30px;width:auto}
+.wordmark img{height:30px;width:auto;flex:0 0 auto}
 .hero-logo{position:absolute;right:5rem;top:8.5rem;width:320px;rotate:6deg;
   filter:drop-shadow(0 24px 70px rgba(255,179,26,.35));animation:rise .9s .5s both}
 nav .links{display:flex;gap:1.4rem;margin-left:auto;align-items:center}
@@ -125,7 +125,7 @@ footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;l
 
 <div class="tape thin"></div>
 <nav><div class="wrap">
-  <a class="wordmark" href="/"><img src="/logo.svg?v=3" alt="">Mad<b>Honey</b></a>
+  <a class="wordmark" href="/"><img src="/logo.svg?v=3" alt=""><span>Mad<b>Honey</b></span></a>
   <div class="links">
     <a href="#how">How it works</a>
     <a href="#features">Features</a>
@@ -227,7 +227,7 @@ footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;l
 <footer><div class="wrap">
   <div class="cols">
     <div>
-      <div class="wordmark"><img src="/logo.svg?v=3" alt="">Mad<b>Honey</b></div>
+      <div class="wordmark"><img src="/logo.svg?v=3" alt=""><span>Mad<b>Honey</b></span></div>
       <p>Honeypot + captcha verification for Discord.<br>Made with 🧡 by <a href="https://github.com/nomadsgalaxy" target="_blank" rel="noopener">Nomads Galaxy</a>.</p>
     </div>
     <div>
