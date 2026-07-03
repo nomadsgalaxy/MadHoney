@@ -21,7 +21,7 @@ export const resolveCredit = (hideCredit) => (SELF_HOSTED && hideCredit ? '' : C
 // The attribution now lives on the VERIFY PANEL, not the honeypot banner - so the
 // decoy carries no MadHoney-specific tell. Discord subtext + a real link. '' only
 // when a self-hoster has hidden it.
-export const creditSuffix = (hideCredit) => (resolveCredit(hideCredit) ? `\n\n-# protected by [madhoney.nomadsgalaxy.com](${CREDIT_URL})` : '');
+export const creditSuffix = (hideCredit) => (resolveCredit(hideCredit) ? `\n\n-# protected by <${CREDIT_URL}>` : '');
 
 export const DEFAULT_BANNER = {
   title: 'HONEYPOT IS ACTIVE',
