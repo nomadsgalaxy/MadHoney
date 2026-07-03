@@ -45,15 +45,15 @@ export const DEFAULT_VERIFY_TEXT = t('verify.panelText', 'en');
 // default in the guild's bot language, + the MadHoney attribution line.
 const verifyContent = (cfg) => (cfg.verifyText || t('verify.panelText', cfg.locale)) + creditSuffix(cfg.banner?.hideCredit);
 
-async function textChannel(guild, id, what) {
+async function textChannel(guild, id, what, loc) {
   const ch = await guild.channels.fetch(id).catch(() => null);
-  if (!ch || !ch.isTextBased()) throw new Error(`${what} channel not found - re-run setup.`);
+  if (!ch || !ch.isTextBased()) throw new Error(t('dash.act.chNotFound', loc, { what }));
   return ch;
 }
 
 // Post (or refresh) the Verify panel in the configured verify channel.
-export async function postVerifyPanel(guild, cfg) {
-  const ch = await textChannel(guild, cfg.verifyChannelId, 'Verify');
+export async function postVerifyPanel(guild, cfg, loc = cfg?.locale) {
+  const ch = await textChannel(guild, cfg.verifyChannelId, 'Verify', loc);
   try { // best-effort cleanup of our previous panels
     const recent = await ch.messages.fetch({ limit: 20 });
     for (const m of recent.filter((m) => m.author.id === guild.client.user.id).values()) {
@@ -62,7 +62,7 @@ export async function postVerifyPanel(guild, cfg) {
   } catch { /* no Read History - skip cleanup */ }
   const msg = await ch.send({ content: verifyContent(cfg), components: [verifyRow(cfg.locale)] });
   saveGuild(guild.id, { verifyPosted: true, verifyMsgId: msg.id, verifyFp: verifyFingerprint(cfg) });
-  return `Posted the Verify panel in #${ch.name}.`;
+  return t('dash.act.postedVerify', loc, { channel: ch.name });
 }
 
 // Silent update: only if the panel's content actually changed, edit the
@@ -94,8 +94,8 @@ export function roleColorMap(guild) {
 }
 
 // Render the configured banner and post it in the honeypot channel.
-export async function postBanner(guild, cfg) {
-  const ch = await textChannel(guild, cfg.honeypotChannelId, 'Honeypot');
+export async function postBanner(guild, cfg, loc = cfg?.locale) {
+  const ch = await textChannel(guild, cfg.honeypotChannelId, 'Honeypot', loc);
   const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), roleColors: roleColorMap(guild) });
   try {
     const recent = await ch.messages.fetch({ limit: 50 });
@@ -105,7 +105,7 @@ export async function postBanner(guild, cfg) {
   } catch { /* skip cleanup */ }
   const msg = await ch.send({ files: [new AttachmentBuilder(png, { name: bannerFileName() })] });
   saveGuild(guild.id, { bannerPosted: true, bannerMsgId: msg.id, bannerFp: bannerFingerprint(cfg) });
-  return `Posted the honeypot banner in #${ch.name}.`;
+  return t('dash.act.postedBanner', loc, { channel: ch.name });
 }
 
 // Silent update: only if the banner's design changed, edit the existing
@@ -185,9 +185,9 @@ export async function classifyChannels(guild, cfg) {
 //   null                 -> gate every currently-public channel (blanket)
 //   [id, id, ...]         -> gate exactly these (legacy)
 //   { gate:[], public:[] } -> gate these, force-public these, leave the rest
-export async function gateChannels(guild, cfg, apply = false, sel = null) {
+export async function gateChannels(guild, cfg, apply = false, sel = null, loc = cfg?.locale) {
   const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
-  if (!role) throw new Error('Verified role not found - re-run setup.');
+  if (!role) throw new Error(t('dash.act.roleNotFound', loc));
   const everyone = guild.roles.everyone;
   const me = await guild.members.fetchMe();
   const channels = await guild.channels.fetch();
@@ -217,17 +217,18 @@ export async function gateChannels(guild, cfg, apply = false, sel = null) {
     !c.permissionOverwrites.cache.get(role.id)?.deny.has(PermissionFlagsBits.ViewChannel));
 
   const name = (c) => `${c.type === ChannelType.GuildCategory ? '▸' : '#'}${c.name}`;
+  const none = t('dash.act.gNone', loc);
   const lines = [
-    `GATE behind "${role.name}" (${plan.gate.length}): ${plan.gate.map(name).join(', ') || '(none)'}`,
-    `STAYS PUBLIC (verify gateway): ${plan.keep.map(name).join(', ') || '(none)'}`,
-    `HONEYPOT (open to everyone, hidden from verified): ${plan.honeypot.map(name).join(', ') || '(none)'}`,
-    `KEEP ADMIN CHANNELS HIDDEN (${protect.length}): ${protect.map(name).join(', ') || '(none)'}`,
-    `SKIP already private (${plan.skip.length})`,
+    t('dash.act.gLineGate', loc, { role: role.name, n: plan.gate.length, list: plan.gate.map(name).join(', ') || none }),
+    t('dash.act.gLineKeep', loc, { list: plan.keep.map(name).join(', ') || none }),
+    t('dash.act.gLineHoney', loc, { list: plan.honeypot.map(name).join(', ') || none }),
+    t('dash.act.gLineProtect', loc, { n: protect.length, list: protect.map(name).join(', ') || none }),
+    t('dash.act.gLineSkip', loc, { n: plan.skip.length }),
   ];
   if (plan.noaccess.length) {
-    lines.push(`⚠️ CAN'T ACCESS (${plan.noaccess.length}) - I can't see these, so I can't gate them: ${plan.noaccess.map(name).join(', ')}\n   Fix: temporarily give the MadHoney role Administrator (Server Settings → Roles), run gate again, then remove it - or grant the MadHoney role View Channel on each.`);
+    lines.push(t('dash.act.gNoAccess', loc, { n: plan.noaccess.length, list: plan.noaccess.map(name).join(', ') }));
   }
-  if (!apply) return `DRY RUN - nothing changed.\n${lines.join('\n')}\nRun "Gate channels (APPLY)" to make it real.`;
+  if (!apply) return t('dash.act.gDryRun', loc, { lines: lines.join('\n') });
 
   let ok = 0; const failed = [];
   const tryEdit = async (ch, fn) => {
@@ -262,7 +263,12 @@ export async function gateChannels(guild, cfg, apply = false, sel = null) {
     gatedChannels: [...plan.gate, ...plan.keep, ...plan.honeypot, ...protect].map((c) => c.id),
     channelTreatment: treatment,
   });
-  return `Gated. ${ok} channels updated, ${failed.length} failed${plan.noaccess.length ? `, ${plan.noaccess.length} unreachable` : ''}.${failed.length ? '\nFailed: ' + failed.join(', ') : ''}\n${lines.join('\n')}`;
+  return t('dash.act.gDone', loc, {
+    ok, failed: failed.length,
+    unreachable: plan.noaccess.length ? t('dash.act.gUnreachable', loc, { n: plan.noaccess.length }) : '',
+    failedList: failed.length ? t('dash.act.gFailedList', loc, { list: failed.join(', ') }) : '',
+    lines: lines.join('\n'),
+  });
 }
 
 // Keep the gate closed on a channel created (or re-opened) AFTER the initial
@@ -272,7 +278,7 @@ export async function gateChannels(guild, cfg, apply = false, sel = null) {
 // the verify gateway, the honeypot, private/admin channels (anything @everyone
 // already can't see), and channels the admin explicitly forced public/left
 // alone. Returns a short status string, or null when it did nothing.
-export async function gateNewChannel(guild, cfg, channel) {
+export async function gateNewChannel(guild, cfg, channel, loc = cfg?.locale) {
   if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) return null;
   if (!cfg.gatedChannels?.length) return null; // this server doesn't use gating
   if (channel.id === cfg.verifyChannelId || channel.id === cfg.honeypotChannelId) return null;
@@ -287,7 +293,7 @@ export async function gateNewChannel(guild, cfg, channel) {
   const me = await guild.members.fetchMe();
   if (!channel.permissionsFor(me).has(PermissionFlagsBits.ViewChannel) ||
       !channel.permissionsFor(me).has(PermissionFlagsBits.ManageRoles)) {
-    return `⚠️ New channel #${channel.name} is public but I can't gate it - grant the MadHoney role View Channel + Manage Roles there, or re-run gating from the dashboard.`;
+    return t('dash.act.anCant', loc, { channel: channel.name });
   }
   const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
   if (!role) return null;
@@ -298,14 +304,14 @@ export async function gateNewChannel(guild, cfg, channel) {
     gatedChannels: cfg.gatedChannels.includes(channel.id) ? cfg.gatedChannels : [...cfg.gatedChannels, channel.id],
     channelTreatment: { ...cfg.channelTreatment, [channel.id]: 'gate' },
   });
-  return `🔒 Auto-gated new channel #${channel.name} behind "${role.name}".`;
+  return t('dash.act.anGated', loc, { channel: channel.name, role: role.name });
 }
 
 // Reverse gating: clear the ViewChannel overwrites MadHoney added on the
 // channels it gated, returning them to their pre-gate (inherited) visibility.
 // Only touches channels MadHoney recorded gating - admin channels it never
 // changed are left alone.
-export async function ungateChannels(guild, cfg) {
+export async function ungateChannels(guild, cfg, loc = cfg?.locale) {
   const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
   const everyone = guild.roles.everyone;
   let ids = cfg.gatedChannels ?? [];
@@ -322,8 +328,8 @@ export async function ungateChannels(guild, cfg) {
       const someRoleAllows = [...ow.values()].some((o) => o.id !== everyone.id && o.allow.has(PermissionFlagsBits.ViewChannel));
       return everyoneDenied && !someRoleAllows;
     }).map((ch) => ch.id);
-    if (!ids.length) throw new Error('Nothing to restore - no channels I gated on record, and none look orphaned.');
-    note = ' (recovered orphaned channels - no gate record existed)';
+    if (!ids.length) throw new Error(t('dash.act.unNothing', loc));
+    note = t('dash.act.unRecovered', loc);
   }
   let ok = 0; const failed = [];
   for (const id of ids) {
@@ -336,7 +342,7 @@ export async function ungateChannels(guild, cfg) {
     } catch (e) { failed.push(`#${ch.name} (${e.message})`); }
   }
   saveGuild(guild.id, { gatedChannels: [] });
-  return `Restored ${ok} channels to their pre-gate visibility${note}${failed.length ? `, ${failed.length} failed: ${failed.join(', ')}` : '.'}`;
+  return t('dash.act.unDone', loc, { ok, note, failedPart: failed.length ? t('dash.act.unFailed', loc, { n: failed.length, list: failed.join(', ') }) : t('dash.act.unDonePeriod', loc) });
 }
 
 // Grandfather: add the verified role to every existing non-bot member so the
@@ -344,31 +350,24 @@ export async function ungateChannels(guild, cfg) {
 // Needs the privileged Server Members intent.
 // Turn a raw Discord API error into plain, step-by-step guidance. Most setup
 // failures are one of two permission problems; spell out the exact fix.
-export function explainError(msg) {
+export function explainError(msg, loc) {
   const m = String(msg ?? '');
-  if (/Missing Permissions|\b50013\b/i.test(m)) {
-    return `${m}\n\nWhat this means: Discord blocked the change because of MadHoney's permissions. Fix it in Server Settings → Roles:\n` +
-      `  1. Drag the MadHoney role ABOVE your verified role (a bot can't touch roles or channels above its own). This is the #1 cause of this error.\n` +
-      `  2. Make sure the MadHoney role still has Manage Roles, Manage Channels and Ban Members. The quickest fix is to re-invite MadHoney with the "Add server" button in the top bar, which re-grants everything.\n` +
-      `Then run the action again.`;
-  }
-  if (/Missing Access|\b50001\b/i.test(m)) {
-    return `${m}\n\nWhat this means: MadHoney can't see one or more channels, so it can't change them. Either grant the MadHoney role "View Channel" on those channels, or temporarily give MadHoney the Administrator permission (Server Settings → Roles), run the action, then remove it.`;
-  }
+  if (/Missing Permissions|\b50013\b/i.test(m)) return t('dash.act.errPerm', loc, { msg: m });
+  if (/Missing Access|\b50001\b/i.test(m)) return t('dash.act.errAccess', loc, { msg: m });
   return m;
 }
 
 // Can the bot actually grant the verified role here? Returns null when
 // everything checks out, or a human-readable problem with the exact fix.
-export async function preflight(guild, cfg) {
+export async function preflight(guild, cfg, loc = cfg?.locale) {
   const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
-  if (!role) return 'Verified role not found - re-run setup and pick one.';
+  if (!role) return t('dash.act.pfRoleMissing', loc);
   const me = await guild.members.fetchMe();
   if (!me.permissions.has(PermissionFlagsBits.ManageRoles)) {
-    return 'I don\'t have the Manage Roles permission here - re-invite me with the link on the site, or grant it to my role.';
+    return t('dash.act.pfNoManageRoles', loc);
   }
   if (me.roles.highest.comparePositionTo(role) <= 0) {
-    return `My role ("${me.roles.highest.name}") is BELOW the verified role ("${role.name}") in the role list, so Discord won't let me grant it. Fix: Server Settings → Roles → drag "${me.roles.highest.name}" above "${role.name}", then try again.`;
+    return t('dash.act.pfBelow', loc, { me: me.roles.highest.name, role: role.name });
   }
   return null;
 }
@@ -376,8 +375,8 @@ export async function preflight(guild, cfg) {
 // Pass a `progress` object to watch it live: {total, done, added, skipped,
 // failed} are updated as the loop runs (one Discord API call per member, so
 // large servers take a while).
-export async function grandfather(guild, cfg, progress = {}) {
-  const problem = await preflight(guild, cfg);
+export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) {
+  const problem = await preflight(guild, cfg, loc);
   if (problem) throw new Error(problem);
   const role = await guild.roles.fetch(cfg.verifiedRoleId);
   const members = await guild.members.fetch();
@@ -390,16 +389,16 @@ export async function grandfather(guild, cfg, progress = {}) {
       .then(() => progress.added++)
       .catch((e) => { progress.failed++; failures.push(`${m.user.tag}: ${e.message}`); });
   }
-  return `Grandfathered "${role.name}": ${progress.added} added, ${progress.skipped} skipped.${failures.length ? `\n${failures.length} failed (is the MadHoney role ABOVE "${role.name}"?): ` + failures.slice(0, 5).join(', ') : ''}`;
+  return t('dash.act.gfDone', loc, { role: role.name, added: progress.added, skipped: progress.skipped, failedPart: failures.length ? t('dash.act.gfFailed', loc, { n: failures.length, role: role.name, list: failures.slice(0, 5).join(', ') }) : '' });
 }
 
 // Ban from List: proactively ban every user on the active shared list (bans
 // from OTHER sharing servers that weren't undone), instead of waiting for
 // them to join. Requires ban sharing to be ON for this server.
-export async function syncBans(guild, cfg, progress = {}) {
-  if (!cfg.banShare) throw new Error('Ban sharing is OFF for this server - turn it on first, then sync.');
+export async function syncBans(guild, cfg, progress = {}, loc = cfg?.locale) {
+  if (!cfg.banShare) throw new Error(t('dash.act.sbOff', loc));
   const me = await guild.members.fetchMe();
-  if (!me.permissions.has(PermissionFlagsBits.BanMembers)) throw new Error("I don't have the Ban Members permission here.");
+  if (!me.permissions.has(PermissionFlagsBits.BanMembers)) throw new Error(t('dash.act.sbNoBan', loc));
 
   // universal list: latest state per (user, guild); an unban reverses the entry
   const perGuild = new Map();
@@ -423,5 +422,5 @@ export async function syncBans(guild, cfg, progress = {}) {
       progress.added++;
     } catch { progress.failed++; }
   }
-  return `Ban sync: ${progress.added} banned from the shared list, ${progress.skipped} already banned here${progress.failed ? `, ${progress.failed} failed` : ''}. Pool size: ${pool.size}.`;
+  return t('dash.act.sbDone', loc, { added: progress.added, skipped: progress.skipped, failedPart: progress.failed ? t('dash.act.sbFailed', loc, { n: progress.failed }) : '', pool: pool.size });
 }

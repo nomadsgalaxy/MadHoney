@@ -257,7 +257,7 @@ export function startDashboard(client) {
     const cfg = getGuild(guild.id) ?? {};
     const msgAt = (key) => (msg && at === key ? `<pre style="margin-top:.6rem">${esc(msg)}</pre>` : '');
     // standing health warning: catches the classic "bot role below verified role" mistake
-    const problem = (cfg.verificationEnabled !== false && cfg.verifiedRoleId) ? await preflight(guild, cfg).catch((e) => e.message) : null;
+    const problem = (cfg.verificationEnabled !== false && cfg.verifiedRoleId) ? await preflight(guild, cfg, dl).catch((e) => e.message) : null;
     const b = { ...DEFAULT_BANNER, ...cfg.banner };
     const roles = guild.roles.cache.filter((r) => !r.managed && r.id !== guild.id)
       .sort((a, z) => z.position - a.position);
@@ -463,10 +463,11 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
   // exactly which to gate, instead of a blanket "all public".
   async function gatePage(guild, sess, msg = '') {
     const cfg = getGuild(guild.id) ?? {};
+    const dl = curLocale;
     if (!cfg.verifiedRoleId || !cfg.verifyChannelId || !cfg.honeypotChannelId) {
       return layout('MadHoney - Gate', `<div class="subnav"><a class="backbtn" href="/g/${guild.id}"><span class="chev">‹</span> ${esc(guild.name)}</a></div>
-        <div class="ghead"><div class="gtitle"><h1>Gate channels</h1></div></div>
-        <div class="card"><p>Finish <a href="/g/${guild.id}#config">configuration</a> first - I need the verified role, verify channel and honeypot channel.</p></div>`, { user: sess.user.username });
+        <div class="ghead"><div class="gtitle"><h1>${t('dash.gate.title', dl)}</h1></div></div>
+        <div class="card"><p>${t('dash.gate.notConfigBody', dl, { config: `<a href="/g/${guild.id}#config">${t('dash.gate.configLink', dl)}</a>` })}</p></div>`, { user: sess.user.username });
     }
     const chans = (await classifyChannels(guild, cfg)).sort((a, z) => a.position - z.position);
     const override = cfg.channelTreatment ?? {};
@@ -483,39 +484,39 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
 
     const catName = (id) => chans.find((c) => c.id === id)?.name;
     const chip = (c) => {
-      const tag = c.isCategory ? '<span class="ctag">CATEGORY</span>'
+      const tag = c.isCategory ? `<span class="ctag">${t('dash.gate.category', dl)}</span>`
         : c.parentId ? `<span class="ctag">${esc(catName(c.parentId) ?? '')}</span>` : '';
-      const kindDot = `<span class="kdot ${c.kind}" title="detected: ${c.kind}"></span>`;
+      const kindDot = `<span class="kdot ${c.kind}" title="${esc(t('dash.gate.detectedTitle', dl, { kind: c.kind }))}"></span>`;
       return `<div class="chip2 ${c.isCategory ? 'iscat' : ''}" draggable="true" data-id="${c.id}" data-cat="${c.parentId ?? ''}" data-type="${c.isCategory ? 'category' : 'channel'}" data-kind="${c.kind}">${kindDot}<span class="cn">${c.isCategory ? '▸ ' : '# '}${esc(c.name)}</span>${tag}</div>`;
     };
     const zone = (id, title, hint) =>
       `<div class="zcol"><div class="zh"><b>${title}</b></div><small>${hint}</small>
-        <div class="drop" data-zone="${id}">${draggable.filter((c) => zoneOf(c) === id).map(chip).join('') || '<div class="zempty">drag channels here</div>'}</div></div>`;
+        <div class="drop" data-zone="${id}">${draggable.filter((c) => zoneOf(c) === id).map(chip).join('') || `<div class="zempty">${t('dash.gate.dragHere', dl)}</div>`}</div></div>`;
 
     return layout(`MadHoney - Gate ${guild.name}`, `
 <div class="subnav">
   <a class="backbtn" href="/g/${guild.id}"><span class="chev">‹</span> ${esc(guild.name)}</a>
-  <a class="pillbtn spacer" href="/g/${guild.id}/gate" title="Re-scan channels from Discord"><span class="ico">⟳</span> Re-scan</a>
+  <a class="pillbtn spacer" href="/g/${guild.id}/gate" title="${esc(t('dash.gate.rescanTitle', dl))}"><span class="ico">⟳</span> ${t('dash.gate.rescan', dl)}</a>
 </div>
-<div class="ghead"><div class="gtitle"><h1>Gate channels</h1></div></div>
+<div class="ghead"><div class="gtitle"><h1>${t('dash.gate.title', dl)}</h1></div></div>
 ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <div class="card">
-<p><b>Drag channels between the columns</b> to choose what MadHoney does with each (or tap a channel to cycle it). The colored dot shows what MadHoney auto-detected - if it guessed wrong, just move the channel. <b>Dragging a category moves all its channels with it</b>, like Discord. Your moves are saved, so the next scan remembers them.</p>
-<div class="legend"><span class="kdot public"></span>public <span class="kdot private"></span>private <span class="kdot admin"></span>admin/staff</div>
+<p>${t('dash.gate.intro', dl)}</p>
+<div class="legend"><span class="kdot public"></span>${t('dash.gate.legendPublic', dl)} <span class="kdot private"></span>${t('dash.gate.legendPrivate', dl)} <span class="kdot admin"></span>${t('dash.gate.legendAdmin', dl)}</div>
 <form method="post" action="/g/${guild.id}/gate" id="gateForm">
 <div class="board">
-  ${zone('gate', '🔒 Gate', 'Hidden behind the verified role. Unverified accounts can\'t see these.')}
-  ${zone('public', '🌐 Keep public', 'Stays visible to everyone, verified or not.')}
-  ${zone('leave', '⬜ Leave as-is', 'MadHoney won\'t touch these at all.')}
+  ${zone('gate', t('dash.gate.zoneGate', dl), t('dash.gate.zoneGateHint', dl))}
+  ${zone('public', t('dash.gate.zonePublic', dl), t('dash.gate.zonePublicHint', dl))}
+  ${zone('leave', t('dash.gate.zoneLeave', dl), t('dash.gate.zoneLeaveHint', dl))}
 </div>
-<div class="info">✅ Verify gateway (always public): <b style="color:var(--ink);margin-left:.3rem">#${verify ? esc(verify.name) : '?'}</b></div>
-<div class="info">🍯 Honeypot (open to unverified, hidden from verified): <b style="color:var(--ink);margin-left:.3rem">#${honeypot ? esc(honeypot.name) : '?'}</b></div>
-${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access ${locked.length} channel(s) (hidden from me): ${locked.map((c) => '#' + esc(c.name)).join(', ')}. Grant the MadHoney role View there, or temporarily give it Administrator.</div>` : ''}
-<button class="btn" style="margin-top:1rem">Apply</button>
-<a class="btn grey" href="/g/${guild.id}" style="margin-top:1rem">Cancel</a>
+<div class="info">${t('dash.gate.verifyGateway', dl)} <b style="color:var(--ink);margin-left:.3rem">#${verify ? esc(verify.name) : '?'}</b></div>
+<div class="info">${t('dash.gate.honeypotInfo', dl)} <b style="color:var(--ink);margin-left:.3rem">#${honeypot ? esc(honeypot.name) : '?'}</b></div>
+${locked.length ? `<div class="info" style="color:#ff8a7d">${t('dash.gate.cantAccess', dl, { n: locked.length, list: locked.map((c) => '#' + esc(c.name)).join(', ') })}</div>` : ''}
+<button class="btn" style="margin-top:1rem">${t('dash.gate.apply', dl)}</button>
+<a class="btn grey" href="/g/${guild.id}" style="margin-top:1rem">${t('dash.gate.cancel', dl)}</a>
 </form>
 <form method="post" action="/g/${guild.id}/gate" style="margin-top:.4rem"><input type="hidden" name="do" value="reset">
-  <button class="btn grey" style="background:none;box-shadow:none;color:var(--dim);padding-left:0">↺ Reset to auto-detected</button></form>
+  <button class="btn grey" style="background:none;box-shadow:none;color:var(--dim);padding-left:0">${t('dash.gate.reset', dl)}</button></form>
 </div>
 <script>
 (() => {
@@ -692,7 +693,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
       // ---- auth ----
       if (url.pathname === '/login') {
         if (!process.env.CLIENT_SECRET) {
-          return html(layout('MadHoney', '<h1>Login not configured yet</h1><p>The bot owner hasn\'t set the OAuth client secret. You can still <a href="' + inviteUrl() + '">add MadHoney to your server</a> and run <code>/madhoney setup</code> in Discord.</p>'), 503);
+          return html(layout('MadHoney', `<h1>${t('dash.err.loginTitle', curLocale)}</h1><p>${t('dash.err.loginBody', curLocale, { add: `<a href="${inviteUrl()}">${t('dash.err.addLink', curLocale)}</a>` })}</p>`), 503);
         }
         const state = randomBytes(16).toString('hex');
         const auth = new URL('https://discord.com/oauth2/authorize');
@@ -704,7 +705,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
       }
       if (url.pathname === '/callback') {
         if (!url.searchParams.get('code') || url.searchParams.get('state') !== cookies(req).oauth_state) {
-          return html(layout('MadHoney', '<h1>Login failed</h1><p>Bad state or missing code. <a href="/login">Try again</a>.</p>'), 400);
+          return html(layout('MadHoney', `<h1>${t('dash.err.loginFailed', curLocale)}</h1><p>${t('dash.err.badState', curLocale, { retry: `<a href="/login">${t('dash.err.retry', curLocale)}</a>` })}</p>`), 400);
         }
         const tok = await (await fetch(`${API}/oauth2/token`, {
           method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -713,7 +714,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
             grant_type: 'authorization_code', code: url.searchParams.get('code'), redirect_uri: `${PUBLIC_URL}/callback`,
           }),
         })).json();
-        if (!tok.access_token) return html(layout('MadHoney', '<h1>Login failed</h1><p>Token exchange failed. <a href="/login">Try again</a>.</p>'), 400);
+        if (!tok.access_token) return html(layout('MadHoney', `<h1>${t('dash.err.loginFailed', curLocale)}</h1><p>${t('dash.err.tokenFailed', curLocale, { retry: `<a href="/login">${t('dash.err.retry', curLocale)}</a>` })}</p>`), 400);
         const bearer = { headers: { authorization: `Bearer ${tok.access_token}` } };
         const user = await (await fetch(`${API}/users/@me`, bearer)).json();
         const guilds = await (await fetch(`${API}/users/@me/guilds`, bearer)).json();
@@ -792,20 +793,20 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
         absent.sort((a, z) => a.name.localeCompare(z.name));
 
         const presentTiles = present.map((g) => tile(g, `/g/${g.id}`, '',
-          armed(g) ? '<span class="spill armed">🍯 Armed</span>' : '<span class="spill setup">Needs setup</span>')).join('');
+          armed(g) ? `<span class="spill armed">${t('dash.home.pillArmed', curLocale)}</span>` : `<span class="spill setup">${t('dash.home.pillSetup', curLocale)}</span>`)).join('');
         const absentTiles = absent.map((g) => tile(g, `${inviteUrl()}&guild_id=${g.id}`, ' target="_blank" rel="noopener"',
-          '<span class="spill add">＋ Add MadHoney</span>')).join('');
+          `<span class="spill add">${t('dash.home.pillAdd', curLocale)}</span>`)).join('');
         const armedCount = present.filter(armed).length;
 
-        return html(layout('MadHoney - Your servers', `
-<h1 style="margin:1.1rem 0 .2rem">Your servers</h1>
-<p style="color:var(--dim);margin:0 0 1rem">Pick a server to configure MadHoney, or add it to a new one.</p>
-${present.length ? `<div class="card"><h2>Your servers <span class="count">${present.length} with MadHoney · ${armedCount} armed</span></h2>
-<ul class="slist">${presentTiles}</ul></div>` : `<div class="card"><h2>Get started</h2>
-<p>MadHoney isn't in any of your servers yet. Add it to one below, then run through setup here.</p></div>`}
-${absent.length ? `<div class="card"><h2>Add MadHoney to another server <span class="count">${absent.length} available</span></h2>
+        return html(layout(t('dash.home.title', curLocale), `
+<h1 style="margin:1.1rem 0 .2rem">${t('dash.home.h1', curLocale)}</h1>
+<p style="color:var(--dim);margin:0 0 1rem">${t('dash.home.subtitle', curLocale)}</p>
+${present.length ? `<div class="card"><h2>${t('dash.home.yourServers', curLocale)} <span class="count">${t('dash.home.withCount', curLocale, { n: present.length, armed: armedCount })}</span></h2>
+<ul class="slist">${presentTiles}</ul></div>` : `<div class="card"><h2>${t('dash.home.getStarted', curLocale)}</h2>
+<p>${t('dash.home.getStartedBody', curLocale)}</p></div>`}
+${absent.length ? `<div class="card"><h2>${t('dash.home.addAnother', curLocale)} <span class="count">${t('dash.home.availCount', curLocale, { n: absent.length })}</span></h2>
 <ul class="slist">${absentTiles}</ul></div>` : ''}
-${!manageable.length ? '<div class="card"><p>No servers where you have Manage Server (or a MadHoney staff/admin role). Ask an admin, or add MadHoney to a server you own.</p></div>' : ''}`, { user: sess.user.username }));
+${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocale)}</p></div>` : ''}`, { user: sess.user.username }));
       }
 
       // ---- per-guild ----
@@ -814,10 +815,10 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
         const sess = session(req);
         if (!sess) return redirect('/login');
         if (!(await canManage(sess, m[1]))) {
-          return html(layout('MadHoney', '<h1>403</h1><p>You need Manage Server there (or that server\'s staff / dashboard admin role).</p>'), 403);
+          return html(layout('MadHoney', `<h1>403</h1><p>${t('dash.err.e403Body', curLocale)}</p>`), 403);
         }
         const guild = client.guilds.cache.get(m[1]);
-        if (!guild) return html(layout('MadHoney', `<h1>Not here yet</h1><p><a href="${inviteUrl()}&guild_id=${m[1]}" target="_blank" rel="noopener">Invite MadHoney to this server</a> first.</p>`), 404);
+        if (!guild) return html(layout('MadHoney', `<h1>${t('dash.err.notHereTitle', curLocale)}</h1><p>${t('dash.err.notHereBody', curLocale, { invite: `<a href="${inviteUrl()}&guild_id=${m[1]}" target="_blank" rel="noopener">${t('dash.err.inviteLink', curLocale)}</a>` })}</p>`), 404);
 
         if (m[2] === '/progress') {
           const p = gfJobs.get(guild.id);
@@ -890,19 +891,19 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             }
             const progress = { finished: false, at: Date.now() };
             gfJobs.set(guild.id, progress);
-            slowJobs[form.get('do')](guild, getGuild(guild.id), progress)
+            slowJobs[form.get('do')](guild, getGuild(guild.id), progress, curLocale)
               .then((r) => Object.assign(progress, { finished: true, result: r, at: Date.now() }))
-              .catch((e) => Object.assign(progress, { finished: true, result: `❌ ${explainError(e.message)}`, at: Date.now() }));
+              .catch((e) => Object.assign(progress, { finished: true, result: `❌ ${explainError(e.message, curLocale)}`, at: Date.now() }));
             return html(await guildPage(guild, sess, '', 'actions'));
           }
           const acts = {
-            post_verify: () => postVerifyPanel(guild, cfg),
-            post_banner: () => postBanner(guild, cfg),
-            ungate: () => ungateChannels(guild, cfg),
+            post_verify: () => postVerifyPanel(guild, cfg, curLocale),
+            post_banner: () => postBanner(guild, cfg, curLocale),
+            ungate: () => ungateChannels(guild, cfg, curLocale),
           };
           const act = acts[form.get('do')];
           if (!act) return html(await guildPage(guild, sess, t('dash.msg.unknownAction', curLocale), 'actions'), 400);
-          const result = await act().catch((e) => `❌ ${explainError(e.message)}`);
+          const result = await act().catch((e) => `❌ ${explainError(e.message, curLocale)}`);
           return html(await guildPage(guild, sess, result, 'actions'));
         }
         if (m[2] === '/gate') {
@@ -911,9 +912,9 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             const form = await body(req);
             if (form.get('do') === 'reset') {
               saveGuild(guild.id, { channelTreatment: {} });
-              return html(await gatePage(guild, sess, 'Cleared manual moves - channels are back to auto-detected placement.'));
+              return html(await gatePage(guild, sess, t('dash.msg.gateReset', curLocale)));
             }
-            const result = await gateChannels(guild, cfg, true, { gate: form.getAll('gate'), public: form.getAll('public') }).catch((e) => `❌ ${explainError(e.message)}`);
+            const result = await gateChannels(guild, cfg, true, { gate: form.getAll('gate'), public: form.getAll('public') }, curLocale).catch((e) => `❌ ${explainError(e.message, curLocale)}`);
             return html(await gatePage(guild, sess, result));
           }
           return html(await gatePage(guild, sess));
@@ -925,10 +926,10 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
         return html(await guildPage(guild, sess));
       }
 
-      html(layout('MadHoney', '<h1>404</h1><p><a href="/">home</a></p>'), 404);
+      html(layout('MadHoney', `<h1>404</h1><p>${t('dash.err.e404Body', curLocale, { home: `<a href="/">${t('dash.err.home', curLocale)}</a>` })}</p>`), 404);
     } catch (err) {
       console.error('dashboard error:', err);
-      html(layout('MadHoney', '<h1>500</h1><p>Something broke - check the bot logs.</p>'), 500);
+      html(layout('MadHoney', `<h1>500</h1><p>${t('dash.err.e500Body', curLocale)}</p>`), 500);
     }
   });
 
