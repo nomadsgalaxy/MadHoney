@@ -12,7 +12,7 @@ import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChan
 import { honeypotMode } from './trap.js';
 import { renderBanner, DEFAULT_BANNER, FONTS, SELF_HOSTED } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
-import { SUPPORTED, LOCALE_NAMES } from './i18n.js';
+import { SUPPORTED, LOCALE_NAMES, t, resolveLocale } from './i18n.js';
 
 const PORT = Number(process.env.PORT || 8300);
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://127.0.0.1:${PORT}`).replace(/\/$/, '');
@@ -34,12 +34,26 @@ const persistSessions = () => { try { writeFileSync(SESS_FILE, JSON.stringify(Ob
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// Viewer locale of the in-flight request (the dashboard follows each visitor's
+// own language, separate from any guild's bot language). Set at handler entry.
+// ponytail: the dashboard serves ~a handful of admins, so a request-scoped
+// module global is fine here; thread it explicitly only if it ever needs to
+// render concurrent requests in different languages at the same instant.
+let curLocale = 'en';
+function dashLocale(req) {
+  const c = cookies(req).mh_lang; // explicit picker choice wins
+  if (c && SUPPORTED.includes(c)) return c;
+  return resolveLocale((req.headers['accept-language'] || '').split(',')[0].trim());
+}
+
 function layout(title, body, opts = {}) {
+  const dl = curLocale;
   const invite = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536852`;
+  const picker = `<select class="langsel" onchange="document.cookie='mh_lang='+this.value+';path=/;max-age=31536000';location.reload()" aria-label="${esc(t('dash.lang', dl))}">${SUPPORTED.map((c) => `<option value="${c}" ${c === dl ? 'selected' : ''}>${esc(LOCALE_NAMES[c])}</option>`).join('')}</select>`;
   const navRight = opts.user
-    ? `<a href="/stats">Stats</a><span class="navuser">${esc(opts.user)}</span><a href="/logout">Log out</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add<span class="lg"> server</span></a>`
-    : `<a href="/stats">Stats</a><a href="/login">Log in</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add<span class="lg"> to Discord</span></a>`;
-  return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    ? `<a href="/stats">${t('dash.nav.stats', dl)}</a><span class="navuser">${esc(opts.user)}</span><a href="/logout">${t('dash.nav.logout', dl)}</a>${picker}<a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ <span class="lg">${t('dash.nav.addServer', dl)}</span></a>`
+    : `<a href="/stats">${t('dash.nav.stats', dl)}</a><a href="/login">${t('dash.nav.login', dl)}</a>${picker}<a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ <span class="lg">${t('dash.nav.addDiscord', dl)}</span></a>`;
+  return `<!doctype html><html lang="${dl}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
 <link rel="icon" href="/logo.svg?v=3" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,6 +78,9 @@ function layout(title, body, opts = {}) {
   nav .navuser{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:12ch}
   .navtape{height:5px;background:repeating-linear-gradient(-45deg,var(--honey) 0 14px,#101010 14px 28px)}
   @media(max-width:520px){nav .navuser{display:none} nav .navr{gap:.7rem} nav .navr .lg{display:none} nav .nin{gap:.5rem} nav .wm span{display:none}}
+  .langsel{display:inline-block;width:auto;margin:0;background:#0f1216;color:var(--dim);border:1px solid var(--line);border-radius:7px;padding:.25rem .4rem;font:inherit;font-size:.82rem;max-width:8.5rem;cursor:pointer}
+  .langsel:hover{border-color:var(--honey);color:var(--ink)}
+  @media(max-width:520px){.langsel{max-width:5.5rem}}
   a{color:var(--honey);text-decoration:none} a:hover{text-decoration:underline}
   h1,h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;line-height:1.2;letter-spacing:-.02em} h1 span{color:var(--honey)}
   h1 img{height:38px;vertical-align:-8px;margin-right:.4rem}
@@ -236,6 +253,7 @@ export function startDashboard(client) {
   // `at` anchors the result: the message renders inside that card and the
   // form's action fragment scrolls the browser back to it after a POST.
   async function guildPage(guild, sess, msg = '', at = 'top') {
+    const dl = curLocale;
     const cfg = getGuild(guild.id) ?? {};
     const msgAt = (key) => (msg && at === key ? `<pre style="margin-top:.6rem">${esc(msg)}</pre>` : '');
     // standing health warning: catches the classic "bot role below verified role" mistake
@@ -258,134 +276,134 @@ export function startDashboard(client) {
     const mode = honeypotMode(cfg); // 'armed' | 'review' | 'disarmed'
     // With verification off there's no verified role/gate to require - just the honeypot.
     const configured = cfg.honeypotChannelId && (!verifyOn || (cfg.verifiedRoleId && cfg.verifyChannelId));
-    const modeChip = { armed: '<span class="chip on"><b>🍯 Armed</b></span>', review: '<span class="chip on"><b>⏸ Review</b></span>', disarmed: '<span class="chip off"><b>⭘ Disarmed</b></span>' }[mode];
+    const modeChip = { armed: `<span class="chip on"><b>${t('dash.guild.mArmed', dl)}</b></span>`, review: `<span class="chip on"><b>${t('dash.guild.mReview', dl)}</b></span>`, disarmed: `<span class="chip off"><b>${t('dash.guild.mDisarmed', dl)}</b></span>` }[mode];
     const chips = [
-      !configured ? '<span class="chip off">Needs setup</span>' : modeChip,
-      `<span class="chip">Trapped here <b>${trappedHere}</b></span>`,
+      !configured ? `<span class="chip off">${t('dash.guild.needsSetup', dl)}</span>` : modeChip,
+      `<span class="chip">${t('dash.guild.trappedChip', dl)} <b>${trappedHere}</b></span>`,
       verifyOn
-        ? (roleName ? `<span class="chip">Verified role <b>${esc(roleName)}</b></span>` : '')
-        : '<span class="chip off">⚠️ Verification OFF</span>',
-      `<span class="chip ${cfg.banShare ? 'on' : 'off'}">Universal list <b>${cfg.banShare ? 'ON' : 'off'}</b></span>`,
+        ? (roleName ? `<span class="chip">${t('dash.guild.verifiedRoleChip', dl)} <b>${esc(roleName)}</b></span>` : '')
+        : `<span class="chip off">${t('dash.guild.verifOffChip', dl)}</span>`,
+      `<span class="chip ${cfg.banShare ? 'on' : 'off'}">${t('dash.guild.universalChip', dl)} <b>${cfg.banShare ? t('dash.guild.on', dl) : t('dash.guild.off', dl)}</b></span>`,
     ].filter(Boolean).join('');
     const modeBtn = (val, label) => `<button class="modeb ${mode === val ? 'active' : ''}" name="do" value="mode_${val}" ${mode === val ? 'disabled' : ''}>${label}</button>`;
-    const armDesc = { armed: 'Anyone who posts in the honeypot is banned immediately.', review: 'Honeypot posts are held and reported to your log channel with Ban / Dismiss buttons - a mod decides. Not recommended for busy servers.', disarmed: 'The trap is off - nobody gets banned. Arm it once everything is set up.' }[mode];
+    const armDesc = { armed: t('dash.guild.armDescArmed', dl), review: t('dash.guild.armDescReview', dl), disarmed: t('dash.guild.armDescDisarmed', dl) }[mode];
     const armBar = configured ? `<form method="post" action="/g/${guild.id}/action" class="armbar ${mode === 'disarmed' ? 'off' : 'on'}">
-      <div><b>${{ armed: '🍯 Honeypot is Armed', review: '⏸ Honeypot: Hold for review', disarmed: '⭘ Honeypot is Disarmed' }[mode]}</b>
-      <small>${armDesc}${mode === 'review' && !cfg.logChannelId ? ' <b style="color:#ff8a7d">Set a log channel below - held posts have nowhere to go otherwise.</b>' : ''}</small></div>
-      <div class="modebtns">${modeBtn('armed', '🍯 Armed')}${modeBtn('review', '⏸ Review')}${modeBtn('disarmed', '⭘ Off')}</div>
+      <div><b>${{ armed: t('dash.guild.armTitleArmed', dl), review: t('dash.guild.armTitleReview', dl), disarmed: t('dash.guild.armTitleDisarmed', dl) }[mode]}</b>
+      <small>${armDesc}${mode === 'review' && !cfg.logChannelId ? ` <b style="color:#ff8a7d">${t('dash.guild.armReviewNoLog', dl)}</b>` : ''}</small></div>
+      <div class="modebtns">${modeBtn('armed', t('dash.guild.mArmed', dl))}${modeBtn('review', t('dash.guild.mReview', dl))}${modeBtn('disarmed', t('dash.guild.mOff', dl))}</div>
     </form>` : '';
 
     const recent = banRows.slice(-12).reverse().map((x) => {
       const when = esc(String(x.at).replace('T', ' ').slice(0, 16));
-      return `<tr><td>${x.unbanned ? '<span class="badge un">unban</span>' : '<span class="badge ban">ban</span>'}</td><td>${esc(x.tag ?? x.id)}</td><td class="k">${esc(x.channel ?? '')}</td><td class="k">${when}</td></tr>`;
+      return `<tr><td>${x.unbanned ? `<span class="badge un">${t('dash.guild.badgeUnban', dl)}</span>` : `<span class="badge ban">${t('dash.guild.badgeBan', dl)}</span>`}</td><td>${esc(x.tag ?? x.id)}</td><td class="k">${esc(x.channel ?? '')}</td><td class="k">${when}</td></tr>`;
     }).join('');
 
     return layout(`MadHoney - ${guild.name}`, `
 <div class="subnav">
-  <a class="backbtn" href="/"><span class="chev">‹</span> All servers</a>
-  <a class="pillbtn spacer" href="/g/${guild.id}?refresh=1" title="Re-fetch roles, channels and members from Discord"><span class="ico">⟳</span> Refresh</a>
+  <a class="backbtn" href="/"><span class="chev">‹</span> ${t('dash.guild.allServers', dl)}</a>
+  <a class="pillbtn spacer" href="/g/${guild.id}?refresh=1" title="${esc(t('dash.guild.refreshTitle', dl))}"><span class="ico">⟳</span> ${t('dash.guild.refresh', dl)}</a>
 </div>
 <div class="ghead">${avatar}<div class="gtitle"><h1>${esc(guild.name)}</h1></div></div>
 <div class="chips">${chips}</div>
 ${armBar}
-${problem ? `<div class="card" style="border-color:#d64545"><b style="color:#ff5b4d">⚠️ Setup problem</b><pre style="margin-top:.5rem">${esc(problem)}</pre></div>` : ''}
+${problem ? `<div class="card" style="border-color:#d64545"><b style="color:#ff5b4d">${t('dash.guild.setupProblem', dl)}</b><pre style="margin-top:.5rem">${esc(problem)}</pre></div>` : ''}
 ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <details class="card guide" ${configured ? '' : 'open'}>
-<summary><b>📋 Best practices &amp; setup guide</b></summary>
+<summary><b>${t('dash.guild.guideSummary', dl)}</b></summary>
 <div class="gb">
-<p><b>Why MadHoney works this way.</b> A spam bot never posts once - it blasts every channel it can reach and pings @everyone if it can, and every message leaves that channel marked unread. Banning the bot and deleting the spam doesn't clear those unread markers, so you're left with a whole server flagged for spam nobody should have seen. MadHoney catches the bot in one place before it can touch the rest of your server.</p>
-<p>Bots aren't smart, and the design leans on that: gate every channel behind the verified role and the only place an unverified account can post is the honeypot. Name it like a real channel (<code>general-2</code>) and an indiscriminate bot walks straight in. Its only content is an image - a human reads the warning and backs off, but a bot can't parse a picture, so it posts anyway and trips the trap. The verified role hides the honeypot from anyone who passed the captcha, so <b>no real member ever gets caught</b>. That's why verification is the recommended setup - it's what keeps humans out of the trap.</p>
-<p><b>Set it up in this order:</b></p>
+<p>${t('dash.guild.guideP1', dl)}</p>
+<p>${t('dash.guild.guideP2', dl)}</p>
+<p>${t('dash.guild.guideOrder', dl)}</p>
 <ol>
-<li><b>Verified role first.</b> Create a role (e.g. "Verified") in Server Settings → Roles, then drag the <b>MadHoney</b> role ABOVE it. If MadHoney's role sits below the verified role, gating and grandfathering fail with a permission error - this is the single most common mistake.</li>
-<li><b>Configure below.</b> Pick the verified role, your verify channel (usually <code>#rules</code>), and a honeypot channel. Optionally add a staff role and a log channel.</li>
-<li><b>Grandfather members.</b> Run this first so everyone already in the server gets the verified role and nobody is locked out when you gate.</li>
-<li><b>Post the Verify panel and honeypot banner.</b></li>
-<li><b>Gate channels.</b> Open the drag board, review what MadHoney detected, move anything it misjudged, then apply. Nothing changes until you hit Apply.</li>
+<li>${t('dash.guild.guideLi1', dl)}</li>
+<li>${t('dash.guild.guideLi2', dl)}</li>
+<li>${t('dash.guild.guideLi3', dl)}</li>
+<li>${t('dash.guild.guideLi4', dl)}</li>
+<li>${t('dash.guild.guideLi5', dl)}</li>
 </ol>
-<div class="tip"><b>🍯 Naming the honeypot:</b> name it like a real channel so bots post in it. Good: <code>general-2</code>, <code>chat-2</code>, <code>off-topic-2</code>. Bad: <code>honeypot</code>, <code>do-not-post</code> (some spam tools skip those).</div>
-<div class="tip"><b>🔘 Honeypot mode:</b> the control at the top has three settings. <b>Armed</b> bans on sight (recommended). <b>Off</b> disables the trap while you set up. <b>Review</b> holds each hit in your log channel with Ban / Dismiss buttons so a mod decides - not recommended for busy servers (a real spam run floods the log), but it works if you want a human in the loop.</div>
-<div class="tip"><b>⚠️ Discord Onboarding:</b> if you use it, make sure it does NOT auto-grant the verified role, or the captcha can be skipped.</div>
-<div class="tip"><b>🔒 Getting a permission error?</b> It's almost always the MadHoney role sitting below your verified role, or missing Manage Roles / Manage Channels. Re-invite MadHoney with <b>＋ Add server</b> in the top bar, then drag its role to the top of your staff roles.</div>
+<div class="tip">${t('dash.guild.tipNaming', dl)}</div>
+<div class="tip">${t('dash.guild.tipMode', dl)}</div>
+<div class="tip">${t('dash.guild.tipOnboarding', dl)}</div>
+<div class="tip">${t('dash.guild.tipPerm', dl)}</div>
 </div>
 </details>
-<div class="card" id="config"><h2>Configuration</h2>${msgAt('config')}
+<div class="card" id="config"><h2>${t('dash.guild.configuration', dl)}</h2>${msgAt('config')}
 <form method="post" action="/g/${guild.id}/save#config">
-  <div class="subh first">Core setup</div>
+  <div class="subh first">${t('dash.guild.coreSetup', dl)}</div>
   <div class="grid2f">
-  <label>Verified role <select name="verifiedRoleId">${roleOpts(cfg.verifiedRoleId)}</select>
-    <small>Granted after the captcha. MadHoney's own role must sit ABOVE it.</small></label>
-  <label>Verify channel <select name="verifyChannelId">${chanOpts(cfg.verifyChannelId)}</select>
-    <small>Where the Verify button lives - your #rules channel is the classic spot.</small></label>
-  <label>Honeypot channel <select name="honeypotChannelId">${chanOpts(cfg.honeypotChannelId)}</select>
-    <small>The trap. Name it like a real channel (general-2). Posting here = instant ban.</small></label>
-  <label>Log channel (optional) <select name="logChannelId">${chanOpts(cfg.logChannelId)}</select>
-    <small>Staff-only channel - each ban is reported there with an Unban button.</small></label>
-  <label>Delete messages on ban <select name="banDeleteDays">
-    ${[[0, "Don't delete any"], [1, 'Last 1 day'], [3, 'Last 3 days'], [7, 'Last 7 days (default)']].map(([v, l]) => `<option value="${v}" ${Number(cfg.banDeleteDays ?? 7) === v ? 'selected' : ''}>${l}</option>`).join('')}
-  </select><small>How much of a trapped user's recent message history to wipe when banned. Discord's max is 7 days.</small></label>
+  <label>${t('dash.guild.verifiedRole', dl)} <select name="verifiedRoleId">${roleOpts(cfg.verifiedRoleId)}</select>
+    <small>${t('dash.guild.verifiedRoleHint', dl)}</small></label>
+  <label>${t('dash.guild.verifyChannel', dl)} <select name="verifyChannelId">${chanOpts(cfg.verifyChannelId)}</select>
+    <small>${t('dash.guild.verifyChannelHint', dl)}</small></label>
+  <label>${t('dash.guild.honeypotChannel', dl)} <select name="honeypotChannelId">${chanOpts(cfg.honeypotChannelId)}</select>
+    <small>${t('dash.guild.honeypotChannelHint', dl)}</small></label>
+  <label>${t('dash.guild.logChannel', dl)} <select name="logChannelId">${chanOpts(cfg.logChannelId)}</select>
+    <small>${t('dash.guild.logChannelHint', dl)}</small></label>
+  <label>${t('dash.guild.deleteOnBan', dl)} <select name="banDeleteDays">
+    ${[[0, t('dash.guild.del0', dl)], [1, t('dash.guild.del1', dl)], [3, t('dash.guild.del3', dl)], [7, t('dash.guild.del7', dl)]].map(([v, l]) => `<option value="${v}" ${Number(cfg.banDeleteDays ?? 7) === v ? 'selected' : ''}>${l}</option>`).join('')}
+  </select><small>${t('dash.guild.deleteHint', dl)}</small></label>
   </div>
-  <div class="subh">Staff &amp; dashboard access</div>
+  <div class="subh">${t('dash.guild.staffAccess', dl)}</div>
   <div class="grid2f">
-  <label>Staff role (optional) <select name="staffRoleId">${roleOpts(cfg.staffRoleId)}</select>
-    <small>Never trapped by the honeypot, and can manage MadHoney here.</small></label>
-  <label>Dashboard admin role (optional) <select name="adminRoleId">${roleOpts(cfg.adminRoleId)}</select>
-    <small>Dashboard access WITHOUT the honeypot exemption - for helpers.</small></label>
+  <label>${t('dash.guild.staffRole', dl)} <select name="staffRoleId">${roleOpts(cfg.staffRoleId)}</select>
+    <small>${t('dash.guild.staffRoleHint', dl)}</small></label>
+  <label>${t('dash.guild.adminRole', dl)} <select name="adminRoleId">${roleOpts(cfg.adminRoleId)}</select>
+    <small>${t('dash.guild.adminRoleHint', dl)}</small></label>
   </div>
-  <div class="subh">Verification</div>
+  <div class="subh">${t('dash.guild.verification', dl)}</div>
   <label class="toggle"><input type="checkbox" name="verificationEnabled" ${verifyOn ? 'checked' : ''}>
-    <span>Require members to verify <b style="color:var(--honey)">(recommended)</b><small>This is the whole point of MadHoney. It gates your channels behind the verified role so the honeypot is the <b>only</b> place an unverified account can post, and it hides the honeypot from real members so no human ever gets caught. Turn this off and the honeypot still bans, but it's visible to everyone, so a member could wander in and get banned - you'd be relying only on the warning banner.</small></span></label>
-  ${!verifyOn ? '<div class="warnbox">⚠️ <b>Verification is OFF.</b> The honeypot is not hidden from your members, so a human could post in it and get banned. Only the warning banner protects them. We strongly recommend turning verification back on.</div>' : ''}
-  <label>Captcha difficulty <select name="captchaDifficulty" ${verifyOn ? '' : 'disabled'}>
-    ${[['easy', 'Easy (4 chars, lighter)'], ['normal', 'Normal (5 chars)'], ['hard', 'Hard (6 chars, heavy)']].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'normal') === v ? 'selected' : ''}>${l}</option>`).join('')}
-  </select><small>Harder = longer code and more OCR-defeating distortion. Raise it if bots start solving your captcha; lower it if real members struggle.</small></label>
-  <label>Bot language <select name="locale">
+    <span>${t('dash.guild.requireVerify', dl)} <b style="color:var(--honey)">${t('dash.guild.recommended', dl)}</b><small>${t('dash.guild.requireVerifyHint', dl)}</small></span></label>
+  ${!verifyOn ? `<div class="warnbox">${t('dash.guild.verifOffWarn', dl)}</div>` : ''}
+  <label>${t('dash.guild.captchaDifficulty', dl)} <select name="captchaDifficulty" ${verifyOn ? '' : 'disabled'}>
+    ${[['easy', t('dash.guild.diffEasy', dl)], ['normal', t('dash.guild.diffNormal', dl)], ['hard', t('dash.guild.diffHard', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'normal') === v ? 'selected' : ''}>${l}</option>`).join('')}
+  </select><small>${t('dash.guild.captchaHint', dl)}</small></label>
+  <label>${t('dash.guild.botLanguage', dl)} <select name="locale">
     ${SUPPORTED.map((c) => `<option value="${c}" ${(cfg.locale || 'en') === c ? 'selected' : ''}>${LOCALE_NAMES[c]}</option>`).join('')}
-  </select><small>The language MadHoney speaks in this server - the verify panel, captcha replies, and appeal DMs. (This dashboard follows <b>your own</b> browser language, which is separate.)</small></label>
-  <label>Verify message <textarea name="verifyText" rows="3" ${verifyOn ? '' : 'disabled'} placeholder="${esc(DEFAULT_VERIFY_TEXT)}">${esc(cfg.verifyText || '')}</textarea>
-    <small>Shown above the Verify button. Leave blank to use the default in your bot language.</small></label>
-  ${SELF_HOSTED ? '' : '<label><small>ℹ️ A small "protected by MadHoney" credit line is shown on your <b>verify panel</b> (not the honeypot banner). Want it gone? MadHoney is free and open - self-host it (SELF_HOSTED=true) and you can remove it.</small></label>'}
-  <div class="subh">Universal ban list</div>
+  </select><small>${t('dash.guild.botLanguageHint', dl)}</small></label>
+  <label>${t('dash.guild.verifyMessage', dl)} <textarea name="verifyText" rows="3" ${verifyOn ? '' : 'disabled'} placeholder="${esc(DEFAULT_VERIFY_TEXT)}">${esc(cfg.verifyText || '')}</textarea>
+    <small>${t('dash.guild.verifyMessageHint', dl)}</small></label>
+  ${SELF_HOSTED ? '' : `<label><small>${t('dash.guild.creditNote', dl)}</small></label>`}
+  <div class="subh">${t('dash.guild.universalBanList', dl)}</div>
   <label class="toggle"><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''}>
-    <span>Apply the universal ban list to this server<small>Every honeypot catch across all MadHoney servers feeds one list. ON: users on it are banned when they join here (use "Ban from List" below to apply it retroactively). OFF: this server acts only on its own catches - which it keeps either way.</small></span></label>
-  <div class="subh">Appeals</div>
+    <span>${t('dash.guild.applyList', dl)}<small>${t('dash.guild.applyListHint', dl)}</small></span></label>
+  <div class="subh">${t('dash.guild.appeals', dl)}</div>
   <label class="toggle"><input type="checkbox" name="appealEnabled" ${cfg.appealEnabled ? 'checked' : ''} ${cfg.logChannelId ? '' : 'disabled'}>
-    <span>Let banned users appeal by DM<small>When a honeypot ban happens, MadHoney DMs the user offering to appeal. If they do, the request lands in your <b>log channel</b> with Approve (unban + fresh invite) / Deny buttons. A user only ever sees servers they were actually banned from that turned this on - never anything else. ${cfg.logChannelId ? '' : '<b>Set a log channel above first.</b>'}</small></span></label>
-  <button class="btn">Save configuration</button>
+    <span>${t('dash.guild.letAppeal', dl)}<small>${t('dash.guild.letAppealHint', dl)} ${cfg.logChannelId ? '' : t('dash.guild.setLogFirst', dl)}</small></span></label>
+  <button class="btn">${t('dash.guild.saveConfig', dl)}</button>
 </form></div>
-<div class="card" id="banner"><h2>Honeypot banner</h2>${msgAt('banner')}
-<small>Live preview - it re-renders as you tweak. Save, then post it from Actions below.<br><b style="color:var(--honey)">Make it yours.</b> If every MadHoney honeypot looked identical, bots could learn to recognize and skip it. Change the text, colors, font or logo so your banner is one of a kind. (The file is also posted under a random name each time, for the same reason.)</small>
+<div class="card" id="banner"><h2>${t('dash.guild.honeypotBanner', dl)}</h2>${msgAt('banner')}
+<small>${t('dash.guild.bannerNote', dl)}</small>
 <img class="banner" id="bannerPreview" src="/g/${guild.id}/banner.png?${Date.now()}" alt="banner preview" style="margin-top:.6rem">
 <form method="post" action="/g/${guild.id}/save#banner" id="bannerForm">
-  <label>Headline <input type="text" name="banner_title" value="${esc(b.title)}"></label>
-  <label>Body <textarea name="banner_text" rows="2">${esc(b.text)}</textarea></label>
+  <label>${t('dash.guild.headline', dl)} <input type="text" name="banner_title" value="${esc(b.title)}"></label>
+  <label>${t('dash.guild.bodyText', dl)} <textarea name="banner_text" rows="2">${esc(b.text)}</textarea></label>
   <div class="colors">
-    <label>Accent (stripes + headline) <input type="color" name="banner_accent" value="${esc(b.accent)}"></label>
-    <label>Text <input type="color" name="banner_color" value="${esc(b.color)}"></label>
-    <label>Background <input type="color" name="banner_bg" value="${esc(b.bg)}"></label>
+    <label>${t('dash.guild.accent', dl)} <input type="color" name="banner_accent" value="${esc(b.accent)}"></label>
+    <label>${t('dash.guild.textColor', dl)} <input type="color" name="banner_color" value="${esc(b.color)}"></label>
+    <label>${t('dash.guild.background', dl)} <input type="color" name="banner_bg" value="${esc(b.bg)}"></label>
   </div>
   <div class="colors">
-    <label>Mention highlight <input type="color" name="banner_mentionColor" value="${esc(b.mentionColor)}">
-      <small>Anything written as #channel or @role gets a pill in this color.</small></label>
-    <label>@role coloring <select name="banner_mentionMode">
-      <option value="custom" ${b.mentionMode !== 'role' ? 'selected' : ''}>custom color (above)</option>
-      <option value="role" ${b.mentionMode === 'role' ? 'selected' : ''}>real role colors</option>
+    <label>${t('dash.guild.mentionHighlight', dl)} <input type="color" name="banner_mentionColor" value="${esc(b.mentionColor)}">
+      <small>${t('dash.guild.mentionHighlightHint', dl)}</small></label>
+    <label>${t('dash.guild.roleColoring', dl)} <select name="banner_mentionMode">
+      <option value="custom" ${b.mentionMode !== 'role' ? 'selected' : ''}>${t('dash.guild.roleColorCustom', dl)}</option>
+      <option value="role" ${b.mentionMode === 'role' ? 'selected' : ''}>${t('dash.guild.roleColorReal', dl)}</option>
     </select>
-      <small>"Real role colors" pulls each @role's color from Discord; #channels and colorless roles use the custom color.</small></label>
+      <small>${t('dash.guild.roleColoringHint', dl)}</small></label>
   </div>
   <div class="cols2">
-    <label>Logo <input type="text" name="banner_logoUrl" value="${esc(b.logoUrl)}" placeholder="empty = MadHoney logo">
-      <small>Direct PNG/JPG URL for your own logo, or type <b>none</b> for no logo.</small></label>
-    <label>Font <select name="banner_font">${FONTS.map((f) => `<option ${f === b.font ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+    <label>${t('dash.guild.logo', dl)} <input type="text" name="banner_logoUrl" value="${esc(b.logoUrl)}" placeholder="${esc(t('dash.guild.logoPlaceholder', dl))}">
+      <small>${t('dash.guild.logoHint', dl)}</small></label>
+    <label>${t('dash.guild.font', dl)} <select name="banner_font">${FONTS.map((f) => `<option ${f === b.font ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
   </div>
-  <label>Distortion <select name="banner_distort">
-    ${[[0, 'None (clean)'], [1, 'Light'], [2, 'Medium'], [3, 'Heavy']].map(([v, l]) => `<option value="${v}" ${Number(b.distort ?? 0) === v ? 'selected' : ''}>${l}</option>`).join('')}
-  </select><small>Garbles the text captcha-style so OCR bots can't read the warning and skip the trap. Higher = harder for machines (and slightly harder for humans). Preview it above before you post.</small></label>
+  <label>${t('dash.guild.distortion', dl)} <select name="banner_distort">
+    ${[[0, t('dash.guild.distNone', dl)], [1, t('dash.guild.distLight', dl)], [2, t('dash.guild.distMedium', dl)], [3, t('dash.guild.distHeavy', dl)]].map(([v, l]) => `<option value="${v}" ${Number(b.distort ?? 0) === v ? 'selected' : ''}>${l}</option>`).join('')}
+  </select><small>${t('dash.guild.distortionHint', dl)}</small></label>
   ${SELF_HOSTED
     ? `<label class="toggle"><input type="checkbox" name="banner_hidecredit" ${b.hideCredit ? 'checked' : ''}>
-    <span>Hide the "protected by MadHoney" credit line<small>You're self-hosting, so this is your call. The credit shows as a small link on your <b>verify panel</b> (not on the honeypot banner, so the decoy stays generic).</small></span></label>`
+    <span>${t('dash.guild.hideCredit', dl)}<small>${t('dash.guild.hideCreditHint', dl)}</small></span></label>`
     : ''}
-  <button class="btn">Save banner</button>
+  <button class="btn">${t('dash.guild.saveBanner', dl)}</button>
 </form>
 <script>
 (() => {
@@ -400,9 +418,9 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   });
 })();
 </script></div>
-<div class="card" id="actions"><h2>Actions</h2>${msgAt('actions')}
+<div class="card" id="actions"><h2>${t('dash.guild.actions', dl)}</h2>${msgAt('actions')}
 ${gfJobs.has(guild.id) ? `
-<div id="gfwrap"><progress id="gfbar" max="1" value="0"></progress><small id="gftext">Grandfathering: starting…</small></div>
+<div id="gfwrap"><progress id="gfbar" max="1" value="0"></progress><small id="gftext">${t('dash.guild.gfStarting', dl)}</small></div>
 <script>
 (async function poll() {
   try {
@@ -412,38 +430,33 @@ ${gfJobs.has(guild.id) ? `
       bar.max = p.total || 1; bar.value = p.done || 0;
       txt.textContent = p.finished
         ? p.result
-        : (p.label || 'Working') + ': ' + (p.done ?? 0) + '/' + (p.total ?? '?') + ' · ' + (p.added ?? 0) + ' added · ' + (p.skipped ?? 0) + ' skipped' + (p.failed ? ' · ' + p.failed + ' FAILED' : '');
+        : (p.label || ${JSON.stringify(t('dash.guild.working', dl))}) + ': ' + (p.done ?? 0) + '/' + (p.total ?? '?') + ' · ' + (p.added ?? 0) + ' ' + ${JSON.stringify(t('dash.guild.added', dl))} + ' · ' + (p.skipped ?? 0) + ' ' + ${JSON.stringify(t('dash.guild.skipped', dl))} + (p.failed ? ' · ' + p.failed + ' ' + ${JSON.stringify(t('dash.guild.failed', dl))} : '');
       if (p.finished) { bar.value = bar.max; return; }
     }
   } catch {}
   setTimeout(poll, 1200);
 })();
 </script>` : ''}
-<div class="subh first">Deploy — run 1 → 4 in order on first setup</div>
+<div class="subh first">${t('dash.guild.deployHeader', dl)}</div>
 <form method="post" action="/g/${guild.id}/action#actions" class="steps">
 ${[
-  ['grandfather', 'grey', '1 · Grandfather members',
-    'Gives the verified role to every human already in the server, so gating never locks anyone out. Bots and already-verified members are skipped.'],
-  ['post_verify', '', '2 · Post Verify panel',
-    'Posts the Verify button in the verify channel. New members click it, read a captcha, and receive the verified role.'],
-  ['post_banner', '', '3 · Post honeypot banner',
-    'Posts the warning image (designed above) into the honeypot channel. Re-run after changing the banner.'],
+  ['grandfather', 'grey', t('dash.guild.step1Label', dl), t('dash.guild.step1Desc', dl)],
+  ['post_verify', '', t('dash.guild.step2Label', dl), t('dash.guild.step2Desc', dl)],
+  ['post_banner', '', t('dash.guild.step3Label', dl), t('dash.guild.step3Desc', dl)],
 ].map(([val, cls, label, desc]) =>
   `<div class="step"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></div>`).join('')}
-<div class="step"><a class="btn" href="/g/${guild.id}/gate">4 · Gate channels…</a><small>Opens the channel picker: MadHoney classifies every channel (public / private / admin) and you choose exactly which to hide behind the verified role. Nothing changes until you apply.</small></div>
+<div class="step"><a class="btn" href="/g/${guild.id}/gate">${t('dash.guild.step4Label', dl)}</a><small>${t('dash.guild.step4Desc', dl)}</small></div>
 </form>
-<div class="subh">Maintenance</div>
+<div class="subh">${t('dash.guild.maintenance', dl)}</div>
 <form method="post" action="/g/${guild.id}/action#actions" class="steps">
 ${[
-  ['ungate', 'grey', '↩ Restore channels',
-    'Reverses gating: returns the channels MadHoney gated to how they looked before. Admin channels it never touched are left alone.'],
-  ['ban_sync', 'grey', 'Ban from shared list',
-    'Bans everyone on the universal ban list now, instead of waiting for them to join. Needs the universal list turned ON above.'],
+  ['ungate', 'grey', t('dash.guild.ungateLabel', dl), t('dash.guild.ungateDesc', dl)],
+  ['ban_sync', 'grey', t('dash.guild.banSyncLabel', dl), t('dash.guild.banSyncDesc', dl)],
 ].map(([val, cls, label, desc]) =>
   `<div class="step"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></div>`).join('')}
 </form></div>
-<div class="card"><h2>Recent bans <span class="count">${trappedHere} trapped here</span></h2>
-${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` : '<div class="empty">No bans logged in this server yet.</div>'}</div>`, { user: sess.user.username });
+<div class="card"><h2>${t('dash.guild.recentBans', dl)} <span class="count">${t('dash.guild.trappedCount', dl, { n: trappedHere })}</span></h2>
+${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` : `<div class="empty">${t('dash.guild.noBans', dl)}</div>`}</div>`, { user: sess.user.username });
   }
 
   // Channel gating picker: classify every channel and let the admin choose
@@ -545,6 +558,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
   // Public statistics page. Aggregates the ban log into headline numbers and a
   // 30-day trap-activity chart. Logged-in users also see their own servers.
   async function statsPage(sess) {
+    const dl = curLocale;
     const rows = bans();
     const trapped = trappedCount(rows);
     const servers = client.guilds.cache.size;
@@ -602,7 +616,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
       mine.sort((a, z) => z.n - a.n);
     }
 
-    return layout('MadHoney - Statistics', `
+    return layout(t('dash.stats.title', dl), `
 <style>
   .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin:.4rem 0 1.2rem}
   @media(max-width:640px){.stat-row{grid-template-columns:1fr}}
@@ -621,16 +635,16 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
   .ctip{position:absolute;pointer-events:none;background:#0f1216;border:1px solid var(--line);border-radius:7px;padding:.35rem .55rem;font-size:.8rem;opacity:0;transform:translate(-50%,-120%);white-space:nowrap}
   .ctip b{color:var(--honey)}
 </style>
-<h1 style="margin:1rem 0 .2rem">📊 MadHoney statistics</h1>
-<p style="color:var(--dim);margin:0 0 1rem">Live numbers across every server running MadHoney.</p>
+<h1 style="margin:1rem 0 .2rem">${t('dash.stats.h1', dl)}</h1>
+<p style="color:var(--dim);margin:0 0 1rem">${t('dash.stats.subtitle', dl)}</p>
 <div class="stat-row">
-  <div class="stat-tile"><div class="n">${trapped.toLocaleString('en-US')}</div><div class="l">Spammers trapped</div></div>
-  <div class="stat-tile"><div class="n">${servers.toLocaleString('en-US')}</div><div class="l">Servers protected</div></div>
-  <div class="stat-tile"><div class="n">${last30.toLocaleString('en-US')}</div><div class="l">Caught in last 30 days</div></div>
+  <div class="stat-tile"><div class="n">${trapped.toLocaleString('en-US')}</div><div class="l">${t('dash.stats.tileTrapped', dl)}</div></div>
+  <div class="stat-tile"><div class="n">${servers.toLocaleString('en-US')}</div><div class="l">${t('dash.stats.tileServers', dl)}</div></div>
+  <div class="stat-tile"><div class="n">${last30.toLocaleString('en-US')}</div><div class="l">${t('dash.stats.tile30d', dl)}</div></div>
 </div>
-<div class="card"><h2>Unique spammers caught · last 30 days</h2>
+<div class="card"><h2>${t('dash.stats.chartHeading', dl)}</h2>
 <div class="chartwrap">
-<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Unique spammers caught per day over the last 30 days">
+<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('dash.stats.chartAria', dl))}">
   ${grid}
   <path class="area" d="${area}"/>
   <path class="line" d="${line}"/>
@@ -640,12 +654,12 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
 </svg>
 <div class="ctip" id="ctip"></div>
 </div>
-<small style="color:var(--dim)">Each spammer is counted once, on the day they were first caught - a bot banned in several servers is one spammer, not many.</small>
+<small style="color:var(--dim)">${t('dash.stats.chartNote', dl)}</small>
 </div>
-${mine.length ? `<div class="card"><h2>Your servers <span class="count">${mine.length} you manage</span></h2>
-<div class="tscroll"><table class="btable"><tr><td class="k">Server</td><td class="k">Status</td><td class="k">Trapped</td></tr>
-${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? '<span class="badge un">armed</span>' : '<span class="k">needs setup</span>'}</td><td>${g.n}</td></tr>`).join('')}
-</table></div><small style="color:var(--dim)">Only shown to you - the servers you own, have Manage Server in, or hold a staff/admin role in.</small></div>` : ''}
+${mine.length ? `<div class="card"><h2>${t('dash.stats.yourServers', dl)} <span class="count">${t('dash.stats.youManage', dl, { n: mine.length })}</span></h2>
+<div class="tscroll"><table class="btable"><tr><td class="k">${t('dash.stats.colServer', dl)}</td><td class="k">${t('dash.stats.colStatus', dl)}</td><td class="k">${t('dash.stats.colTrapped', dl)}</td></tr>
+${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badge un">${t('dash.stats.armed', dl)}</span>` : `<span class="k">${t('dash.stats.needsSetup', dl)}</span>`}</td><td>${g.n}</td></tr>`).join('')}
+</table></div><small style="color:var(--dim)">${t('dash.stats.onlyYou', dl)}</small></div>` : ''}
 <script>
 (() => {
   const pts = [${dots.join(',')}];
@@ -661,7 +675,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? '<span class="badg
     tip.style.opacity = 1;
     tip.style.left = (best.x / vb * r.width) + 'px';
     tip.style.top = (best.y / ${H} * r.height) + 'px';
-    tip.innerHTML = '<b>' + best.c + '</b> caught<br>' + best.d;
+    tip.innerHTML = '<b>' + best.c + '</b> ' + ${JSON.stringify(t('dash.stats.caught', dl))} + '<br>' + best.d;
   });
   svg.addEventListener('mouseleave', () => { cx.style.opacity = cd.style.opacity = tip.style.opacity = 0; });
 })();
@@ -672,6 +686,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? '<span class="badg
     const html = (s, code = 200, headers = {}) => { res.writeHead(code, { 'content-type': 'text/html; charset=utf-8', ...headers }); res.end(s); };
     const redirect = (to, headers = {}) => { res.writeHead(302, { location: to, ...headers }); res.end(); };
     const url = new URL(req.url, PUBLIC_URL);
+    curLocale = dashLocale(req); // this viewer's language, for every t() below
 
     try {
       // ---- auth ----
@@ -832,7 +847,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             banner.hideCredit = SELF_HOSTED && form.get('banner_hidecredit') === 'on';
             delete banner.credit; // effective credit is resolved at render time
             saveGuild(guild.id, { banner });
-            return html(await guildPage(guild, sess, 'Banner saved. Post it from Actions (or /madhoney deploy in Discord).', 'banner'));
+            return html(await guildPage(guild, sess, t('dash.msg.bannerSaved', curLocale), 'banner'));
           }
           const patch = {};
           for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText', 'captchaDifficulty', 'locale']) {
@@ -843,10 +858,10 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
           patch.verificationEnabled = form.get('verificationEnabled') === 'on';
           if (form.has('banDeleteDays')) patch.banDeleteDays = Math.min(7, Math.max(0, Number(form.get('banDeleteDays')) || 0));
           if (patch.verifyChannelId && patch.verifyChannelId === patch.honeypotChannelId) {
-            return html(await guildPage(guild, sess, '❌ Verify and honeypot must be different channels - not saved.', 'config'));
+            return html(await guildPage(guild, sess, t('dash.msg.channelClash', curLocale), 'config'));
           }
           saveGuild(guild.id, patch);
-          return html(await guildPage(guild, sess, 'Saved.', 'config'));
+          return html(await guildPage(guild, sess, t('dash.msg.saved', curLocale), 'config'));
         }
         if (m[2] === '/action' && req.method === 'POST') {
           const form = await body(req);
@@ -857,21 +872,21 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             const m = modeMap[form.get('do')];
             saveGuild(guild.id, { honeypotMode: m });
             const note = {
-              armed: '🍯 Honeypot armed. Anyone who posts in the honeypot channel is now banned.',
-              review: '⏸ Honeypot set to Hold for review. Honeypot posts go to your log channel with Ban / Dismiss buttons instead of an instant ban.' + (getGuild(guild.id)?.logChannelId ? '' : ' ⚠️ Set a log channel below so held posts have somewhere to go.'),
-              disarmed: '⭘ Honeypot disarmed. The trap is off - nobody gets banned until you arm it again.',
+              armed: t('dash.msg.noteArmed', curLocale),
+              review: t('dash.msg.noteReview', curLocale) + (getGuild(guild.id)?.logChannelId ? '' : t('dash.msg.noteReviewNoLog', curLocale)),
+              disarmed: t('dash.msg.noteDisarmed', curLocale),
             }[m];
             return html(await guildPage(guild, sess, note, 'top'));
           }
           if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
-            return html(await guildPage(guild, sess, '❌ Finish configuration first (role + both channels).', 'actions'));
+            return html(await guildPage(guild, sess, t('dash.msg.finishConfig', curLocale), 'actions'));
           }
           // Member-by-member jobs (one API call each) run in the background
           // with a polled progress bar; one job at a time per guild.
           const slowJobs = { grandfather, ban_sync: syncBans };
           if (slowJobs[form.get('do')]) {
             if (gfJobs.get(guild.id) && !gfJobs.get(guild.id).finished) {
-              return html(await guildPage(guild, sess, 'A job is already running - watch the bar below.', 'actions'));
+              return html(await guildPage(guild, sess, t('dash.msg.jobRunning', curLocale), 'actions'));
             }
             const progress = { finished: false, at: Date.now() };
             gfJobs.set(guild.id, progress);
@@ -886,7 +901,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             ungate: () => ungateChannels(guild, cfg),
           };
           const act = acts[form.get('do')];
-          if (!act) return html(await guildPage(guild, sess, 'Unknown action.', 'actions'), 400);
+          if (!act) return html(await guildPage(guild, sess, t('dash.msg.unknownAction', curLocale), 'actions'), 400);
           const result = await act().catch((e) => `❌ ${explainError(e.message)}`);
           return html(await guildPage(guild, sess, result, 'actions'));
         }
@@ -905,7 +920,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
         }
         if (url.searchParams.get('refresh')) {
           await Promise.all([guild.roles.fetch(), guild.channels.fetch()]).catch(() => {});
-          return html(await guildPage(guild, sess, 'Refreshed roles and channels from Discord.'));
+          return html(await guildPage(guild, sess, t('dash.msg.refreshed', curLocale)));
         }
         return html(await guildPage(guild, sess));
       }
