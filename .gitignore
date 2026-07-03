@@ -2,5 +2,6 @@ node_modules/
 .env
 guilds.json
 bans.jsonl
+appeals.jsonl
 bot.log
 sessions.json

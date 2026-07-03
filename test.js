@@ -2,7 +2,7 @@
 import assert from 'node:assert';
 import { shouldTrap, honeypotMode } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
-import { bannedElsewhere, trappedCount, appealableGuildIds } from './store.js';
+import { bannedElsewhere, trappedCount, appealableGuildIds, banEpoch } from './store.js';
 import { renderBanner } from './banner.js';
 import { renderCaptcha } from './captcha.js';
 
@@ -47,6 +47,20 @@ const agRows = [{ id: 'x', guildId: 'A' }, { id: 'x', guildId: 'B' }, { id: 'x',
 const ag = appealableGuildIds('x', agGuilds, agRows);
 assert.deepEqual(ag, ['A'], 'appeal: only opted-in+logchannel+banned server (A); not B (opted out), C (no log), D (unknown/not-in-before)');
 assert.deepEqual(appealableGuildIds('nobody', agGuilds, agRows), [], 'no bans -> no appeal targets');
+
+// ban episode: latest un-reversed ban `at` per (user,guild); one appeal per episode
+const beRows = [
+  { id: 'z', guildId: 'A', at: 'T1' },
+  { id: 'z', guildId: 'A', at: 'T2', unbanned: true }, // unbanned...
+  { id: 'z', guildId: 'A', at: 'T3' },                 // ...then re-banned = new episode
+  { id: 'z', guildId: 'B', at: 'T4' },
+];
+assert.equal(banEpoch('z', 'A', beRows), 'T3', 'episode = latest un-reversed ban');
+assert.equal(banEpoch('z', 'B', beRows), 'T4', 'banned in B');
+assert.equal(banEpoch('z', 'C', beRows), null, 'not banned in C -> no episode');
+assert.equal(banEpoch('nobody', 'A', beRows), null, 'unknown user -> no episode');
+assert.equal(banEpoch('q', 'A', [{ id: 'q', guildId: 'A', at: 'T1' }, { id: 'q', guildId: 'A', at: 'T2', unbanned: true }]), null,
+  'currently unbanned -> no episode (appeal closed)');
 
 // trapped count: distinct users, not raw log lines
 const trows = [

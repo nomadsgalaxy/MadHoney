@@ -3,7 +3,7 @@
 // returns a human-readable result string.
 import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { createHash, randomBytes } from 'node:crypto';
-import { renderBanner, DEFAULT_BANNER, resolveCredit } from './banner.js';
+import { renderBanner, DEFAULT_BANNER, creditSuffix } from './banner.js';
 
 // Randomize the banner's attachment filename on every post. A fixed name like
 // "do-not-post.png" is a fingerprint: once MadHoney is popular, spam tooling
@@ -26,11 +26,11 @@ import { saveGuild, bans, logBan } from './store.js';
 // banner looks. Combined with the per-guild content, they form a fingerprint;
 // on boot the posted message is edited in place (no notification) only if that
 // fingerprint changed, so plain bot updates never re-post anything.
-const VERIFY_PANEL_VERSION = 1;
-const BANNER_RENDER_VERSION = 3; // v3: credit line resolved via SELF_HOSTED, per-render noise
+const VERIFY_PANEL_VERSION = 2; // v2: attribution line moved onto the verify panel
+const BANNER_RENDER_VERSION = 4; // v4: credit line removed from the banner (moved to verify panel)
 const fp = (s) => createHash('sha1').update(s).digest('hex').slice(0, 12);
-export const verifyFingerprint = (cfg) => fp(`${VERIFY_PANEL_VERSION}|${cfg.verifyText || DEFAULT_VERIFY_TEXT}`);
-export const bannerFingerprint = (cfg) => fp(`${BANNER_RENDER_VERSION}|${JSON.stringify({ ...DEFAULT_BANNER, ...cfg.banner, credit: resolveCredit(cfg.banner?.hideCredit) })}`);
+export const verifyFingerprint = (cfg) => fp(`${VERIFY_PANEL_VERSION}|${cfg.verifyText || DEFAULT_VERIFY_TEXT}|${creditSuffix(cfg.banner?.hideCredit)}`);
+export const bannerFingerprint = (cfg) => fp(`${BANNER_RENDER_VERSION}|${JSON.stringify({ ...DEFAULT_BANNER, ...cfg.banner })}`);
 
 const verifyRow = () => new ActionRowBuilder().addComponents(
   new ButtonBuilder().setCustomId('verify_start').setLabel('Verify').setStyle(ButtonStyle.Success),
@@ -39,6 +39,10 @@ const verifyRow = () => new ActionRowBuilder().addComponents(
 export const DEFAULT_VERIFY_TEXT =
   '**Verify & Agree to the Rules**\nClick **Verify** and type the code from the image. ' +
   'Verifying confirms you’ve read and agree to the rules above, and unlocks the server.';
+
+// The verify panel's full text = the admin's (editable) message + the MadHoney
+// attribution line. The credit lives here now, not on the honeypot banner.
+const verifyContent = (cfg) => (cfg.verifyText || DEFAULT_VERIFY_TEXT) + creditSuffix(cfg.banner?.hideCredit);
 
 async function textChannel(guild, id, what) {
   const ch = await guild.channels.fetch(id).catch(() => null);
@@ -55,7 +59,7 @@ export async function postVerifyPanel(guild, cfg) {
       await m.delete().catch(() => {});
     }
   } catch { /* no Read History - skip cleanup */ }
-  const msg = await ch.send({ content: cfg.verifyText || DEFAULT_VERIFY_TEXT, components: [verifyRow()] });
+  const msg = await ch.send({ content: verifyContent(cfg), components: [verifyRow()] });
   saveGuild(guild.id, { verifyPosted: true, verifyMsgId: msg.id, verifyFp: verifyFingerprint(cfg) });
   return `Posted the Verify panel in #${ch.name}.`;
 }
@@ -67,7 +71,7 @@ export async function refreshVerifyPanel(guild, cfg) {
   if (!cfg.verifyChannelId || cfg.verifyFp === verifyFingerprint(cfg)) return null;
   const ch = await guild.channels.fetch(cfg.verifyChannelId).catch(() => null);
   if (!ch?.isTextBased()) return null;
-  const payload = { content: cfg.verifyText || DEFAULT_VERIFY_TEXT, components: [verifyRow()] };
+  const payload = { content: verifyContent(cfg), components: [verifyRow()] };
   let msg = cfg.verifyMsgId ? await ch.messages.fetch(cfg.verifyMsgId).catch(() => null) : null;
   if (!msg) {
     const recent = await ch.messages.fetch({ limit: 20 }).catch(() => null);
@@ -91,7 +95,7 @@ export function roleColorMap(guild) {
 // Render the configured banner and post it in the honeypot channel.
 export async function postBanner(guild, cfg) {
   const ch = await textChannel(guild, cfg.honeypotChannelId, 'Honeypot');
-  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), credit: resolveCredit(cfg.banner?.hideCredit), roleColors: roleColorMap(guild) });
+  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), roleColors: roleColorMap(guild) });
   try {
     const recent = await ch.messages.fetch({ limit: 50 });
     for (const m of recent.filter((m) => m.author.id === guild.client.user.id).values()) {
@@ -109,7 +113,7 @@ export async function refreshBanner(guild, cfg) {
   if (!cfg.honeypotChannelId || cfg.bannerFp === bannerFingerprint(cfg)) return null;
   const ch = await guild.channels.fetch(cfg.honeypotChannelId).catch(() => null);
   if (!ch?.isTextBased()) return null;
-  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), credit: resolveCredit(cfg.banner?.hideCredit), roleColors: roleColorMap(guild) });
+  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), roleColors: roleColorMap(guild) });
   const file = new AttachmentBuilder(png, { name: bannerFileName() });
   let msg = cfg.bannerMsgId ? await ch.messages.fetch(cfg.bannerMsgId).catch(() => null) : null;
   if (!msg) {
@@ -258,6 +262,42 @@ export async function gateChannels(guild, cfg, apply = false, sel = null) {
     channelTreatment: treatment,
   });
   return `Gated. ${ok} channels updated, ${failed.length} failed${plan.noaccess.length ? `, ${plan.noaccess.length} unreachable` : ''}.${failed.length ? '\nFailed: ' + failed.join(', ') : ''}\n${lines.join('\n')}`;
+}
+
+// Keep the gate closed on a channel created (or re-opened) AFTER the initial
+// gate. Without this, any channel an admin adds later is an ungated hole an
+// unverified account can post in (and it's not the honeypot, so nothing traps
+// them there). Only acts when the server is set up AND has gated before; leaves
+// the verify gateway, the honeypot, private/admin channels (anything @everyone
+// already can't see), and channels the admin explicitly forced public/left
+// alone. Returns a short status string, or null when it did nothing.
+export async function gateNewChannel(guild, cfg, channel) {
+  if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) return null;
+  if (!cfg.gatedChannels?.length) return null; // this server doesn't use gating
+  if (channel.id === cfg.verifyChannelId || channel.id === cfg.honeypotChannelId) return null;
+  const treat = cfg.channelTreatment?.[channel.id];
+  if (treat === 'public' || treat === 'leave') return null; // admin's explicit choice - honor it
+  const everyone = guild.roles.everyone;
+  // Only a channel @everyone can currently VIEW is a hole. One that inherits
+  // "hidden" from a gated category is already effectively gated - leave it.
+  // ponytail: same call as gateChannels; admin channels under a gated category
+  // stay hidden by inheritance, so we don't re-run its explicit-deny protect step.
+  if (!channel.permissionOverwrites || !channel.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel)) return null;
+  const me = await guild.members.fetchMe();
+  if (!channel.permissionsFor(me).has(PermissionFlagsBits.ViewChannel) ||
+      !channel.permissionsFor(me).has(PermissionFlagsBits.ManageRoles)) {
+    return `⚠️ New channel #${channel.name} is public but I can't gate it - grant the MadHoney role View Channel + Manage Roles there, or re-run gating from the dashboard.`;
+  }
+  const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
+  if (!role) return null;
+  // role-first ordering (see gateChannels) so the bot doesn't lock itself out
+  await channel.permissionOverwrites.edit(role, { ViewChannel: true }, { reason: 'MadHoney: auto-gate new channel' });
+  await channel.permissionOverwrites.edit(everyone, { ViewChannel: false }, { reason: 'MadHoney: auto-gate new channel' });
+  saveGuild(guild.id, {
+    gatedChannels: cfg.gatedChannels.includes(channel.id) ? cfg.gatedChannels : [...cfg.gatedChannels, channel.id],
+    channelTreatment: { ...cfg.channelTreatment, [channel.id]: 'gate' },
+  });
+  return `🔒 Auto-gated new channel #${channel.name} behind "${role.name}".`;
 }
 
 // Reverse gating: clear the ViewChannel overwrites MadHoney added on the

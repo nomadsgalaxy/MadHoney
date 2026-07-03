@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs
 
 const GUILDS = new URL('./guilds.json', import.meta.url);
 const BANS = new URL('./bans.jsonl', import.meta.url);
+const APPEALS = new URL('./appeals.jsonl', import.meta.url);
 
 export function allGuilds() {
   return existsSync(GUILDS) ? JSON.parse(readFileSync(GUILDS, 'utf8')) : {};
@@ -22,6 +23,18 @@ export function saveGuild(id, patch) {
 }
 
 export function logBan(entry) {
+  // Dedup: skip a ban row for a user already banned in this guild (per their
+  // latest row). Unban rows and a user's first ban always write. Keeps the
+  // append-only log from ballooning under repeat catches / propagation and
+  // bounds ban-list flooding.
+  // ponytail: re-reads the guild's rows per call - fine at this scale (see file
+  // header). A ban-sync over a huge shared list is the O(n^2) case that triggers
+  // the SQLite migration, not this.
+  if (!entry.unbanned && entry.id && entry.guildId) {
+    let banned = false;
+    for (const b of bans(entry.guildId)) if (b.id === entry.id) banned = !b.unbanned;
+    if (banned) return;
+  }
   appendFileSync(BANS, JSON.stringify(entry) + '\n');
 }
 
@@ -68,4 +81,34 @@ export function appealableGuildIds(userId, guilds = allGuilds(), rows = bans()) 
     if (banned && guilds[g]?.appealEnabled && guilds[g]?.logChannelId) out.push(g);
   }
   return out;
+}
+
+// The "episode" identifier of a user's CURRENT ban in a guild: the `at` of the
+// latest un-reversed ban row for (user, guild), or null if they aren't banned
+// there right now. An unban then re-ban is a NEW episode, so a fresh ban is
+// appealable again while duplicate clicks on one ban collapse to one appeal.
+export function banEpoch(userId, guildId, rows = bans()) {
+  let epoch = null;
+  for (const b of rows) {
+    if (b.id !== userId || b.guildId !== guildId) continue;
+    epoch = b.unbanned ? null : (b.at ?? epoch);
+  }
+  return epoch;
+}
+
+// One appeal per ban episode. hasAppealed is the durable (survives restarts)
+// half of the dedup; the caller pairs it with an in-memory in-flight guard to
+// cover the async gap before recordAppeal persists. Both checks are synchronous
+// so concurrent button replays can't all pass before one wins.
+export function hasAppealed(userId, guildId, epoch) {
+  if (!existsSync(APPEALS)) return false;
+  const key = `${userId}:${guildId}:${epoch}`;
+  for (const l of readFileSync(APPEALS, 'utf8').trim().split('\n').filter(Boolean)) {
+    try { const a = JSON.parse(l); if (`${a.id}:${a.guildId}:${a.epoch}` === key) return true; } catch { /* skip */ }
+  }
+  return false;
+}
+
+export function recordAppeal(userId, guildId, epoch) {
+  appendFileSync(APPEALS, JSON.stringify({ id: userId, guildId, epoch, at: new Date().toISOString() }) + '\n');
 }

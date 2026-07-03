@@ -10,7 +10,7 @@ import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans, trappedCount } from './store.js';
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { honeypotMode } from './trap.js';
-import { renderBanner, DEFAULT_BANNER, FONTS, resolveCredit, SELF_HOSTED } from './banner.js';
+import { renderBanner, DEFAULT_BANNER, FONTS, SELF_HOSTED } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
 
 const PORT = Number(process.env.PORT || 8300);
@@ -378,8 +378,8 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   </select><small>Garbles the text captcha-style so OCR bots can't read the warning and skip the trap. Higher = harder for machines (and slightly harder for humans). Preview it above before you post.</small></label>
   ${SELF_HOSTED
     ? `<label class="toggle"><input type="checkbox" name="banner_hidecredit" ${b.hideCredit ? 'checked' : ''}>
-    <span>Hide the "protected by MadHoney" credit line<small>You're self-hosting, so this is your call. Heads up: a fixed credit string is a fingerprint bots could use to spot the honeypot - customizing the banner is the safer way to stay unique.</small></span></label>`
-    : '<label><small>ℹ️ A small "protected by MadHoney" credit line is included on the banner. Want it gone? MadHoney is free and open - self-host it (SELF_HOSTED=true) and you can remove it.</small></label>'}
+    <span>Hide the "protected by MadHoney" credit line<small>You're self-hosting, so this is your call. The credit shows as a small link on your <b>verify panel</b> (not on the honeypot banner, so the decoy stays generic).</small></span></label>`
+    : '<label><small>ℹ️ A small "protected by MadHoney" credit line is shown on your <b>verify panel</b> (not the honeypot banner). Want it gone? MadHoney is free and open - self-host it (SELF_HOSTED=true) and you can remove it.</small></label>'}
   <button class="btn">Save banner</button>
 </form>
 <script>
@@ -813,7 +813,6 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             const v = url.searchParams.get(`banner_${k}`);
             if (v !== null) opts[k] = v;
           }
-          opts.credit = resolveCredit(url.searchParams.get('banner_hidecredit') === 'on');
           const png = await renderBanner({ ...opts, roleColors: roleColorMap(guild) });
           res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
           return res.end(png);

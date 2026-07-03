@@ -14,9 +14,14 @@ const BUNDLED_LOGO = fileURLToPath(new URL('./logo.png', import.meta.url));
 // The attribution/credit line. On the hosted service it's mandatory (marketing
 // + SWAtt); only self-hosters may hide it. Set SELF_HOSTED=true to allow that.
 export const CREDIT_LINE = 'protected by https://madhoney.nomadsgalaxy.com';
+export const CREDIT_URL = 'https://madhoney.nomadsgalaxy.com';
 export const SELF_HOSTED = ['true', 'on', '1', 'yes'].includes(String(process.env.SELF_HOSTED).toLowerCase());
-// Resolve what actually gets printed: forced on unless a self-hoster hid it.
+// Resolve whether the credit shows at all: forced on unless a self-hoster hid it.
 export const resolveCredit = (hideCredit) => (SELF_HOSTED && hideCredit ? '' : CREDIT_LINE);
+// The attribution now lives on the VERIFY PANEL, not the honeypot banner - so the
+// decoy carries no MadHoney-specific tell. Discord subtext + a real link. '' only
+// when a self-hoster has hidden it.
+export const creditSuffix = (hideCredit) => (resolveCredit(hideCredit) ? `\n\n-# protected by [madhoney.nomadsgalaxy.com](${CREDIT_URL})` : '');
 
 export const DEFAULT_BANNER = {
   title: 'HONEYPOT IS ACTIVE',
@@ -28,7 +33,7 @@ export const DEFAULT_BANNER = {
   logoUrl: '',        // '' -> bundled MadHoney logo, 'none' -> no logo
   mentionColor: '#5865f2', // #channel / @role highlight (Discord blurple)
   mentionMode: 'custom',   // 'custom' -> mentionColor for all; 'role' -> real role colors via opts.roleColors
-  credit: CREDIT_LINE,     // effective value is set via resolveCredit() per render
+  credit: '',              // attribution moved to the verify panel (see creditSuffix); banner stays generic
   distort: 0,              // 0 none .. 3 heavy: garble the text against OCR/bot detection
 };
 

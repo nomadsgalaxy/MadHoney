@@ -26,8 +26,12 @@ const DIFFICULTY = { easy: 0.55, normal: 1, hard: 1.6 };
 
 export function renderCaptcha(code, difficulty = 'normal', rand = Math.random) {
   const k = DIFFICULTY[difficulty] ?? 1;
-  const step = 48;
-  const W = 60 + code.length * step;
+  const step = 46;
+  const startX = 40;
+  // Slack for the variable glyph pitch below. Combined with the now-variable
+  // code length (captchaLength), the image no longer advertises a fixed
+  // "always N chars at a fixed pitch" prior a solver can hardcode.
+  const W = startX + Math.ceil(code.length * step * 1.25) + 20;
   const H = 110;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
@@ -63,19 +67,20 @@ export function renderCaptcha(code, difficulty = 'normal', rand = Math.random) {
   interference(ctx, W, H, NOISE, 2 + rand() * 2, rand);
 
   // characters: jitter + rotation + horizontal shear (skew), varied size, and
-  // slight overlap so neighbouring glyphs touch (hard for OCR to segment).
-  // Distortion magnitude scales with difficulty.
+  // NON-CONSTANT horizontal pitch so a solver can't segment glyphs by assuming
+  // a fixed step. Distortion magnitude scales with difficulty.
+  let x = startX;
   for (let i = 0; i < code.length; i++) {
-    const x = 40 + i * step + (rand() * 10 - 5) * k;
     const y = H / 2 + (rand() * 22 - 11) * k;
     ctx.save();
-    ctx.translate(x, y);
+    ctx.translate(x + (rand() * 8 - 4) * k, y);
     ctx.transform(1, (rand() - 0.5) * 0.5 * k, (rand() - 0.5) * 0.5 * k, 1, 0, 0); // shear
     ctx.rotate((rand() - 0.5) * 0.8 * k);
     ctx.font = `bold ${44 + Math.floor(rand() * 16)}px sans-serif`;
     ctx.fillStyle = INK[Math.floor(rand() * INK.length)];
     ctx.fillText(code[i], 0, 0);
     ctx.restore();
+    x += step * (0.8 + rand() * 0.4); // 0.8..1.2 of step, mean 1.0 - pitch varies per glyph
   }
 
   // interference curves OVER the text - these cross the glyphs and defeat OCR
@@ -92,5 +97,9 @@ export function renderCaptcha(code, difficulty = 'normal', rand = Math.random) {
   return canvas.toBuffer('image/png');
 }
 
-// Code length per difficulty - longer is harder to guess and to OCR cleanly.
-export const captchaLength = (difficulty) => ({ easy: 4, normal: 5, hard: 6 }[difficulty] ?? 5);
+// Random length in a per-difficulty range - longer is harder to guess/OCR, and
+// varying it removes the fixed "always N chars" prior a trained solver relies on.
+export const captchaLength = (difficulty, rand = Math.random) => {
+  const [lo, hi] = ({ easy: [4, 5], normal: [5, 6], hard: [6, 7] })[difficulty] ?? [5, 6];
+  return lo + Math.floor(rand() * (hi - lo + 1));
+};

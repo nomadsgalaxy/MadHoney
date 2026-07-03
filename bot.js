@@ -2,6 +2,7 @@
 // One process: the bot, plus (if CLIENT_ID/CLIENT_SECRET are set) the web
 // dashboard. Per-guild config lives in guilds.json; bans in bans.jsonl.
 import 'dotenv/config';
+import { createHmac } from 'node:crypto';
 import {
   Client, GatewayIntentBits, Events, PermissionFlagsBits, PermissionsBitField, MessageFlags,
   SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
@@ -12,12 +13,56 @@ import { shouldTrap, honeypotMode } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha, captchaLength } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
-import { getGuild, saveGuild, logBan, bans, bannedElsewhere, appealableGuildIds } from './store.js';
-import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, ungateChannels, grandfather, syncBans, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { getGuild, saveGuild, logBan, bans, bannedElsewhere, appealableGuildIds, banEpoch, hasAppealed, recordAppeal } from './store.js';
+import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, gateNewChannel, ungateChannels, grandfather, syncBans, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { startDashboard } from './dashboard.js';
 
 const EPH = { flags: MessageFlags.Ephemeral };
-const pending = new Map(); // userId -> expected captcha answer (in-memory; users just re-click after a restart)
+const pending = new Map(); // userId -> { code, attempts, expires, cooldownUntil } (in-memory; users re-click after a restart)
+const appealInFlight = new Set(); // `${uid}:${gid}:${epoch}` mid-send; the async half of the one-appeal-per-ban guard (durable half is appeals.jsonl)
+const VERIFY_TTL = 3 * 60 * 1000;  // a shown captcha is valid this long
+const VERIFY_MAX_ATTEMPTS = 5;     // wrong guesses against one code before it's burned
+const VERIFY_COOLDOWN = 2000;      // min ms between "Verify" clicks (each mints a fresh image)
+// sweep expired codes so `pending` can't grow without bound
+setInterval(() => { const now = Date.now(); for (const [k, v] of pending) if (now > v.expires) pending.delete(k); }, 60_000).unref?.();
+
+// Sign appeal buttons so a forged `mh_appeal_<gid>` can't be used to probe
+// "am I banned here?" - the signature binds the button to this user + ban
+// episode. Set APPEAL_SIGNING_KEY to a stable secret; falls back to the bot
+// token (already secret and stable per deployment).
+const APPEAL_KEY = process.env.APPEAL_SIGNING_KEY || process.env.DISCORD_TOKEN || 'madhoney-dev';
+const appealSig = (uid, gid, epoch) => createHmac('sha256', APPEAL_KEY).update(`${uid}:${gid}:${epoch}`).digest('hex').slice(0, 16);
+
+// ---- log-channel flood control ----
+// Two-tier token buckets so a flood of low-priority notices (appeals, auto-gate,
+// webhook alerts) can never crowd out critical ban/trap reports, plus a global
+// cap that protects the bot's Discord rate limit across all guilds. In-memory,
+// 60s windows. Critical (ban/trap) reports bypass the global cap - a real ban
+// wave must always land in the log.
+const logBuckets = new Map(); // `${guildId}:${priority}` -> { tokens, resetAt }
+let globalLog = { tokens: 0, resetAt: 0 };
+const LOG_LIMITS = { critical: 20, normal: 8 }; // per guild, per 60s window
+function logAllow(guildId, priority) {
+  const now = Date.now();
+  if (now > globalLog.resetAt) globalLog = { tokens: 30, resetAt: now + 60_000 };
+  const key = `${guildId}:${priority}`;
+  let b = logBuckets.get(key);
+  if (!b || now > b.resetAt) { b = { tokens: LOG_LIMITS[priority] ?? 8, resetAt: now + 60_000 }; logBuckets.set(key, b); }
+  if (b.tokens <= 0) return false;
+  if (priority !== 'critical') { if (globalLog.tokens <= 0) return false; globalLog.tokens--; }
+  b.tokens--;
+  return true;
+}
+// Fire-and-forget send to a guild's log channel, throttled by priority. Use
+// logAllow directly where the caller needs to know whether it went through.
+async function logSend(guild, cfg, payload, priority = 'normal') {
+  if (!cfg?.logChannelId) return;
+  if (!logAllow(guild.id, priority)) { console.log(`[${guild.name}] log ${priority} message throttled`); return; }
+  try {
+    const log = await guild.channels.fetch(cfg.logChannelId);
+    await log.send(payload);
+  } catch (err) { console.error(`[${guild.name}] log send failed:`, err.message); }
+}
 const DASH = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
 const dashLink = (guildId) => (DASH ? `**[${DASH.replace(/^https?:\/\//, '')}](${DASH}${guildId ? `/g/${guildId}` : ''})**` : 'the web dashboard');
 
@@ -161,9 +206,12 @@ client.on(Events.InteractionCreate, async (i) => {
       const cfg = getGuild(i.guildId) ?? {};
       const role = cfg.verifiedRoleId && (await i.guild.roles.fetch(cfg.verifiedRoleId).catch(() => null));
       if (role && i.member.roles.cache.has(role.id)) return i.reply({ content: "You're already verified ✅", ...EPH });
+      const now = Date.now();
+      const prev = pending.get(i.user.id);
+      if (prev && now < prev.cooldownUntil) return i.reply({ content: 'One sec - wait a moment, then tap **Verify** again.', ...EPH });
       const difficulty = cfg.captchaDifficulty ?? 'normal';
       const code = makeCode(captchaLength(difficulty));
-      pending.set(i.user.id, code);
+      pending.set(i.user.id, { code, attempts: 0, expires: now + VERIFY_TTL, cooldownUntil: now + VERIFY_COOLDOWN });
       const img = new AttachmentBuilder(renderCaptcha(code, difficulty), { name: 'captcha.png' });
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('verify_open').setLabel('Enter code').setStyle(ButtonStyle.Success),
@@ -178,8 +226,12 @@ client.on(Events.InteractionCreate, async (i) => {
       return i.showModal(modal);
     }
     if (i.isModalSubmit() && i.customId === 'verify_answer') {
-      const expected = pending.get(i.user.id);
-      if (expected && answerOk(i.fields.getTextInputValue('ans'), expected)) {
+      const rec = pending.get(i.user.id);
+      if (!rec || Date.now() > rec.expires) {
+        pending.delete(i.user.id);
+        return i.reply({ content: 'That code expired - tap **Verify** for a fresh one.', ...EPH });
+      }
+      if (answerOk(i.fields.getTextInputValue('ans'), rec.code)) {
         pending.delete(i.user.id);
         const cfg = getGuild(i.guildId) ?? {};
         const role = cfg.verifiedRoleId && (await i.guild.roles.fetch(cfg.verifiedRoleId).catch(() => null));
@@ -187,19 +239,40 @@ client.on(Events.InteractionCreate, async (i) => {
         await i.member.roles.add(role, 'MadHoney: passed verification');
         return i.reply({ content: `Verified ✅ Welcome to ${i.guild.name}.`, ...EPH });
       }
-      return i.reply({ content: "That's not right - hit Verify and try again.", ...EPH });
+      // wrong answer: count it against this code; burn the code after too many so
+      // re-opening the modal (verify_open) can't brute-force one image forever.
+      rec.attempts++;
+      if (rec.attempts >= VERIFY_MAX_ATTEMPTS) {
+        pending.delete(i.user.id);
+        return i.reply({ content: 'Too many wrong tries - tap **Verify** for a new image.', ...EPH });
+      }
+      return i.reply({ content: `That's not right - tap **Verify** for a new image and try again. (${VERIFY_MAX_ATTEMPTS - rec.attempts} left)`, ...EPH });
     }
 
     // Appeal button (clicked in a DM). User-facing, so handled before the
     // admin/guild guard below. Forwards the appeal to that server's log channel.
     if (i.isButton() && i.customId.startsWith('mh_appeal_')) {
-      const gid = i.customId.slice('mh_appeal_'.length);
-      if (!appealableGuildIds(i.user.id).includes(gid)) {
-        return i.reply({ content: 'That appeal is no longer available (you may already have been unbanned).' });
+      // customId: mh_appeal_<gid>_<sig>, sig = HMAC(user, gid, banEpoch). The
+      // signature binds the button to THIS user + ban, so a forged id can't be
+      // used to probe "am I banned here?" - every failure path returns one
+      // identical reply (no oracle). One appeal per ban episode (see the ledger):
+      // the checks + the in-flight add run synchronously (no await between them),
+      // so a flood of parallel replays can't all pass before one wins.
+      const [gid, sig] = i.customId.slice('mh_appeal_'.length).split('_');
+      const epoch = gid ? banEpoch(i.user.id, gid) : null;
+      const nope = 'That appeal link is no longer valid - you may already have been unbanned, or already sent an appeal for this ban.';
+      if (!epoch || sig !== appealSig(i.user.id, gid, epoch) || !appealableGuildIds(i.user.id).includes(gid)) {
+        return i.reply({ content: nope });
       }
+      const key = `${i.user.id}:${gid}:${epoch}`;
+      if (appealInFlight.has(key) || hasAppealed(i.user.id, gid, epoch)) return i.reply({ content: nope });
+      appealInFlight.add(key); // synchronous claim before any await
       const cfg = getGuild(gid);
       const guild = client.guilds.cache.get(gid);
       try {
+        if (!logAllow(gid, 'normal')) {
+          return i.reply({ content: "The mod team's inbox is busy right now - please try again in a minute." });
+        }
         const log = await guild.channels.fetch(cfg.logChannelId);
         await log.send({
           content: `📩 **Ban appeal** - <@${i.user.id}> (${i.user.tag}, \`${i.user.id}\`) was banned by the honeypot and is asking you to take another look.`,
@@ -208,9 +281,12 @@ client.on(Events.InteractionCreate, async (i) => {
             new ButtonBuilder().setCustomId(`mh_appno_${gid}_${i.user.id}`).setLabel('Deny').setStyle(ButtonStyle.Danger),
           )],
         });
+        recordAppeal(i.user.id, gid, epoch); // persist ONLY after it actually reached the mod team
         return i.reply({ content: `✅ Your appeal was sent to **${guild.name}**'s mod team. If they approve it, I'll DM you a fresh invite.` });
       } catch (e) {
-        return i.reply({ content: `Sorry - I couldn't reach that server's mod team (${e.message}).` });
+        return i.reply({ content: `Sorry - I couldn't reach that server's mod team (${e.message}). Try again in a moment.` });
+      } finally {
+        appealInFlight.delete(key); // released; durable dedup is now on recordAppeal (success) or free to retry (failure/throttle)
       }
     }
 
@@ -452,28 +528,48 @@ client.on(Events.GuildCreate, async (guild) => {
   } catch { /* no postable channel - fine */ }
 });
 
+// ---------- keep the gate closed on channels added/re-opened later ----------
+
+// A channel created after the initial gate (or one an admin re-exposes to
+// @everyone) is an ungated hole. Auto-gate it behind the verified role, matching
+// the classify/gate rules. Best-effort; reports to the log channel if set.
+async function autogate(channel) {
+  const guild = channel?.guild;
+  if (!guild) return;
+  const cfg = getGuild(guild.id);
+  if (!cfg) return;
+  try {
+    const msg = await gateNewChannel(guild, cfg, channel);
+    if (!msg) return;
+    console.log(`[${guild.name}] ${msg}`);
+    await logSend(guild, cfg, { content: msg }, 'normal');
+  } catch (err) {
+    console.error(`[${guild.name}] auto-gate failed for #${channel?.name}:`, err.message);
+  }
+}
+client.on(Events.GuildChannelCreate, (channel) => autogate(channel));
+client.on(Events.GuildChannelUpdate, (_old, channel) => autogate(channel));
+
 // ---------- appeal pipeline (opt-in) ----------
 
-// DM a just-banned user offering to appeal, listing ONLY servers they're
-// currently banned in that opted into appeals (privacy: never reveals servers
-// they were never removed from). Best-effort: fails silently if DMs are closed.
-async function offerAppeal(user) {
-  const ids = appealableGuildIds(user.id);
-  const targets = ids.map((id) => client.guilds.cache.get(id)).filter(Boolean);
-  if (!targets.length) return;
-  const rows = [];
-  for (let i = 0; i < targets.length && i < 20; i += 5) {
-    rows.push(new ActionRowBuilder().addComponents(
-      targets.slice(i, i + 5).map((g) => new ButtonBuilder()
-        .setCustomId(`mh_appeal_${g.id}`).setLabel(`Appeal to ${g.name}`.slice(0, 80)).setStyle(ButtonStyle.Primary)),
-    ));
-  }
+// DM a just-banned user offering to appeal ONLY the server that just banned
+// them. Scoped deliberately: the DM never lists other servers the user is
+// banned in, so it can't be turned into a tool to enumerate someone's server
+// memberships. Best-effort: fails silently if DMs are closed or not appealable.
+async function offerAppeal(user, guildId) {
+  if (!appealableGuildIds(user.id).includes(guildId)) return; // this server didn't opt in, or they aren't banned here
+  const guild = client.guilds.cache.get(guildId);
+  if (!guild) return;
+  const epoch = banEpoch(user.id, guildId);
+  if (!epoch) return;
   await user.send({
     content: [
       '⚠️ You were banned by a **MadHoney** honeypot - a hidden channel that exists only to catch spam bots. Anything posted there is banned automatically.',
-      "If you're a real person who ended up in one by mistake, you can ask the mod team to take another look. Pick a server to appeal to:",
+      `If you're a real person who ended up in one by mistake, you can ask **${guild.name}**'s mod team to take another look:`,
     ].join('\n\n'),
-    components: rows,
+    components: [new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`mh_appeal_${guild.id}_${appealSig(user.id, guild.id, epoch)}`).setLabel(`Appeal to ${guild.name}`.slice(0, 80)).setStyle(ButtonStyle.Primary),
+    )],
   });
 }
 
@@ -482,6 +578,18 @@ async function offerAppeal(user) {
 client.on(Events.MessageCreate, async (msg) => {
   if (!msg.inGuild()) return;
   const cfg = getGuild(msg.guildId);
+
+  // Webhooks post with the bot flag, so shouldTrap's bot exemption skips them -
+  // but a webhook firing in the honeypot is hostile and can't be "banned" (it's
+  // not a member). Delete the post and alert; removing the webhook itself needs
+  // Manage Webhooks and is the mods' call.
+  if (msg.webhookId && cfg?.honeypotChannelId && msg.channelId === cfg.honeypotChannelId && honeypotMode(cfg) !== 'disarmed') {
+    msg.delete().catch(() => {});
+    console.log(`[${msg.guild.name}] deleted webhook post in honeypot (${msg.webhookId})`);
+    await logSend(msg.guild, cfg, { content: `🪝 **A webhook posted in the honeypot** (<#${cfg.honeypotChannelId}>) and its message was deleted. Webhooks aren't members, so they can't be banned - open **Server Settings → Integrations → Webhooks** and delete any you don't recognize.` }, 'normal');
+    return;
+  }
+
   const facts = {
     channelId: msg.channelId,
     authorIsBot: msg.author.bot,
@@ -505,24 +613,19 @@ client.on(Events.MessageCreate, async (msg) => {
   // buries the log), but supported.
   if (honeypotMode(cfg) === 'review') {
     if (!cfg.logChannelId) { console.log(`[${msg.guild.name}] review mode but no log channel - ignoring honeypot hit`); return; }
-    try {
-      const log = await msg.guild.channels.fetch(cfg.logChannelId);
-      await log.send({
-        content: [
-          `⏸ **Held for review.** ${msg.author.tag} (\`${msg.author.id}\`) posted in the honeypot (<#${cfg.honeypotChannelId}>). **Nobody has been banned yet.**`,
-          `[Jump to message](${msg.url})`,
-          quoted,
-          attachments ? `📎 ${attachments}` : null,
-        ].filter(Boolean).join('\n'),
-        components: [new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`mh_review_ban_${msg.author.id}`).setLabel('Ban').setStyle(ButtonStyle.Danger),
-          new ButtonBuilder().setCustomId(`mh_review_dismiss_${msg.author.id}`).setLabel('Dismiss (no action)').setStyle(ButtonStyle.Secondary),
-        )],
-      });
-      console.log(`[${msg.guild.name}] held ${msg.author.tag} (${msg.author.id}) for review`);
-    } catch (err) {
-      console.error(`[${msg.guild.name}] review report failed:`, err.message);
-    }
+    await logSend(msg.guild, cfg, {
+      content: [
+        `⏸ **Held for review.** ${msg.author.tag} (\`${msg.author.id}\`) posted in the honeypot (<#${cfg.honeypotChannelId}>). **Nobody has been banned yet.**`,
+        `[Jump to message](${msg.url})`,
+        quoted,
+        attachments ? `📎 ${attachments}` : null,
+      ].filter(Boolean).join('\n'),
+      components: [new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`mh_review_ban_${msg.author.id}`).setLabel('Ban').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`mh_review_dismiss_${msg.author.id}`).setLabel('Dismiss (no action)').setStyle(ButtonStyle.Secondary),
+      )],
+    }, 'critical');
+    console.log(`[${msg.guild.name}] held ${msg.author.tag} (${msg.author.id}) for review`);
     return;
   }
 
@@ -533,7 +636,7 @@ client.on(Events.MessageCreate, async (msg) => {
   // Appeal DM (opt-in): a real human who tripped the trap can ask for review.
   // Sent BEFORE the ban so they're still reachable, and only lists servers they
   // are actually banned in that opted into appeals (never leaks other servers).
-  await offerAppeal(msg.author).catch(() => {});
+  await offerAppeal(msg.author, msg.guildId).catch(() => {});
 
   let banned = false;
   // How much of their recent message history to wipe with the ban (0-7 days).
@@ -550,23 +653,17 @@ client.on(Events.MessageCreate, async (msg) => {
   }
 
   // Report to the log channel (if configured) with an Unban escape hatch.
-  if (!cfg.logChannelId) return;
-  try {
-    const log = await msg.guild.channels.fetch(cfg.logChannelId);
-    await log.send({
-      content: [
-        `🍯 **The following message was posted in the honeypot** (<#${cfg.honeypotChannelId}>) **and the user has been ${banned ? 'banned' : '⚠️ NOT banned (ban failed - check my permissions)'}.**`,
-        `**User:** ${msg.author.tag} (\`${msg.author.id}\`)`,
-        quoted,
-        attachments ? `📎 ${attachments}` : null,
-      ].filter(Boolean).join('\n'),
-      components: banned ? [new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`mh_unban_${msg.author.id}`).setLabel('Undo - unban this user').setStyle(ButtonStyle.Danger),
-      )] : [],
-    });
-  } catch (err) {
-    console.error(`[${msg.guild.name}] log-channel report failed:`, err.message);
-  }
+  await logSend(msg.guild, cfg, {
+    content: [
+      `🍯 **The following message was posted in the honeypot** (<#${cfg.honeypotChannelId}>) **and the user has been ${banned ? 'banned' : '⚠️ NOT banned (ban failed - check my permissions)'}.**`,
+      `**User:** ${msg.author.tag} (\`${msg.author.id}\`)`,
+      quoted,
+      attachments ? `📎 ${attachments}` : null,
+    ].filter(Boolean).join('\n'),
+    components: banned ? [new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`mh_unban_${msg.author.id}`).setLabel('Undo - unban this user').setStyle(ButtonStyle.Danger),
+    )] : [],
+  }, 'critical');
 });
 
 // ---------- cross-server ban sharing (opt-in) ----------
@@ -584,21 +681,16 @@ client.on(Events.GuildMemberAdd, async (member) => {
   } catch (err) {
     console.error(`[${member.guild.name}] ban-share FAILED for ${member.id}:`, err.message);
   }
-  if (!banned || !cfg.logChannelId) return;
-  try {
-    const log = await member.guild.channels.fetch(cfg.logChannelId);
-    await log.send({
-      content: [
-        '🌐 **Auto-banned on join** - this user is on the universal MadHoney ban list (caught by another server\'s honeypot).',
-        `**User:** ${member.user.tag} (\`${member.id}\`)`,
-      ].join('\n'),
-      components: [new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`mh_unban_${member.id}`).setLabel('Undo - unban this user').setStyle(ButtonStyle.Danger),
-      )],
-    });
-  } catch (err) {
-    console.error(`[${member.guild.name}] ban-share log report failed:`, err.message);
-  }
+  if (!banned) return;
+  await logSend(member.guild, cfg, {
+    content: [
+      '🌐 **Auto-banned on join** - this user is on the universal MadHoney ban list (caught by another server\'s honeypot).',
+      `**User:** ${member.user.tag} (\`${member.id}\`)`,
+    ].join('\n'),
+    components: [new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`mh_unban_${member.id}`).setLabel('Undo - unban this user').setStyle(ButtonStyle.Danger),
+    )],
+  }, 'critical');
 });
 
 // ---------- boot ----------
