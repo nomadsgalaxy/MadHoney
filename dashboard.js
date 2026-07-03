@@ -92,7 +92,7 @@ function body(req) {
 export function startDashboard(client) {
   // Minimum viable permission set - see the note in bot.js.
   const inviteUrl = () =>
-    `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536836`;
+    `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536852`;
 
   async function canManage(sess, guildId) {
     if (isAdmin(sess, guildId)) return true;

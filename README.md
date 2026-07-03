@@ -92,10 +92,11 @@ Dev Portal checklist:
   the dashboard.
 - Invite the bot with the URL it prints on startup. It asks for the minimum
   it needs: Manage Roles (grants the verified role, and channel-overwrite
-  editing requires it), Ban Members, View Channels, Send Messages, Attach
-  Files, Read Message History. If gating one specific channel fails, that
-  channel explicitly denies the bot access - give it View/Send there or gate
-  that one by hand.
+  editing requires it), Manage Channels, Ban Members, View Channels, Send
+  Messages, Attach Files, Read Message History. If gating a channel fails with
+  Missing Access, the bot can't see that channel (it's hidden from @everyone
+  and the bot has no override) - grant the MadHoney role View there, or
+  temporarily give MadHoney Administrator, gate, then remove it.
 
 ### Run it 24/7 (systemd)
 

@@ -65,20 +65,33 @@ export async function postBanner(guild, cfg) {
 // Gate every currently-public channel behind the verified role.
 // Verify channel stays public (it's the gateway); honeypot stays open to
 // @everyone but hidden from verified members. Dry run unless apply=true.
+//
+// Two things this has to get right, both learned the hard way:
+//  1. ORDER: grant the verified role View BEFORE denying @everyone View.
+//     Denying @everyone first strips the bot's own inherited access (the bot
+//     only has @everyone + its role), so the follow-up grant fails and the
+//     channel is left half-gated - visible to no one. Role-first means both
+//     edits complete while the bot can still see the channel.
+//  2. VISIBILITY: a channel already hidden from @everyone that the bot has no
+//     override on is invisible to the bot - it can't edit what it can't see.
+//     Report those as needs-access instead of failing mid-edit.
 export async function gateChannels(guild, cfg, apply = false) {
   const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
   if (!role) throw new Error('Verified role not found - re-run setup.');
   const everyone = guild.roles.everyone;
+  const me = await guild.members.fetchMe();
   const channels = await guild.channels.fetch();
 
-  const plan = { gate: [], keep: [], honeypot: [], skip: [] };
+  const plan = { gate: [], keep: [], honeypot: [], skip: [], noaccess: [] };
   for (const ch of channels.values()) {
     if (!ch) continue;
-    const isPublic = ch.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel);
-    if (ch.id === cfg.honeypotChannelId) plan.honeypot.push(ch);
-    else if (ch.id === cfg.verifyChannelId) plan.keep.push(ch);
-    else if (isPublic) plan.gate.push(ch);
-    else plan.skip.push(ch);
+    const target = ch.id === cfg.honeypotChannelId ? 'honeypot'
+      : ch.id === cfg.verifyChannelId ? 'keep'
+      : ch.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel) ? 'gate'
+      : 'skip';
+    // The bot must be able to see AND manage roles on a channel to gate it.
+    if (target !== 'skip' && !ch.permissionsFor(me).has(PermissionFlagsBits.ViewChannel)) plan.noaccess.push(ch);
+    else plan[target].push(ch);
   }
 
   const name = (c) => `${c.type === ChannelType.GuildCategory ? '▸' : '#'}${c.name}`;
@@ -88,6 +101,9 @@ export async function gateChannels(guild, cfg, apply = false) {
     `HONEYPOT (open to everyone, hidden from verified): ${plan.honeypot.map(name).join(', ') || '(none)'}`,
     `SKIP already private (${plan.skip.length})`,
   ];
+  if (plan.noaccess.length) {
+    lines.push(`⚠️ CAN'T ACCESS (${plan.noaccess.length}) - I can't see these, so I can't gate them: ${plan.noaccess.map(name).join(', ')}\n   Fix: temporarily give the MadHoney role Administrator (Server Settings → Roles), run gate again, then remove it - or grant the MadHoney role View Channel on each.`);
+  }
   if (!apply) return `DRY RUN - nothing changed.\n${lines.join('\n')}\nRun "Gate channels (APPLY)" to make it real.`;
 
   let ok = 0; const failed = [];
@@ -96,8 +112,8 @@ export async function gateChannels(guild, cfg, apply = false) {
   };
   for (const ch of plan.gate) {
     await tryEdit(ch, async () => {
-      await ch.permissionOverwrites.edit(everyone, { ViewChannel: false }, { reason: 'MadHoney: gate behind verified' });
       await ch.permissionOverwrites.edit(role, { ViewChannel: true }, { reason: 'MadHoney: gate behind verified' });
+      await ch.permissionOverwrites.edit(everyone, { ViewChannel: false }, { reason: 'MadHoney: gate behind verified' });
     });
   }
   for (const ch of plan.keep) {
@@ -109,7 +125,7 @@ export async function gateChannels(guild, cfg, apply = false) {
       await ch.permissionOverwrites.edit(role, { ViewChannel: false }, { reason: 'MadHoney: hide honeypot from verified' });
     });
   }
-  return `Gated. ${ok} channels updated, ${failed.length} failed.${failed.length ? '\nFailed: ' + failed.join(', ') : ''}\n${lines.join('\n')}`;
+  return `Gated. ${ok} channels updated, ${failed.length} failed${plan.noaccess.length ? `, ${plan.noaccess.length} unreachable` : ''}.${failed.length ? '\nFailed: ' + failed.join(', ') : ''}\n${lines.join('\n')}`;
 }
 
 // Grandfather: add the verified role to every existing non-bot member so the

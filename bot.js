@@ -448,11 +448,12 @@ client.once(Events.ClientReady, async (c) => {
       }
     }
   }, 5000); // let the guild/channel caches settle first
-  // Minimum viable: Manage Roles (verified role + channel overwrites), Ban
-  // Members, View Channels, Send Messages, Attach Files, Read Message History.
-  // If gating a specific channel fails, that channel denies the bot access -
-  // grant it View/Send there (or gate it by hand).
-  console.log(`Invite: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot+applications.commands&permissions=268536836`);
+  // Minimum viable: Manage Roles (verified role + channel overwrites), Manage
+  // Channels, Ban Members, View Channels, Send Messages, Attach Files, Read
+  // Message History. If gating a specific channel fails with Missing Access,
+  // the bot can't see it - grant the MadHoney role View there (or temporarily
+  // give it Administrator, gate, then remove).
+  console.log(`Invite: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot+applications.commands&permissions=268536852`);
   if (process.env.CLIENT_ID) {
     startDashboard(client);
     if (!process.env.CLIENT_SECRET) console.log('Dashboard up in landing-only mode - set CLIENT_SECRET in .env to enable login.');
