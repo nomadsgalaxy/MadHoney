@@ -105,7 +105,46 @@ export async function refreshBanner(guild, cfg) {
   return 'banner updated (edited in place, no ping)';
 }
 
-// Gate every currently-public channel behind the verified role.
+// Roles that mark a channel as admin/staff (any grants "elevated" here).
+const ELEVATED = PermissionFlagsBits.Administrator | PermissionFlagsBits.ManageGuild |
+  PermissionFlagsBits.ManageChannels | PermissionFlagsBits.ManageRoles |
+  PermissionFlagsBits.ManageMessages | PermissionFlagsBits.BanMembers |
+  PermissionFlagsBits.KickMembers | PermissionFlagsBits.ModerateMembers;
+
+// Classify every channel so the dashboard can show what MadHoney sees and let
+// the admin pick exactly what to gate. Kinds:
+//   public  - @everyone can view (standard channel; the gate targets these)
+//   private - hidden from @everyone, no elevated role has access (restricted)
+//   admin   - hidden from @everyone AND an elevated (mod/staff) role can view
+//   verify  - the verify gateway (stays public)
+//   honeypot- the trap
+export async function classifyChannels(guild, cfg) {
+  const everyone = guild.roles.everyone;
+  const me = await guild.members.fetchMe();
+  const channels = await guild.channels.fetch();
+  const list = [];
+  for (const ch of channels.values()) {
+    if (!ch) continue;
+    const canManage = ch.permissionsFor(me).has(PermissionFlagsBits.ViewChannel) &&
+      ch.permissionsFor(me).has(PermissionFlagsBits.ManageRoles);
+    let kind;
+    if (ch.id === cfg.honeypotChannelId) kind = 'honeypot';
+    else if (ch.id === cfg.verifyChannelId) kind = 'verify';
+    else if (ch.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel)) kind = 'public';
+    else {
+      const adminRoleSees = guild.roles.cache.some((r) =>
+        (r.permissions.bitfield & ELEVATED) !== 0n &&
+        ch.permissionOverwrites.cache.get(r.id)?.allow.has(PermissionFlagsBits.ViewChannel));
+      kind = adminRoleSees ? 'admin' : 'private';
+    }
+    list.push({ id: ch.id, name: ch.name, kind, isCategory: ch.type === ChannelType.GuildCategory, parentId: ch.parentId, canManage });
+  }
+  // stable order: categories keep their children grouped by Discord position
+  return list;
+}
+
+// Gate channels behind the verified role. If `only` (a Set/array of channel
+// IDs) is given, gate exactly those; otherwise gate every public channel.
 // Verify channel stays public (it's the gateway); honeypot stays open to
 // @everyone but hidden from verified members. Dry run unless apply=true.
 //
@@ -118,19 +157,23 @@ export async function refreshBanner(guild, cfg) {
 //  2. VISIBILITY: a channel already hidden from @everyone that the bot has no
 //     override on is invisible to the bot - it can't edit what it can't see.
 //     Report those as needs-access instead of failing mid-edit.
-export async function gateChannels(guild, cfg, apply = false) {
+export async function gateChannels(guild, cfg, apply = false, only = null) {
   const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
   if (!role) throw new Error('Verified role not found - re-run setup.');
   const everyone = guild.roles.everyone;
   const me = await guild.members.fetchMe();
   const channels = await guild.channels.fetch();
+  const pick = only ? new Set(only) : null;
 
   const plan = { gate: [], keep: [], honeypot: [], skip: [], noaccess: [] };
   for (const ch of channels.values()) {
     if (!ch) continue;
+    // With an explicit selection, gate exactly the chosen channels; otherwise
+    // fall back to "every currently-public channel".
+    const wantGate = pick ? pick.has(ch.id) : ch.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel);
     const target = ch.id === cfg.honeypotChannelId ? 'honeypot'
       : ch.id === cfg.verifyChannelId ? 'keep'
-      : ch.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel) ? 'gate'
+      : wantGate ? 'gate'
       : 'skip';
     // The bot must be able to see AND manage roles on a channel to gate it.
     if (target !== 'skip' && !ch.permissionsFor(me).has(PermissionFlagsBits.ViewChannel)) plan.noaccess.push(ch);

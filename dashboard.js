@@ -8,7 +8,7 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans, trappedCount } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, ungateChannels, grandfather, syncBans, preflight, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
 
@@ -68,6 +68,52 @@ function layout(title, body) {
   .spill.setup{background:rgba(255,138,125,.14);color:#ff8a7d}
   .spill.add{background:#1c2029;color:var(--dim)}
   h2 .count{font:400 .8rem/1 "Instrument Sans",sans-serif;color:var(--dim);margin-left:.5rem}
+  /* guild page */
+  .ghead{display:flex;align-items:center;gap:1rem;margin:.6rem 0 1rem}
+  .ghead .savatar{width:58px;height:58px;border-radius:16px;flex:0 0 58px;font-size:1.6rem}
+  .ghead .gtitle{min-width:0}
+  .ghead h1{margin:0;font-size:clamp(1.4rem,4vw,1.9rem)}
+  .ghead .crumbs{font-size:.85rem;margin:.15rem 0 0}
+  .chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1rem}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:.3rem .75rem;font-size:.82rem;color:var(--dim)}
+  .chip b{color:var(--ink);font-weight:700}
+  .chip.on{border-color:rgba(255,179,26,.5);color:var(--honey)}
+  .chip.off{opacity:.75}
+  .subh{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--honey);margin:1.3rem 0 .1rem;padding-top:1rem;border-top:1px solid var(--line)}
+  .subh.first{margin-top:0;padding-top:0;border-top:0}
+  .grid2f{display:grid;grid-template-columns:1fr 1fr;gap:0 1.1rem}
+  @media(max-width:620px){.grid2f{grid-template-columns:1fr}}
+  .toggle{display:flex;gap:.6rem;align-items:flex-start;margin:.7rem 0;font-weight:600;cursor:pointer}
+  .toggle input{width:18px;height:18px;margin-top:.15rem;accent-color:var(--honey);flex:0 0 auto}
+  .steps{margin-top:.6rem}
+  .step{display:grid;grid-template-columns:210px 1fr;gap:.4rem 1rem;align-items:center;padding:.7rem 0;border-top:1px solid var(--line)}
+  .step:first-child{border-top:0}
+  .step .btn{width:100%;text-align:center;margin:0}
+  .step small{margin:0}
+  @media(max-width:600px){.step{grid-template-columns:1fr}}
+  .btable{width:100%;border-collapse:collapse;font-size:.85rem;font-variant-numeric:tabular-nums}
+  .btable td{padding:.4rem .6rem;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+  .btable tr:last-child td{border-bottom:0}
+  .btable .k{color:var(--dim);font-size:.78rem}
+  .badge{font-size:.72rem;font-weight:700;padding:.05rem .45rem;border-radius:5px}
+  .badge.ban{background:rgba(214,69,69,.16);color:#ff8a7d}
+  .badge.un{background:rgba(123,216,143,.14);color:#7bd88f}
+  .empty{color:var(--dim);padding:.4rem 0}
+  /* gate picker */
+  .clist{margin:.3rem 0 0}
+  .crow{display:flex;align-items:center;gap:.6rem;padding:.32rem .5rem;border-radius:7px;font-weight:500}
+  .crow:hover{background:#0f1216}
+  .crow input{width:17px;height:17px;accent-color:var(--honey);flex:0 0 auto;margin:0}
+  .crow.cat{font-weight:700;color:var(--ink);margin-top:.3rem}
+  .crow.disabled{opacity:.5}
+  .gsec{border:1px solid var(--line);border-radius:11px;padding:.8rem 1rem;margin:.9rem 0}
+  .gsec>.gh{display:flex;justify-content:space-between;align-items:center;gap:.6rem}
+  .gsec .gh b{font-family:"Bricolage Grotesque",sans-serif}
+  .gsec .toggle-all{font-size:.8rem;color:var(--honey);cursor:pointer;background:none;border:0;font-weight:600}
+  .gsec small{margin:.15rem 0 .4rem}
+  .gsec.pub{border-color:rgba(255,179,26,.35)}
+  .gsec.adm{border-color:rgba(214,69,69,.4)}
+  .info{display:flex;gap:.6rem;align-items:center;padding:.3rem .5rem;color:var(--dim)}
   .stripes{height:12px;border-radius:4px;background:repeating-linear-gradient(-45deg,var(--honey) 0 18px,#111 18px 36px);margin-bottom:1.1rem}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
 </style><div class="stripes"></div>${body}
@@ -130,31 +176,59 @@ export function startDashboard(client) {
       `<option value="${r.id}" ${r.id === sel ? 'selected' : ''}>${esc(r.name)}</option>`)].join('');
     const chanOpts = (sel) => ['<option value="">(none)</option>', ...chans.map((c) =>
       `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>#${esc(c.name)}</option>`)].join('');
-    const recent = bans(guild.id).slice(-15).reverse()
-      .map((x) => `${x.at}  ${x.unbanned ? 'UNBAN' : 'ban  '}  ${esc(x.tag ?? x.id)}  ${esc(x.channel ?? '')}`).join('\n') || '(none yet)';
+    const banRows = bans(guild.id);
+    const trappedHere = trappedCount(banRows);
+    const icon = guild.iconURL?.({ size: 128 });
+    const avatar = icon ? `<img class="savatar" src="${icon}" alt="">` : `<span class="savatar">${esc([...guild.name][0]?.toUpperCase() ?? '#')}</span>`;
+    const roleName = cfg.verifiedRoleId ? (roles.get(cfg.verifiedRoleId)?.name ?? 'set') : null;
+    const configured = cfg.verifiedRoleId && cfg.verifyChannelId && cfg.honeypotChannelId;
+    const chips = [
+      configured ? '<span class="chip on"><b>🍯 Armed</b></span>' : '<span class="chip off">Needs setup</span>',
+      `<span class="chip">Trapped here <b>${trappedHere}</b></span>`,
+      roleName ? `<span class="chip">Verified role <b>${esc(roleName)}</b></span>` : '',
+      `<span class="chip ${cfg.banShare ? 'on' : 'off'}">Universal list <b>${cfg.banShare ? 'ON' : 'off'}</b></span>`,
+    ].filter(Boolean).join('');
+
+    const recent = banRows.slice(-12).reverse().map((x) => {
+      const when = esc(String(x.at).replace('T', ' ').slice(0, 16));
+      return `<tr><td>${x.unbanned ? '<span class="badge un">unban</span>' : '<span class="badge ban">ban</span>'}</td><td>${esc(x.tag ?? x.id)}</td><td class="k">${esc(x.channel ?? '')}</td><td class="k">${when}</td></tr>`;
+    }).join('');
+
     return layout(`MadHoney - ${guild.name}`, `
-<h1><img src="/logo.svg?v=3" alt="MadHoney"><span>${esc(guild.name)}</span></h1>
-<p><a href="/">← servers</a> · <a href="/g/${guild.id}?refresh=1" title="Re-fetch roles, channels and members from Discord">⟳ refresh data</a></p>
+<div class="ghead">${avatar}<div class="gtitle">
+  <h1>${esc(guild.name)}</h1>
+  <div class="crumbs"><a href="/">← all servers</a> · <a href="/g/${guild.id}?refresh=1" title="Re-fetch roles, channels and members from Discord">⟳ refresh data</a></div>
+</div></div>
+<div class="chips">${chips}</div>
 ${problem ? `<div class="card" style="border-color:#d64545"><b style="color:#ff5b4d">⚠️ Setup problem</b><pre style="margin-top:.5rem">${esc(problem)}</pre></div>` : ''}
 ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <div class="card" id="config"><h2>Configuration</h2>${msgAt('config')}
 <form method="post" action="/g/${guild.id}/save#config">
+  <div class="subh first">Core setup</div>
+  <div class="grid2f">
   <label>Verified role <select name="verifiedRoleId">${roleOpts(cfg.verifiedRoleId)}</select>
-    <small>Granted after the captcha. Create one in Discord first if needed (e.g. "Verified"). MadHoney's own role must sit ABOVE it.</small></label>
+    <small>Granted after the captcha. MadHoney's own role must sit ABOVE it.</small></label>
   <label>Verify channel <select name="verifyChannelId">${chanOpts(cfg.verifyChannelId)}</select>
-    <small>Where the Verify button lives - your #rules channel is the classic spot. Stays visible to everyone.</small></label>
+    <small>Where the Verify button lives - your #rules channel is the classic spot.</small></label>
   <label>Honeypot channel <select name="honeypotChannelId">${chanOpts(cfg.honeypotChannelId)}</select>
-    <small>The trap. Name it like a real channel (general-2, chat-2). Posting here = instant ban.</small></label>
-  <label>Staff role (optional) <select name="staffRoleId">${roleOpts(cfg.staffRoleId)}</select>
-    <small>Members with this role are never trapped by the honeypot, and can manage MadHoney on this dashboard. The owner and anyone with Manage Server always can.</small></label>
-  <label>Dashboard admin role (optional) <select name="adminRoleId">${roleOpts(cfg.adminRoleId)}</select>
-    <small>Grants dashboard access here WITHOUT the honeypot exemption - for helpers who manage the bot but should still play by the trap's rules.</small></label>
+    <small>The trap. Name it like a real channel (general-2). Posting here = instant ban.</small></label>
   <label>Log channel (optional) <select name="logChannelId">${chanOpts(cfg.logChannelId)}</select>
-    <small>Staff-only channel - each honeypot ban is reported there with an Unban button.</small></label>
-  <label>Verify message <textarea name="verifyText" rows="4">${esc(cfg.verifyText || DEFAULT_VERIFY_TEXT)}</textarea></label>
-  <label><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''} style="width:auto;display:inline"> Apply the universal ban list to this server
-    <small>Every honeypot catch across all MadHoney servers feeds one list. ON: users on it are banned when they join here (use "Ban from List" below to apply it retroactively). OFF: this server acts only on its own catches - which it keeps either way.</small></label>
-  <button class="btn">Save</button>
+    <small>Staff-only channel - each ban is reported there with an Unban button.</small></label>
+  </div>
+  <div class="subh">Staff &amp; dashboard access</div>
+  <div class="grid2f">
+  <label>Staff role (optional) <select name="staffRoleId">${roleOpts(cfg.staffRoleId)}</select>
+    <small>Never trapped by the honeypot, and can manage MadHoney here.</small></label>
+  <label>Dashboard admin role (optional) <select name="adminRoleId">${roleOpts(cfg.adminRoleId)}</select>
+    <small>Dashboard access WITHOUT the honeypot exemption - for helpers.</small></label>
+  </div>
+  <div class="subh">Verify message</div>
+  <label><textarea name="verifyText" rows="3">${esc(cfg.verifyText || DEFAULT_VERIFY_TEXT)}</textarea>
+    <small>Shown above the Verify button.</small></label>
+  <div class="subh">Universal ban list</div>
+  <label class="toggle"><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''}>
+    <span>Apply the universal ban list to this server<small>Every honeypot catch across all MadHoney servers feeds one list. ON: users on it are banned when they join here (use "Ban from List" below to apply it retroactively). OFF: this server acts only on its own catches - which it keeps either way.</small></span></label>
+  <button class="btn">Save configuration</button>
 </form></div>
 <div class="card" id="banner"><h2>Honeypot banner</h2>${msgAt('banner')}
 <small>Live preview - it re-renders as you tweak. Save, then post it from Actions below.</small>
@@ -215,27 +289,85 @@ ${gfJobs.has(guild.id) ? `
   setTimeout(poll, 1200);
 })();
 </script>` : ''}
-<small>Run in order 1 → 4 on first deploy. Each one is safe to re-run later.</small>
-<form method="post" action="/g/${guild.id}/action#actions">
+<div class="subh first">Deploy — run 1 → 4 in order on first setup</div>
+<form method="post" action="/g/${guild.id}/action#actions" class="steps">
 ${[
   ['grandfather', 'grey', '1 · Grandfather members',
-    'Gives the verified role to every human already in the server, so gating never locks out existing members. Bots are skipped, members who already have the role are skipped. Needs MadHoney’s role positioned ABOVE the verified role.'],
+    'Gives the verified role to every human already in the server, so gating never locks anyone out. Bots and already-verified members are skipped.'],
   ['post_verify', '', '2 · Post Verify panel',
-    'Posts the Verify button (with your verify message) in the verify channel. New members click it, read a captcha image, type the code, and receive the verified role. Old MadHoney panels in that channel are cleaned up first.'],
+    'Posts the Verify button in the verify channel. New members click it, read a captcha, and receive the verified role.'],
   ['post_banner', '', '3 · Post honeypot banner',
-    'Posts the warning image designed above into the honeypot channel, so no human has an excuse. Re-run it after changing the banner.'],
-  ['gate_dry', 'grey', '4 · Gate channels (dry run)',
-    'Prints exactly which channels WOULD be hidden behind the verified role - changes nothing. Always run this first.'],
-  ['gate_apply', 'red', '4 · Gate channels (APPLY)',
-    'Does it for real: every public channel becomes visible only to verified members; the verify channel stays public (it’s the gateway); the honeypot stays open to unverified accounts but is hidden from verified ones. Already-private staff channels are untouched. Undo by editing channel permissions in Discord.'],
-  ['ungate', 'grey', '↩ Restore channels (undo gating)',
-    'Reverses the gate: clears the view overwrites MadHoney added and returns those channels to how they looked before. Only touches channels MadHoney gated - admin channels it never changed are left alone. Use this if a gate went wrong.'],
-  ['ban_sync', 'grey', '5 · Ban from shared list',
-    'Bans every user on the active shared ban list right now, instead of waiting for them to join. Needs ban sharing turned ON above. Users already banned here are skipped; an Undo from the log channel still reverses any of them.'],
+    'Posts the warning image (designed above) into the honeypot channel. Re-run after changing the banner.'],
 ].map(([val, cls, label, desc]) =>
-  `<p style="margin:.8rem 0 .2rem"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></p>`).join('')}
+  `<div class="step"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></div>`).join('')}
+<div class="step"><a class="btn" href="/g/${guild.id}/gate">4 · Gate channels…</a><small>Opens the channel picker: MadHoney classifies every channel (public / private / admin) and you choose exactly which to hide behind the verified role. Nothing changes until you apply.</small></div>
+</form>
+<div class="subh">Maintenance</div>
+<form method="post" action="/g/${guild.id}/action#actions" class="steps">
+${[
+  ['ungate', 'grey', '↩ Restore channels',
+    'Reverses gating: returns the channels MadHoney gated to how they looked before. Admin channels it never touched are left alone.'],
+  ['ban_sync', 'grey', 'Ban from shared list',
+    'Bans everyone on the universal ban list now, instead of waiting for them to join. Needs the universal list turned ON above.'],
+].map(([val, cls, label, desc]) =>
+  `<div class="step"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></div>`).join('')}
 </form></div>
-<div class="card"><h2>Recent bans</h2><pre>${recent}</pre></div>`);
+<div class="card"><h2>Recent bans <span class="count">${trappedHere} trapped here</span></h2>
+${recent ? `<table class="btable">${recent}</table>` : '<div class="empty">No bans logged in this server yet.</div>'}</div>`);
+  }
+
+  // Channel gating picker: classify every channel and let the admin choose
+  // exactly which to gate, instead of a blanket "all public".
+  async function gatePage(guild, sess, msg = '') {
+    const cfg = getGuild(guild.id) ?? {};
+    if (!cfg.verifiedRoleId || !cfg.verifyChannelId || !cfg.honeypotChannelId) {
+      return layout('MadHoney - Gate', `<div class="ghead"><div class="gtitle"><h1>Gate channels</h1>
+        <div class="crumbs"><a href="/g/${guild.id}">← ${esc(guild.name)}</a></div></div></div>
+        <div class="card"><p>Finish <a href="/g/${guild.id}#config">configuration</a> first - I need the verified role, verify channel and honeypot channel.</p></div>`);
+    }
+    const chans = await classifyChannels(guild, cfg);
+    const gated = new Set(cfg.gatedChannels ?? []);
+    const firstRun = gated.size === 0;
+
+    const row = (c, defChecked) => {
+      const checked = c.canManage && (firstRun ? defChecked : gated.has(c.id)) ? 'checked' : '';
+      const badge = !c.canManage ? ' <span class="badge ban">can\'t access</span>' : '';
+      return `<label class="crow ${c.isCategory ? 'cat' : ''} ${c.canManage ? '' : 'disabled'}">
+        <input type="checkbox" name="ch" value="${c.id}" ${checked} ${c.canManage ? '' : 'disabled'}>
+        <span>${c.isCategory ? '▸ ' : '# '}${esc(c.name)}${badge}</span></label>`;
+    };
+    const section = (cls, title, hint, kind, defChecked) => {
+      const items = chans.filter((c) => c.kind === kind);
+      if (!items.length) return '';
+      return `<div class="gsec ${cls}"><div class="gh"><b>${title} <span class="count">${items.length}</span></b>
+        <button type="button" class="toggle-all" data-kind="${kind}">toggle all</button></div>
+        <small>${hint}</small><div class="clist" data-kind="${kind}">${items.map((c) => row(c, defChecked)).join('')}</div></div>`;
+    };
+    const verify = chans.find((c) => c.kind === 'verify');
+    const honeypot = chans.find((c) => c.kind === 'honeypot');
+
+    return layout(`MadHoney - Gate ${guild.name}`, `
+<div class="ghead"><div class="gtitle"><h1>Gate channels</h1>
+  <div class="crumbs"><a href="/g/${guild.id}">← ${esc(guild.name)}</a> · <a href="/g/${guild.id}/gate">⟳ re-scan</a></div></div></div>
+${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
+<div class="card">
+<p>MadHoney scanned this server and sorted every channel below. <b>Tick the ones to hide behind the verified role</b> (public channels are pre-selected). Unticked channels are left exactly as they are. When applied: verify stays public, the honeypot stays open to unverified, and any admin channel under a gated category is explicitly kept hidden.</p>
+<form method="post" action="/g/${guild.id}/gate">
+${section('pub', '🌐 Public channels', 'Standard channels anyone can currently see. These are what you normally gate.', 'public', true)}
+${section('', '🔒 Private / restricted', 'Already hidden from @everyone (not admin). Usually leave these alone - tick only if you want the verified role added.', 'private', false)}
+${section('adm', '🛡️ Admin / staff channels', 'Hidden from @everyone AND a mod/staff role can see them. Leave unticked unless you know what you\'re doing.', 'admin', false)}
+<div class="info">✅ Verify gateway (stays public): <b style="color:var(--ink);margin-left:.3rem">#${verify ? esc(verify.name) : '?'}</b></div>
+<div class="info">🍯 Honeypot (open to unverified, hidden from verified): <b style="color:var(--ink);margin-left:.3rem">#${honeypot ? esc(honeypot.name) : '?'}</b></div>
+<button class="btn" style="margin-top:1rem">Apply gating to selected</button>
+<a class="btn grey" href="/g/${guild.id}" style="margin-top:1rem">Cancel</a>
+</form></div>
+<script>
+document.querySelectorAll('.toggle-all').forEach((b) => b.addEventListener('click', () => {
+  const boxes = [...document.querySelectorAll('.clist[data-kind="' + b.dataset.kind + '"] input:not([disabled])')];
+  const anyOff = boxes.some((x) => !x.checked);
+  boxes.forEach((x) => { x.checked = anyOff; });
+}));
+</script>`);
   }
 
   const server = createServer(async (req, res) => {
@@ -345,7 +477,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
       }
 
       // ---- per-guild ----
-      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/progress)?$/);
+      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/progress|\/gate)?$/);
       if (m) {
         const sess = session(req);
         if (!sess) return redirect('/login');
@@ -417,14 +549,22 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
           const acts = {
             post_verify: () => postVerifyPanel(guild, cfg),
             post_banner: () => postBanner(guild, cfg),
-            gate_dry: () => gateChannels(guild, cfg, false),
-            gate_apply: () => gateChannels(guild, cfg, true),
             ungate: () => ungateChannels(guild, cfg),
           };
           const act = acts[form.get('do')];
           if (!act) return html(await guildPage(guild, sess, 'Unknown action.', 'actions'), 400);
           const result = await act().catch((e) => `❌ ${e.message}`);
           return html(await guildPage(guild, sess, result, 'actions'));
+        }
+        if (m[2] === '/gate') {
+          const cfg = getGuild(guild.id);
+          if (req.method === 'POST') {
+            const form = await body(req);
+            const ids = form.getAll('ch');
+            const result = await gateChannels(guild, cfg, true, ids).catch((e) => `❌ ${e.message}`);
+            return html(await gatePage(guild, sess, result));
+          }
+          return html(await gatePage(guild, sess));
         }
         if (url.searchParams.get('refresh')) {
           await Promise.all([guild.roles.fetch(), guild.channels.fetch()]).catch(() => {});
