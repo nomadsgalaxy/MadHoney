@@ -92,6 +92,15 @@ function layout(title, body, opts = {}) {
   .ghead .gtitle{min-width:0}
   .ghead h1{margin:0;font-size:clamp(1.4rem,4vw,1.9rem)}
   .ghead .crumbs{font-size:.85rem;margin:.15rem 0 0}
+  .subnav{display:flex;align-items:center;gap:.5rem;margin:.6rem 0 1rem;flex-wrap:wrap}
+  .backbtn{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:9px;background:var(--card);border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:.9rem;transition:transform .12s,border-color .12s,color .12s}
+  .backbtn:hover{border-color:var(--honey);color:var(--honey);text-decoration:none;transform:translateX(-2px)}
+  .backbtn .chev{font-size:1.15em;line-height:1;margin-top:-1px}
+  .pillbtn{display:inline-flex;align-items:center;gap:.45rem;padding:.45rem .9rem;border-radius:9px;background:transparent;border:1px solid var(--line);color:var(--dim);font-weight:600;font-size:.88rem;transition:border-color .12s,color .12s}
+  .pillbtn:hover{border-color:var(--honey);color:var(--honey);text-decoration:none}
+  .pillbtn .ico{display:inline-block;transition:transform .4s ease}
+  .pillbtn:hover .ico{transform:rotate(180deg)}
+  .subnav .spacer{margin-left:auto}
   .chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1rem}
   .chip{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:.3rem .75rem;font-size:.82rem;color:var(--dim)}
   .chip b{color:var(--ink);font-weight:700}
@@ -224,10 +233,11 @@ export function startDashboard(client) {
     }).join('');
 
     return layout(`MadHoney - ${guild.name}`, `
-<div class="ghead">${avatar}<div class="gtitle">
-  <h1>${esc(guild.name)}</h1>
-  <div class="crumbs"><a href="/">← all servers</a> · <a href="/g/${guild.id}?refresh=1" title="Re-fetch roles, channels and members from Discord">⟳ refresh data</a></div>
-</div></div>
+<div class="subnav">
+  <a class="backbtn" href="/"><span class="chev">‹</span> All servers</a>
+  <a class="pillbtn spacer" href="/g/${guild.id}?refresh=1" title="Re-fetch roles, channels and members from Discord"><span class="ico">⟳</span> Refresh</a>
+</div>
+<div class="ghead">${avatar}<div class="gtitle"><h1>${esc(guild.name)}</h1></div></div>
 <div class="chips">${chips}</div>
 ${problem ? `<div class="card" style="border-color:#d64545"><b style="color:#ff5b4d">⚠️ Setup problem</b><pre style="margin-top:.5rem">${esc(problem)}</pre></div>` : ''}
 ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
@@ -350,8 +360,8 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
   async function gatePage(guild, sess, msg = '') {
     const cfg = getGuild(guild.id) ?? {};
     if (!cfg.verifiedRoleId || !cfg.verifyChannelId || !cfg.honeypotChannelId) {
-      return layout('MadHoney - Gate', `<div class="ghead"><div class="gtitle"><h1>Gate channels</h1>
-        <div class="crumbs"><a href="/g/${guild.id}">← ${esc(guild.name)}</a></div></div></div>
+      return layout('MadHoney - Gate', `<div class="subnav"><a class="backbtn" href="/g/${guild.id}"><span class="chev">‹</span> ${esc(guild.name)}</a></div>
+        <div class="ghead"><div class="gtitle"><h1>Gate channels</h1></div></div>
         <div class="card"><p>Finish <a href="/g/${guild.id}#config">configuration</a> first - I need the verified role, verify channel and honeypot channel.</p></div>`, { user: sess.user.username });
     }
     const chans = (await classifyChannels(guild, cfg)).sort((a, z) => a.position - z.position);
@@ -379,8 +389,11 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
         <div class="drop" data-zone="${id}">${draggable.filter((c) => zoneOf(c) === id).map(chip).join('') || '<div class="zempty">drag channels here</div>'}</div></div>`;
 
     return layout(`MadHoney - Gate ${guild.name}`, `
-<div class="ghead"><div class="gtitle"><h1>Gate channels</h1>
-  <div class="crumbs"><a href="/g/${guild.id}">← ${esc(guild.name)}</a> · <a href="/g/${guild.id}/gate">⟳ re-scan</a></div></div></div>
+<div class="subnav">
+  <a class="backbtn" href="/g/${guild.id}"><span class="chev">‹</span> ${esc(guild.name)}</a>
+  <a class="pillbtn spacer" href="/g/${guild.id}/gate" title="Re-scan channels from Discord"><span class="ico">⟳</span> Re-scan</a>
+</div>
+<div class="ghead"><div class="gtitle"><h1>Gate channels</h1></div></div>
 ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <div class="card">
 <p><b>Drag channels between the columns</b> to choose what MadHoney does with each (or tap a channel to cycle it). The colored dot shows what MadHoney auto-detected - if it guessed wrong, just move the channel. <b>Dragging a category moves all its channels with it</b>, like Discord. Your moves are saved, so the next scan remembers them.</p>
