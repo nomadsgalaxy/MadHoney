@@ -13,7 +13,7 @@ import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { getGuild, saveGuild, logBan, bans, bannedElsewhere } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, grandfather, roleColorMap, DEFAULT_VERIFY_TEXT, ASSETS_VERSION } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, grandfather, syncBans, roleColorMap, DEFAULT_VERIFY_TEXT, ASSETS_VERSION } from './actions.js';
 import { startDashboard } from './dashboard.js';
 
 const EPH = { flags: MessageFlags.Ephemeral };
@@ -51,7 +51,8 @@ const command = new SlashCommandBuilder()
   .addSubcommand((s) => s
     .setName('banshare').setDescription('Share bans with other MadHoney servers, or stay isolated')
     .addStringOption((o) => o.setName('mode').setDescription('shared = auto-ban users banned in other sharing servers').setRequired(true)
-      .addChoices({ name: 'shared', value: 'shared' }, { name: 'isolated', value: 'isolated' })));
+      .addChoices({ name: 'shared', value: 'shared' }, { name: 'isolated', value: 'isolated' })))
+  .addSubcommand((s) => s.setName('bansync').setDescription('Ban everyone on the active shared list now (requires ban sharing ON)'));
 
 // ---------- setup panel ----------
 
@@ -196,10 +197,23 @@ client.on(Events.InteractionCreate, async (i) => {
         saveGuild(i.guildId, { banShare: shared });
         return i.reply({
           content: shared
-            ? '🌐 **Ban sharing ON** - users banned by other sharing MadHoney servers are auto-banned when they join here (and your honeypot bans protect them).'
+            ? '🌐 **Ban sharing ON** - users banned by other sharing MadHoney servers are auto-banned when they join here (and your honeypot bans protect them). Run `/madhoney bansync` to also ban everyone already on the list.'
             : '🔒 **Isolated** - this server only acts on its own honeypot.',
           ...EPH,
         });
+      }
+      if (sub === 'bansync') {
+        await i.deferReply(EPH);
+        const progress = {};
+        const job = syncBans(i.guild, getGuild(i.guildId) ?? {}, progress).catch((e) => `❌ ${e.message}`);
+        const ticker = setInterval(() => {
+          if (progress.total !== undefined) {
+            i.editReply({ content: `⏳ Ban sync… ${progress.done}/${progress.total} · ${progress.added} banned · ${progress.skipped} skipped` }).catch(() => {});
+          }
+        }, 2500);
+        const result = await job;
+        clearInterval(ticker);
+        return i.editReply({ content: String(result).slice(0, 1900) });
       }
       if (sub === 'banner') {
         const prev = getGuild(i.guildId)?.banner ?? {};

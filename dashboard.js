@@ -8,7 +8,7 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, grandfather, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, grandfather, syncBans, preflight, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
 
@@ -105,9 +105,11 @@ export function startDashboard(client) {
 
   // `at` anchors the result: the message renders inside that card and the
   // form's action fragment scrolls the browser back to it after a POST.
-  function guildPage(guild, sess, msg = '', at = 'top') {
+  async function guildPage(guild, sess, msg = '', at = 'top') {
     const cfg = getGuild(guild.id) ?? {};
     const msgAt = (key) => (msg && at === key ? `<pre style="margin-top:.6rem">${esc(msg)}</pre>` : '');
+    // standing health warning: catches the classic "bot role below verified role" mistake
+    const problem = cfg.verifiedRoleId ? await preflight(guild, cfg).catch((e) => e.message) : null;
     const b = { ...DEFAULT_BANNER, ...cfg.banner };
     const roles = guild.roles.cache.filter((r) => !r.managed && r.id !== guild.id)
       .sort((a, z) => z.position - a.position);
@@ -122,6 +124,7 @@ export function startDashboard(client) {
     return layout(`MadHoney - ${guild.name}`, `
 <h1><img src="/logo.svg?v=3" alt="MadHoney"><span>${esc(guild.name)}</span></h1>
 <p><a href="/">← servers</a> · <a href="/g/${guild.id}?refresh=1" title="Re-fetch roles, channels and members from Discord">⟳ refresh data</a></p>
+${problem ? `<div class="card" style="border-color:#d64545"><b style="color:#ff5b4d">⚠️ Setup problem</b><pre style="margin-top:.5rem">${esc(problem)}</pre></div>` : ''}
 ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <div class="card" id="config"><h2>Configuration</h2>${msgAt('config')}
 <form method="post" action="/g/${guild.id}/save#config">
@@ -194,7 +197,7 @@ ${gfJobs.has(guild.id) ? `
       bar.max = p.total || 1; bar.value = p.done || 0;
       txt.textContent = p.finished
         ? p.result
-        : 'Grandfathering: ' + (p.done ?? 0) + '/' + (p.total ?? '?') + ' members · ' + (p.added ?? 0) + ' added · ' + (p.skipped ?? 0) + ' skipped' + (p.failed ? ' · ' + p.failed + ' FAILED' : '');
+        : (p.label || 'Working') + ': ' + (p.done ?? 0) + '/' + (p.total ?? '?') + ' · ' + (p.added ?? 0) + ' added · ' + (p.skipped ?? 0) + ' skipped' + (p.failed ? ' · ' + p.failed + ' FAILED' : '');
       if (p.finished) { bar.value = bar.max; return; }
     }
   } catch {}
@@ -214,6 +217,8 @@ ${[
     'Prints exactly which channels WOULD be hidden behind the verified role - changes nothing. Always run this first.'],
   ['gate_apply', 'red', '4 · Gate channels (APPLY)',
     'Does it for real: every public channel becomes visible only to verified members; the verify channel stays public (it’s the gateway); the honeypot stays open to unverified accounts but is hidden from verified ones. Already-private staff channels are untouched. Undo by editing channel permissions in Discord.'],
+  ['ban_sync', 'grey', '5 · Ban from shared list',
+    'Bans every user on the active shared ban list right now, instead of waiting for them to join. Needs ban sharing turned ON above. Users already banned here are skipped; an Undo from the log channel still reverses any of them.'],
 ].map(([val, cls, label, desc]) =>
   `<p style="margin:.8rem 0 .2rem"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></p>`).join('')}
 </form></div>
@@ -346,7 +351,7 @@ ${[
               if (form.has(`banner_${k}`)) banner[k] = form.get(`banner_${k}`).trim();
             }
             saveGuild(guild.id, { banner });
-            return html(guildPage(guild, sess, 'Banner saved. Post it from Actions (or /madhoney deploy in Discord).', 'banner'));
+            return html(await guildPage(guild, sess, 'Banner saved. Post it from Actions (or /madhoney deploy in Discord).', 'banner'));
           }
           const patch = {};
           for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText']) {
@@ -354,29 +359,30 @@ ${[
           }
           patch.banShare = form.get('banShare') === 'on';
           if (patch.verifyChannelId && patch.verifyChannelId === patch.honeypotChannelId) {
-            return html(guildPage(guild, sess, '❌ Verify and honeypot must be different channels - not saved.', 'config'));
+            return html(await guildPage(guild, sess, '❌ Verify and honeypot must be different channels - not saved.', 'config'));
           }
           saveGuild(guild.id, patch);
-          return html(guildPage(guild, sess, 'Saved.', 'config'));
+          return html(await guildPage(guild, sess, 'Saved.', 'config'));
         }
         if (m[2] === '/action' && req.method === 'POST') {
           const form = await body(req);
           const cfg = getGuild(guild.id);
           if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
-            return html(guildPage(guild, sess, '❌ Finish configuration first (role + both channels).', 'actions'));
+            return html(await guildPage(guild, sess, '❌ Finish configuration first (role + both channels).', 'actions'));
           }
-          // Grandfathering is one API call per member - on a big server that's
-          // minutes, so it runs as a background job the page polls for.
-          if (form.get('do') === 'grandfather') {
+          // Member-by-member jobs (one API call each) run in the background
+          // with a polled progress bar; one job at a time per guild.
+          const slowJobs = { grandfather, ban_sync: syncBans };
+          if (slowJobs[form.get('do')]) {
             if (gfJobs.get(guild.id) && !gfJobs.get(guild.id).finished) {
-              return html(guildPage(guild, sess, 'Grandfathering is already running - watch the bar below.', 'actions'));
+              return html(await guildPage(guild, sess, 'A job is already running - watch the bar below.', 'actions'));
             }
             const progress = { finished: false, at: Date.now() };
             gfJobs.set(guild.id, progress);
-            grandfather(guild, getGuild(guild.id), progress)
+            slowJobs[form.get('do')](guild, getGuild(guild.id), progress)
               .then((r) => Object.assign(progress, { finished: true, result: r, at: Date.now() }))
               .catch((e) => Object.assign(progress, { finished: true, result: `❌ ${e.message}`, at: Date.now() }));
-            return html(guildPage(guild, sess, '', 'actions'));
+            return html(await guildPage(guild, sess, '', 'actions'));
           }
           const acts = {
             post_verify: () => postVerifyPanel(guild, cfg),
@@ -385,15 +391,15 @@ ${[
             gate_apply: () => gateChannels(guild, cfg, true),
           };
           const act = acts[form.get('do')];
-          if (!act) return html(guildPage(guild, sess, 'Unknown action.', 'actions'), 400);
+          if (!act) return html(await guildPage(guild, sess, 'Unknown action.', 'actions'), 400);
           const result = await act().catch((e) => `❌ ${e.message}`);
-          return html(guildPage(guild, sess, result, 'actions'));
+          return html(await guildPage(guild, sess, result, 'actions'));
         }
         if (url.searchParams.get('refresh')) {
           await Promise.all([guild.roles.fetch(), guild.channels.fetch()]).catch(() => {});
-          return html(guildPage(guild, sess, 'Refreshed roles and channels from Discord.'));
+          return html(await guildPage(guild, sess, 'Refreshed roles and channels from Discord.'));
         }
-        return html(guildPage(guild, sess));
+        return html(await guildPage(guild, sess));
       }
 
       html(layout('MadHoney', '<h1>404</h1><p><a href="/">home</a></p>'), 404);

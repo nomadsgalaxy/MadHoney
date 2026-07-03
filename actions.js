@@ -3,7 +3,7 @@
 // returns a human-readable result string.
 import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { renderBanner, DEFAULT_BANNER } from './banner.js';
-import { saveGuild } from './store.js';
+import { saveGuild, allGuilds, bans, logBan } from './store.js';
 
 // Bump this whenever a code change alters what the posted Verify panel or
 // honeypot banner looks like. On the next boot, every configured server's
@@ -115,14 +115,30 @@ export async function gateChannels(guild, cfg, apply = false) {
 // Grandfather: add the verified role to every existing non-bot member so the
 // gate doesn't lock out people who were already in the server.
 // Needs the privileged Server Members intent.
+// Can the bot actually grant the verified role here? Returns null when
+// everything checks out, or a human-readable problem with the exact fix.
+export async function preflight(guild, cfg) {
+  const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
+  if (!role) return 'Verified role not found - re-run setup and pick one.';
+  const me = await guild.members.fetchMe();
+  if (!me.permissions.has(PermissionFlagsBits.ManageRoles)) {
+    return 'I don\'t have the Manage Roles permission here - re-invite me with the link on the site, or grant it to my role.';
+  }
+  if (me.roles.highest.comparePositionTo(role) <= 0) {
+    return `My role ("${me.roles.highest.name}") is BELOW the verified role ("${role.name}") in the role list, so Discord won't let me grant it. Fix: Server Settings → Roles → drag "${me.roles.highest.name}" above "${role.name}", then try again.`;
+  }
+  return null;
+}
+
 // Pass a `progress` object to watch it live: {total, done, added, skipped,
 // failed} are updated as the loop runs (one Discord API call per member, so
 // large servers take a while).
 export async function grandfather(guild, cfg, progress = {}) {
-  const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
-  if (!role) throw new Error('Verified role not found - re-run setup.');
+  const problem = await preflight(guild, cfg);
+  if (problem) throw new Error(problem);
+  const role = await guild.roles.fetch(cfg.verifiedRoleId);
   const members = await guild.members.fetch();
-  Object.assign(progress, { total: members.size, done: 0, added: 0, skipped: 0, failed: 0 });
+  Object.assign(progress, { label: 'Grandfathering', total: members.size, done: 0, added: 0, skipped: 0, failed: 0 });
   const failures = [];
   for (const m of members.values()) {
     progress.done++;
@@ -132,4 +148,38 @@ export async function grandfather(guild, cfg, progress = {}) {
       .catch((e) => { progress.failed++; failures.push(`${m.user.tag}: ${e.message}`); });
   }
   return `Grandfathered "${role.name}": ${progress.added} added, ${progress.skipped} skipped.${failures.length ? `\n${failures.length} failed (is the MadHoney role ABOVE "${role.name}"?): ` + failures.slice(0, 5).join(', ') : ''}`;
+}
+
+// Ban from List: proactively ban every user on the active shared list (bans
+// from OTHER sharing servers that weren't undone), instead of waiting for
+// them to join. Requires ban sharing to be ON for this server.
+export async function syncBans(guild, cfg, progress = {}) {
+  if (!cfg.banShare) throw new Error('Ban sharing is OFF for this server - turn it on first, then sync.');
+  const me = await guild.members.fetchMe();
+  if (!me.permissions.has(PermissionFlagsBits.BanMembers)) throw new Error("I don't have the Ban Members permission here.");
+
+  // shared pool: latest state per (user, guild); an unban reverses the share
+  const guilds = allGuilds();
+  const perGuild = new Map();
+  for (const b of bans()) {
+    if (b.guildId !== guild.id && guilds[b.guildId]?.banShare) perGuild.set(`${b.id}:${b.guildId}`, b);
+  }
+  const pool = new Map(); // userId -> tag
+  for (const b of perGuild.values()) if (!b.unbanned) pool.set(b.id, b.tag);
+
+  // ponytail: bans.fetch caps at 1000 entries; paginate if a server ever exceeds it
+  const existing = await guild.bans.fetch();
+  const already = new Set([...existing.keys(), ...bans(guild.id).filter((b) => !b.unbanned).map((b) => b.id)]);
+
+  Object.assign(progress, { label: 'Ban sync', total: pool.size, done: 0, added: 0, skipped: 0, failed: 0 });
+  for (const [id, tag] of pool) {
+    progress.done++;
+    if (already.has(id)) { progress.skipped++; continue; }
+    try {
+      await guild.bans.create(id, { reason: 'MadHoney: synced from the shared ban list' });
+      logBan({ id, tag, guildId: guild.id, channel: '(ban-sync)', at: new Date().toISOString() });
+      progress.added++;
+    } catch { progress.failed++; }
+  }
+  return `Ban sync: ${progress.added} banned from the shared list, ${progress.skipped} already banned here${progress.failed ? `, ${progress.failed} failed` : ''}. Pool size: ${pool.size}.`;
 }
