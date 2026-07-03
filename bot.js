@@ -12,12 +12,14 @@ import { shouldTrap, honeypotMode } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha, captchaLength } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
-import { getGuild, saveGuild, logBan, bans, bannedElsewhere } from './store.js';
+import { getGuild, saveGuild, logBan, bans, bannedElsewhere, appealableGuildIds } from './store.js';
 import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, ungateChannels, grandfather, syncBans, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { startDashboard } from './dashboard.js';
 
 const EPH = { flags: MessageFlags.Ephemeral };
 const pending = new Map(); // userId -> expected captcha answer (in-memory; users just re-click after a restart)
+const DASH = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
+const dashLink = (guildId) => (DASH ? `**[${DASH.replace(/^https?:\/\//, '')}](${DASH}${guildId ? `/g/${guildId}` : ''})**` : 'the web dashboard');
 
 // The trap itself never needs message content. It's only used to COPY the
 // spam text into the log channel - opt-in, because it's a privileged intent:
@@ -71,6 +73,8 @@ function setupContent(guild) {
   const v = (id) => (id ? `<#${id}>` : '*not set*');
   return [
     '## MadHoney setup',
+    `💡 **The web dashboard is the easy way to do this.** ${dashLink(guild.id)} is far more powerful and user-friendly than these chat commands - drag-and-drop channel gating, a live banner designer, appeals, and clearer guidance. These commands work too, if you prefer Discord.`,
+    '',
     `**Verified role:** ${cfg.verifiedRoleId ? `<@&${cfg.verifiedRoleId}>` : '*not set*'} - pick an existing role, or create one first (Server Settings → Roles, e.g. "Verified").`,
     `**Verify channel:** ${v(cfg.verifyChannelId)} - where the Verify button lives. Your **#rules** channel is the classic spot.`,
     `**Honeypot channel:** ${v(cfg.honeypotChannelId)} - create a decoy channel bots will post in. Name it like a real channel: \`general-2\`, \`general2\`, \`chat-2\`. Anyone who posts there is banned.`,
@@ -128,7 +132,7 @@ function deployPanel(guild) {
   const ready = cfg.verifiedRoleId && cfg.verifyChannelId && cfg.honeypotChannelId;
   return {
     content: ready
-      ? ['## Deploy MadHoney', 'Recommended order:',
+      ? ['## Deploy MadHoney', `💡 Prefer buttons and a live preview? Do all of this on the dashboard: ${dashLink(guild.id)}`, '', 'Recommended order:',
         '1. **Grandfather members** - give everyone already here the verified role',
         '2. **Post Verify panel** - the button + captcha, in your verify channel',
         '3. **Post honeypot banner** - the warning image (design it with `/madhoney banner`)',
@@ -184,6 +188,30 @@ client.on(Events.InteractionCreate, async (i) => {
         return i.reply({ content: `Verified ✅ Welcome to ${i.guild.name}.`, ...EPH });
       }
       return i.reply({ content: "That's not right - hit Verify and try again.", ...EPH });
+    }
+
+    // Appeal button (clicked in a DM). User-facing, so handled before the
+    // admin/guild guard below. Forwards the appeal to that server's log channel.
+    if (i.isButton() && i.customId.startsWith('mh_appeal_')) {
+      const gid = i.customId.slice('mh_appeal_'.length);
+      if (!appealableGuildIds(i.user.id).includes(gid)) {
+        return i.reply({ content: 'That appeal is no longer available (you may already have been unbanned).' });
+      }
+      const cfg = getGuild(gid);
+      const guild = client.guilds.cache.get(gid);
+      try {
+        const log = await guild.channels.fetch(cfg.logChannelId);
+        await log.send({
+          content: `📩 **Ban appeal** - <@${i.user.id}> (${i.user.tag}, \`${i.user.id}\`) was banned by the honeypot and is asking you to take another look.`,
+          components: [new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(`mh_appok_${gid}_${i.user.id}`).setLabel('Approve & re-invite').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`mh_appno_${gid}_${i.user.id}`).setLabel('Deny').setStyle(ButtonStyle.Danger),
+          )],
+        });
+        return i.reply({ content: `✅ Your appeal was sent to **${guild.name}**'s mod team. If they approve it, I'll DM you a fresh invite.` });
+      } catch (e) {
+        return i.reply({ content: `Sorry - I couldn't reach that server's mod team (${e.message}).` });
+      }
     }
 
     // --- everything below is admin-only ---
@@ -326,6 +354,31 @@ client.on(Events.InteractionCreate, async (i) => {
       return i.update({ content: i.message.content + `\n☑️ **Dismissed** by ${i.user} - no action taken.`, components: [] });
     }
 
+    // Appeal approve / deny (clicked by a mod in the log channel)
+    if (i.isButton() && i.customId.startsWith('mh_appok_')) {
+      const [, , , uid] = i.customId.split('_'); // mh_appok_{gid}_{uid}
+      try {
+        await i.guild.bans.remove(uid, `MadHoney: appeal approved by ${i.user.tag}`);
+      } catch (e) {
+        return i.reply({ content: `Unban failed: ${e.message}`, ...EPH });
+      }
+      logBan({ id: uid, guildId: i.guildId, channel: '(appeal-approved)', at: new Date().toISOString(), unbanned: true });
+      let invite = null;
+      try {
+        const cfg = getGuild(i.guildId) ?? {};
+        const ch = (cfg.verifyChannelId && await i.guild.channels.fetch(cfg.verifyChannelId).catch(() => null)) ||
+          i.guild.channels.cache.find((c) => c.isTextBased?.() && c.viewable);
+        if (ch) invite = (await ch.createInvite({ maxAge: 86400, maxUses: 1, unique: true, reason: 'MadHoney appeal approved' })).url;
+      } catch { /* no invite perm - mod can send one manually */ }
+      client.users.send(uid, `✅ Your appeal to **${i.guild.name}** was approved.${invite ? ` Rejoin here: ${invite}` : ' Ask a member for a fresh invite to rejoin.'}`).catch(() => {});
+      return i.update({ content: i.message.content + `\n✅ **Approved** by ${i.user} - unbanned${invite ? ' and re-invited' : " (couldn't auto-create an invite)"}.`, components: [] });
+    }
+    if (i.isButton() && i.customId.startsWith('mh_appno_')) {
+      const [, , , uid] = i.customId.split('_');
+      client.users.send(uid, `Your appeal to **${i.guild.name}** was reviewed and not approved.`).catch(() => {});
+      return i.update({ content: i.message.content + `\n❌ **Denied** by ${i.user}.`, components: [] });
+    }
+
     if (i.isButton() && i.customId === 'mh_text') {
       const cfg = getGuild(i.guildId) ?? {};
       const modal = new ModalBuilder().setCustomId('mh_text_modal').setTitle('Verify message');
@@ -381,6 +434,49 @@ client.on(Events.InteractionCreate, async (i) => {
   }
 });
 
+// ---------- onboarding: point new servers at the dashboard ----------
+
+client.on(Events.GuildCreate, async (guild) => {
+  console.log(`Joined ${guild.name} (${guild.id})`);
+  try {
+    const me = await guild.members.fetchMe();
+    const canPost = (c) => c?.isTextBased?.() && c.permissionsFor(me)?.has(PermissionFlagsBits.SendMessages);
+    const ch = canPost(guild.systemChannel) ? guild.systemChannel : guild.channels.cache.find(canPost);
+    await ch?.send({
+      content: [
+        '🍯 Thanks for adding **MadHoney**!',
+        `The easiest way to set up is the **web dashboard**: ${dashLink(guild.id)} - drag-and-drop channel gating, a live banner designer, and guided setup. It's much friendlier than doing it by hand.`,
+        'Prefer Discord? Run `/madhoney setup`. Either way, make sure my role sits **above** your verified role in Server Settings → Roles.',
+      ].join('\n\n'),
+    });
+  } catch { /* no postable channel - fine */ }
+});
+
+// ---------- appeal pipeline (opt-in) ----------
+
+// DM a just-banned user offering to appeal, listing ONLY servers they're
+// currently banned in that opted into appeals (privacy: never reveals servers
+// they were never removed from). Best-effort: fails silently if DMs are closed.
+async function offerAppeal(user) {
+  const ids = appealableGuildIds(user.id);
+  const targets = ids.map((id) => client.guilds.cache.get(id)).filter(Boolean);
+  if (!targets.length) return;
+  const rows = [];
+  for (let i = 0; i < targets.length && i < 20; i += 5) {
+    rows.push(new ActionRowBuilder().addComponents(
+      targets.slice(i, i + 5).map((g) => new ButtonBuilder()
+        .setCustomId(`mh_appeal_${g.id}`).setLabel(`Appeal to ${g.name}`.slice(0, 80)).setStyle(ButtonStyle.Primary)),
+    ));
+  }
+  await user.send({
+    content: [
+      '⚠️ You were banned by a **MadHoney** honeypot - a hidden channel that exists only to catch spam bots. Anything posted there is banned automatically.',
+      "If you're a real person who ended up in one by mistake, you can ask the mod team to take another look. Pick a server to appeal to:",
+    ].join('\n\n'),
+    components: rows,
+  });
+}
+
 // ---------- honeypot ----------
 
 client.on(Events.MessageCreate, async (msg) => {
@@ -433,6 +529,12 @@ client.on(Events.MessageCreate, async (msg) => {
   // --- armed mode: ban now ---
   // log first, so we keep the ID even if the ban call fails
   logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date().toISOString() });
+
+  // Appeal DM (opt-in): a real human who tripped the trap can ask for review.
+  // Sent BEFORE the ban so they're still reachable, and only lists servers they
+  // are actually banned in that opted into appeals (never leaks other servers).
+  await offerAppeal(msg.author).catch(() => {});
+
   let banned = false;
   // How much of their recent message history to wipe with the ban (0-7 days).
   const deleteDays = Math.min(7, Math.max(0, cfg.banDeleteDays ?? 7));

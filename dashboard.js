@@ -343,6 +343,9 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <div class="subh">Universal ban list</div>
   <label class="toggle"><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''}>
     <span>Apply the universal ban list to this server<small>Every honeypot catch across all MadHoney servers feeds one list. ON: users on it are banned when they join here (use "Ban from List" below to apply it retroactively). OFF: this server acts only on its own catches - which it keeps either way.</small></span></label>
+  <div class="subh">Appeals</div>
+  <label class="toggle"><input type="checkbox" name="appealEnabled" ${cfg.appealEnabled ? 'checked' : ''} ${cfg.logChannelId ? '' : 'disabled'}>
+    <span>Let banned users appeal by DM<small>When a honeypot ban happens, MadHoney DMs the user offering to appeal. If they do, the request lands in your <b>log channel</b> with Approve (unban + fresh invite) / Deny buttons. A user only ever sees servers they were actually banned from that turned this on - never anything else. ${cfg.logChannelId ? '' : '<b>Set a log channel above first.</b>'}</small></span></label>
   <button class="btn">Save configuration</button>
 </form></div>
 <div class="card" id="banner"><h2>Honeypot banner</h2>${msgAt('banner')}
@@ -700,6 +703,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             if (form.has(k)) patch[k] = form.get(k).trim();
           }
           patch.banShare = form.get('banShare') === 'on';
+          patch.appealEnabled = form.get('appealEnabled') === 'on';
           patch.verificationEnabled = form.get('verificationEnabled') === 'on';
           if (form.has('banDeleteDays')) patch.banDeleteDays = Math.min(7, Math.max(0, Number(form.get('banDeleteDays')) || 0));
           if (patch.verifyChannelId && patch.verifyChannelId === patch.honeypotChannelId) {

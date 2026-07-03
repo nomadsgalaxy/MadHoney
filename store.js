@@ -56,3 +56,16 @@ export function bannedElsewhere(userId, guildId, rows = bans()) {
   }
   return false;
 }
+
+// Guilds a user may appeal to: ONLY ones they are currently banned in (so we
+// never reveal a server they were never removed from) AND that opted into the
+// appeal pipeline with a log channel. This is the privacy boundary for the DM.
+export function appealableGuildIds(userId, guilds = allGuilds(), rows = bans()) {
+  const state = new Map();
+  for (const b of rows) if (b.id === userId) state.set(b.guildId, !b.unbanned);
+  const out = [];
+  for (const [g, banned] of state) {
+    if (banned && guilds[g]?.appealEnabled && guilds[g]?.logChannelId) out.push(g);
+  }
+  return out;
+}

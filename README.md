@@ -33,6 +33,13 @@ OCL v1.1 + SWAtt.
 
 ## Add MadHoney to your server (hosted)
 
+**Use the web dashboard** at https://madhoney.nomadsgalaxy.com — it's the
+easiest way by far. Log in with Discord, pick your server, and you get
+drag-and-drop channel gating, a live banner designer, appeals, captcha
+difficulty, and guided setup with plain-English fixes when something's off.
+The `/madhoney` chat commands below do the same things if you'd rather stay in
+Discord, but the dashboard is more powerful and friendlier.
+
 1. Invite the bot from https://madhoney.nomadsgalaxy.com and grant the
    requested permissions.
 2. If you don't have them yet, create a **verified role** (e.g. `Verified`)

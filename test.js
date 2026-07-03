@@ -2,7 +2,7 @@
 import assert from 'node:assert';
 import { shouldTrap, honeypotMode } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
-import { bannedElsewhere, trappedCount } from './store.js';
+import { bannedElsewhere, trappedCount, appealableGuildIds } from './store.js';
 import { renderBanner } from './banner.js';
 import { renderCaptcha } from './captcha.js';
 
@@ -40,6 +40,13 @@ assert.ok(bannedElsewhere('u1', 'B', rows), 'banned in guild A → on the univer
 assert.ok(!bannedElsewhere('u1', 'A', rows), 'own guild does not count');
 assert.ok(bannedElsewhere('u2', 'B', rows), 'even an isolated guild\'s catches feed the list');
 assert.ok(!bannedElsewhere('u3', 'B', rows), 'unban reverses the entry');
+
+// appeal targets: only servers the user is actively banned in AND opted in
+const agGuilds = { A: { appealEnabled: true, logChannelId: 'L' }, B: { appealEnabled: false, logChannelId: 'L' }, C: { appealEnabled: true } };
+const agRows = [{ id: 'x', guildId: 'A' }, { id: 'x', guildId: 'B' }, { id: 'x', guildId: 'C' }, { id: 'x', guildId: 'D' }];
+const ag = appealableGuildIds('x', agGuilds, agRows);
+assert.deepEqual(ag, ['A'], 'appeal: only opted-in+logchannel+banned server (A); not B (opted out), C (no log), D (unknown/not-in-before)');
+assert.deepEqual(appealableGuildIds('nobody', agGuilds, agRows), [], 'no bans -> no appeal targets');
 
 // trapped count: distinct users, not raw log lines
 const trows = [
