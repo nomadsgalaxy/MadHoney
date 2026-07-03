@@ -141,8 +141,8 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <label>Log channel (optional) <select name="logChannelId">${chanOpts(cfg.logChannelId)}</select>
     <small>Staff-only channel - each honeypot ban is reported there with an Unban button.</small></label>
   <label>Verify message <textarea name="verifyText" rows="4">${esc(cfg.verifyText || DEFAULT_VERIFY_TEXT)}</textarea></label>
-  <label><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''} style="width:auto;display:inline"> Share bans with other MadHoney servers
-    <small>ON: users banned by other sharing servers are auto-banned when they join yours. OFF: fully isolated.</small></label>
+  <label><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''} style="width:auto;display:inline"> Apply the universal ban list to this server
+    <small>Every honeypot catch across all MadHoney servers feeds one list. ON: users on it are banned when they join here (use "Ban from List" below to apply it retroactively). OFF: this server acts only on its own catches - which it keeps either way.</small></label>
   <button class="btn">Save</button>
 </form></div>
 <div class="card" id="banner"><h2>Honeypot banner</h2>${msgAt('banner')}

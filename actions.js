@@ -3,7 +3,7 @@
 // returns a human-readable result string.
 import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { renderBanner, DEFAULT_BANNER } from './banner.js';
-import { saveGuild, allGuilds, bans, logBan } from './store.js';
+import { saveGuild, bans, logBan } from './store.js';
 
 // Bump this whenever a code change alters what the posted Verify panel or
 // honeypot banner looks like. On the next boot, every configured server's
@@ -158,11 +158,10 @@ export async function syncBans(guild, cfg, progress = {}) {
   const me = await guild.members.fetchMe();
   if (!me.permissions.has(PermissionFlagsBits.BanMembers)) throw new Error("I don't have the Ban Members permission here.");
 
-  // shared pool: latest state per (user, guild); an unban reverses the share
-  const guilds = allGuilds();
+  // universal list: latest state per (user, guild); an unban reverses the entry
   const perGuild = new Map();
   for (const b of bans()) {
-    if (b.guildId !== guild.id && guilds[b.guildId]?.banShare) perGuild.set(`${b.id}:${b.guildId}`, b);
+    if (b.guildId !== guild.id) perGuild.set(`${b.id}:${b.guildId}`, b);
   }
   const pool = new Map(); // userId -> tag
   for (const b of perGuild.values()) if (!b.unbanned) pool.set(b.id, b.tag);

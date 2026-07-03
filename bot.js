@@ -197,8 +197,8 @@ client.on(Events.InteractionCreate, async (i) => {
         saveGuild(i.guildId, { banShare: shared });
         return i.reply({
           content: shared
-            ? '🌐 **Ban sharing ON** - users banned by other sharing MadHoney servers are auto-banned when they join here (and your honeypot bans protect them). Run `/madhoney bansync` to also ban everyone already on the list.'
-            : '🔒 **Isolated** - this server only acts on its own honeypot.',
+            ? '🌐 **Ban sharing ON** - users on the universal MadHoney ban list (caught by any server\'s honeypot) are auto-banned when they join here. Run `/madhoney bansync` to also ban everyone already on the list.'
+            : '🔒 **Isolated** - this server acts only on its own honeypot catches. (Your catches still feed the universal list for servers that opt in.)',
           ...EPH,
         });
       }
@@ -396,14 +396,31 @@ client.on(Events.MessageCreate, async (msg) => {
 
 client.on(Events.GuildMemberAdd, async (member) => {
   const cfg = getGuild(member.guild.id);
-  if (!cfg?.banShare) return;
+  if (!cfg?.banShare) return; // universal list only applies to opted-in servers
   if (!bannedElsewhere(member.id, member.guild.id)) return;
+  let banned = false;
   try {
-    await member.ban({ reason: 'MadHoney: banned by another server in the shared honeypot pool' });
+    await member.ban({ reason: 'MadHoney: on the universal ban list (caught by another server\'s honeypot)' });
     logBan({ id: member.id, tag: member.user.tag, guildId: member.guild.id, channel: '(ban-share)', at: new Date().toISOString() });
+    banned = true;
     console.log(`[${member.guild.name}] ban-share banned ${member.user.tag} (${member.id})`);
   } catch (err) {
     console.error(`[${member.guild.name}] ban-share FAILED for ${member.id}:`, err.message);
+  }
+  if (!banned || !cfg.logChannelId) return;
+  try {
+    const log = await member.guild.channels.fetch(cfg.logChannelId);
+    await log.send({
+      content: [
+        '🌐 **Auto-banned on join** - this user is on the universal MadHoney ban list (caught by another server\'s honeypot).',
+        `**User:** ${member.user.tag} (\`${member.id}\`)`,
+      ].join('\n'),
+      components: [new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`mh_unban_${member.id}`).setLabel('Undo - unban this user').setStyle(ButtonStyle.Danger),
+      )],
+    });
+  } catch (err) {
+    console.error(`[${member.guild.name}] ban-share log report failed:`, err.message);
   }
 });
 

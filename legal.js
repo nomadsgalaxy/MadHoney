@@ -29,12 +29,13 @@ readers, you must disclose the honeypot channel in your server rules. A
 honeypot is a visual trap; do not deploy one where it can catch people who
 cannot see the warning.</p>
 
-<h2>Ban sharing</h2>
-<p>Ban sharing is off by default. If you turn it on, ban records from your
-server (Discord user IDs) join a shared pool that other opted-in servers act
-on, and your server acts on theirs. Turning it off stops both directions.
-Unbanning a user through the log channel removes them from the pool's
-effect.</p>
+<h2>The universal ban list</h2>
+<p>Every honeypot ban is recorded on a universal ban list (Discord user IDs).
+Whether that list <i>applies to your server</i> is your choice and off by
+default: opt in and users on the list are banned when they join (or all at
+once with Ban from List); stay opted out and your server acts only on its
+own honeypot catches, which remain yours either way. Unbanning a user
+through the log channel removes them from the list's effect.</p>
 
 <h2>Fair use</h2>
 <p>Don't abuse the service: no attempting to overload the bot or dashboard,
@@ -96,11 +97,12 @@ cookies.</p>
 caching; <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">their policy</a>
 applies to that hop) and loads fonts from Google Fonts.</p>
 
-<h2>Ban sharing and your data</h2>
-<p>If a server you're in has ban sharing on and the honeypot bans you there,
-your user ID becomes visible in effect to other sharing servers, which may
-ban you on join. An admin unbanning you removes that effect. If you believe
-you're in the pool wrongly, ask the server that banned you to undo it, or
+<h2>The universal ban list and your data</h2>
+<p>If a MadHoney honeypot bans you in any server, the record (your Discord
+user ID) lands on the universal ban list. Servers that opted in to the list
+may ban you when you join them. An admin unbanning you removes that effect
+everywhere. If you believe you're on the list wrongly, ask the server that
+banned you to undo it, or
 <a href="https://github.com/nomadsgalaxy/MadHoney/issues" target="_blank" rel="noopener">open a GitHub issue</a>
 and we'll look at the record.</p>
 

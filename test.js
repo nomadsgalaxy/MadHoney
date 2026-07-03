@@ -24,17 +24,16 @@ assert.equal(code.length, 5);
 assert.ok(answerOk(` ${code.toLowerCase()} `, code), 'case/space-insensitive match');
 assert.ok(!answerOk('nope!', code));
 
-// ban sharing
-const guilds = { A: { banShare: true }, B: { banShare: true }, C: { banShare: false } };
+// universal ban list: every catch counts; opting out only stops applying it
 const rows = [
   { id: 'u1', guildId: 'A' },
   { id: 'u2', guildId: 'C' },
   { id: 'u3', guildId: 'A' }, { id: 'u3', guildId: 'A', unbanned: true },
 ];
-assert.ok(bannedElsewhere('u1', 'B', guilds, rows), 'banned in sharing guild A → banned elsewhere');
-assert.ok(!bannedElsewhere('u1', 'A', guilds, rows), 'own guild does not count');
-assert.ok(!bannedElsewhere('u2', 'B', guilds, rows), 'isolated guild C does not share');
-assert.ok(!bannedElsewhere('u3', 'B', guilds, rows), 'unban reverses the share');
+assert.ok(bannedElsewhere('u1', 'B', rows), 'banned in guild A → on the universal list');
+assert.ok(!bannedElsewhere('u1', 'A', rows), 'own guild does not count');
+assert.ok(bannedElsewhere('u2', 'B', rows), 'even an isolated guild\'s catches feed the list');
+assert.ok(!bannedElsewhere('u3', 'B', rows), 'unban reverses the entry');
 
 // renderers produce PNGs
 const png = (buf) => buf.length > 800 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;

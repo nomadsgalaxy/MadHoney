@@ -33,13 +33,15 @@ export function bans(guildId = null) {
   return guildId ? rows.filter((b) => b.guildId === guildId) : rows;
 }
 
-// A user is "banned elsewhere" if any OTHER guild with ban-sharing ON has a
-// ban entry for them that wasn't later reversed (unbanned:true entry wins).
-export function bannedElsewhere(userId, guildId, guilds = allGuilds(), rows = bans()) {
+// Every honeypot ban lands on the universal list; banShare only controls
+// whether a server ACTS on it (checked at the call sites). A user is "banned
+// elsewhere" if any OTHER guild has a ban entry for them that wasn't later
+// reversed (unbanned:true entry wins).
+export function bannedElsewhere(userId, guildId, rows = bans()) {
   const state = new Map(); // guildId -> currently banned there?
   for (const b of rows) if (b.id === userId) state.set(b.guildId, !b.unbanned);
   for (const [g, banned] of state) {
-    if (g !== guildId && banned && guilds[g]?.banShare) return true;
+    if (g !== guildId && banned) return true;
   }
   return false;
 }

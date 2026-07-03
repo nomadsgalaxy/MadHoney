@@ -128,9 +128,10 @@ State is two files: `guilds.json` (per-server config) and `bans.jsonl`
 read message content unless you opt in with `MESSAGE_CONTENT=on`; the trap
 fires on *where* a message was posted, not what it says.
 
-Ban sharing is opt-in per server, both directions. Only sharing servers
-contribute bans and only sharing servers act on them. An Undo from the log
-channel also removes the user from the shared pool.
+Every honeypot ban is recorded on a universal ban list. Whether that list
+applies to your server is opt-in (`/madhoney banshare`); opting out keeps
+your own catches and stops nothing else. An Undo from the log channel
+removes the user from the list's effect everywhere.
 
 ## License
 
