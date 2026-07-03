@@ -2,13 +2,23 @@
 // (dashboard.js). Each takes a discord.js Guild + the stored config and
 // returns a human-readable result string.
 import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
+import { createHash } from 'node:crypto';
 import { renderBanner, DEFAULT_BANNER } from './banner.js';
 import { saveGuild, bans, logBan } from './store.js';
 
-// Bump this whenever a code change alters what the posted Verify panel or
-// honeypot banner looks like. On the next boot, every configured server's
-// posted messages are refreshed automatically (see bot.js ClientReady).
-export const ASSETS_VERSION = 2; // v2: "protected by" credit line on the banner
+// Bump these ONLY when a code change alters how the posted Verify panel or
+// banner looks. Combined with the per-guild content, they form a fingerprint;
+// on boot the posted message is edited in place (no notification) only if that
+// fingerprint changed, so plain bot updates never re-post anything.
+const VERIFY_PANEL_VERSION = 1;
+const BANNER_RENDER_VERSION = 2; // v2: HONEYPOT IS ACTIVE headline + credit line
+const fp = (s) => createHash('sha1').update(s).digest('hex').slice(0, 12);
+export const verifyFingerprint = (cfg) => fp(`${VERIFY_PANEL_VERSION}|${cfg.verifyText || DEFAULT_VERIFY_TEXT}`);
+export const bannerFingerprint = (cfg) => fp(`${BANNER_RENDER_VERSION}|${JSON.stringify({ ...DEFAULT_BANNER, ...cfg.banner })}`);
+
+const verifyRow = () => new ActionRowBuilder().addComponents(
+  new ButtonBuilder().setCustomId('verify_start').setLabel('Verify').setStyle(ButtonStyle.Success),
+);
 
 export const DEFAULT_VERIFY_TEXT =
   '**Verify & Agree to the Rules**\nClick **Verify** and type the code from the image. ' +
@@ -29,12 +39,27 @@ export async function postVerifyPanel(guild, cfg) {
       await m.delete().catch(() => {});
     }
   } catch { /* no Read History - skip cleanup */ }
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('verify_start').setLabel('Verify').setStyle(ButtonStyle.Success),
-  );
-  await ch.send({ content: cfg.verifyText || DEFAULT_VERIFY_TEXT, components: [row] });
-  saveGuild(guild.id, { verifyPosted: true });
+  const msg = await ch.send({ content: cfg.verifyText || DEFAULT_VERIFY_TEXT, components: [verifyRow()] });
+  saveGuild(guild.id, { verifyPosted: true, verifyMsgId: msg.id, verifyFp: verifyFingerprint(cfg) });
   return `Posted the Verify panel in #${ch.name}.`;
+}
+
+// Silent update: only if the panel's content actually changed, edit the
+// existing message in place (Discord edits don't notify). Adopts a panel we
+// posted before message-ID tracking existed. Returns null when nothing to do.
+export async function refreshVerifyPanel(guild, cfg) {
+  if (!cfg.verifyChannelId || cfg.verifyFp === verifyFingerprint(cfg)) return null;
+  const ch = await guild.channels.fetch(cfg.verifyChannelId).catch(() => null);
+  if (!ch?.isTextBased()) return null;
+  const payload = { content: cfg.verifyText || DEFAULT_VERIFY_TEXT, components: [verifyRow()] };
+  let msg = cfg.verifyMsgId ? await ch.messages.fetch(cfg.verifyMsgId).catch(() => null) : null;
+  if (!msg) {
+    const recent = await ch.messages.fetch({ limit: 20 }).catch(() => null);
+    msg = recent?.find((m) => m.author.id === guild.client.user.id && m.components.length);
+  }
+  if (msg) await msg.edit(payload); else msg = await ch.send(payload);
+  saveGuild(guild.id, { verifyMsgId: msg.id, verifyFp: verifyFingerprint(cfg) });
+  return 'verify panel updated (edited in place, no ping)';
 }
 
 // Map '@rolename' -> the role's Discord color, for mentionMode 'role'.
@@ -57,9 +82,27 @@ export async function postBanner(guild, cfg) {
       await m.delete().catch(() => {});
     }
   } catch { /* skip cleanup */ }
-  await ch.send({ files: [new AttachmentBuilder(png, { name: 'do-not-post.png' })] });
-  saveGuild(guild.id, { bannerPosted: true });
+  const msg = await ch.send({ files: [new AttachmentBuilder(png, { name: 'do-not-post.png' })] });
+  saveGuild(guild.id, { bannerPosted: true, bannerMsgId: msg.id, bannerFp: bannerFingerprint(cfg) });
   return `Posted the honeypot banner in #${ch.name}.`;
+}
+
+// Silent update: only if the banner's design changed, edit the existing
+// message's attachment in place (no notification). Returns null when unchanged.
+export async function refreshBanner(guild, cfg) {
+  if (!cfg.honeypotChannelId || cfg.bannerFp === bannerFingerprint(cfg)) return null;
+  const ch = await guild.channels.fetch(cfg.honeypotChannelId).catch(() => null);
+  if (!ch?.isTextBased()) return null;
+  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), roleColors: roleColorMap(guild) });
+  const file = new AttachmentBuilder(png, { name: 'do-not-post.png' });
+  let msg = cfg.bannerMsgId ? await ch.messages.fetch(cfg.bannerMsgId).catch(() => null) : null;
+  if (!msg) {
+    const recent = await ch.messages.fetch({ limit: 50 }).catch(() => null);
+    msg = recent?.find((m) => m.author.id === guild.client.user.id && m.attachments.size);
+  }
+  if (msg) await msg.edit({ files: [file], attachments: [] }); else msg = await ch.send({ files: [file] });
+  saveGuild(guild.id, { bannerMsgId: msg.id, bannerFp: bannerFingerprint(cfg) });
+  return 'banner updated (edited in place, no ping)';
 }
 
 // Gate every currently-public channel behind the verified role.

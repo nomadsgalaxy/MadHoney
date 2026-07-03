@@ -110,11 +110,12 @@ journalctl -u madhoney -f
 
 ### Updating
 
-Deploying new code updates every server at once - it's a single process. The
-messages the bot has posted (Verify panels, honeypot banners) refresh
-automatically too: if your change alters how they look, bump `ASSETS_VERSION`
-in `actions.js` and on the next start each configured server's posted
-messages are re-posted in place.
+Deploying new code updates every server at once - it's a single process.
+Messages the bot has posted (Verify panels, honeypot banners) are only
+touched when their content actually changed, and then they're edited in place
+so no one gets a notification. If a code change alters how those look, bump
+`VERIFY_PANEL_VERSION` or `BANNER_RENDER_VERSION` in `actions.js`; the next
+start edits the existing messages silently. A plain update re-posts nothing.
 
 ### Dashboard hosting
 

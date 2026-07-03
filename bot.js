@@ -13,7 +13,7 @@ import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { getGuild, saveGuild, logBan, bans, bannedElsewhere } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, ungateChannels, grandfather, syncBans, roleColorMap, DEFAULT_VERIFY_TEXT, ASSETS_VERSION } from './actions.js';
+import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, ungateChannels, grandfather, syncBans, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { startDashboard } from './dashboard.js';
 
 const EPH = { flags: MessageFlags.Ephemeral };
@@ -432,19 +432,17 @@ client.once(Events.ClientReady, async (c) => {
   await c.application.commands.set([command]);
   console.log(`MadHoney armed as ${c.user.tag} in ${c.guilds.cache.size} guild(s). /madhoney setup to begin.`);
 
-  // Propagate updates to what's posted in servers: if a shipped change bumped
-  // ASSETS_VERSION, re-post each configured guild's Verify panel and banner
-  // (only the ones that guild had posted before). Runs once per version.
+  // Keep posted messages current WITHOUT notifying anyone: each refresh edits
+  // the existing Verify panel / banner in place, and only when its content
+  // actually changed (fingerprint check inside). A plain bot update with no
+  // visible change to those messages does nothing here.
   setTimeout(async () => {
     for (const guild of c.guilds.cache.values()) {
       const cfg = getGuild(guild.id);
-      if (!cfg || cfg.assetsVersion === ASSETS_VERSION) continue;
-      if (!cfg.verifyPosted && !cfg.bannerPosted) { saveGuild(guild.id, { assetsVersion: ASSETS_VERSION }); continue; }
+      if (!cfg) continue;
       try {
-        if (cfg.verifyPosted) await postVerifyPanel(guild, cfg);
-        if (cfg.bannerPosted) await postBanner(guild, cfg);
-        saveGuild(guild.id, { assetsVersion: ASSETS_VERSION });
-        console.log(`[${guild.name}] refreshed posted panels to assets v${ASSETS_VERSION}`);
+        if (cfg.verifyPosted) { const r = await refreshVerifyPanel(guild, getGuild(guild.id)); if (r) console.log(`[${guild.name}] ${r}`); }
+        if (cfg.bannerPosted) { const r = await refreshBanner(guild, getGuild(guild.id)); if (r) console.log(`[${guild.name}] ${r}`); }
       } catch (err) {
         console.error(`[${guild.name}] panel refresh failed (will retry next boot):`, err.message);
       }
