@@ -107,6 +107,14 @@ sudo systemctl daemon-reload && sudo systemctl enable --now madhoney
 journalctl -u madhoney -f
 ```
 
+### Updating
+
+Deploying new code updates every server at once - it's a single process. The
+messages the bot has posted (Verify panels, honeypot banners) refresh
+automatically too: if your change alters how they look, bump `ASSETS_VERSION`
+in `actions.js` and on the next start each configured server's posted
+messages are re-posted in place.
+
 ### Dashboard hosting
 
 The dashboard binds `127.0.0.1:$PORT`. Put a reverse proxy or Cloudflare

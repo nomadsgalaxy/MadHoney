@@ -13,7 +13,7 @@ import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { getGuild, saveGuild, logBan, bans, bannedElsewhere } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, grandfather, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, grandfather, roleColorMap, DEFAULT_VERIFY_TEXT, ASSETS_VERSION } from './actions.js';
 import { startDashboard } from './dashboard.js';
 
 const EPH = { flags: MessageFlags.Ephemeral };
@@ -398,6 +398,25 @@ client.on(Events.GuildMemberAdd, async (member) => {
 client.once(Events.ClientReady, async (c) => {
   await c.application.commands.set([command]);
   console.log(`MadHoney armed as ${c.user.tag} in ${c.guilds.cache.size} guild(s). /madhoney setup to begin.`);
+
+  // Propagate updates to what's posted in servers: if a shipped change bumped
+  // ASSETS_VERSION, re-post each configured guild's Verify panel and banner
+  // (only the ones that guild had posted before). Runs once per version.
+  setTimeout(async () => {
+    for (const guild of c.guilds.cache.values()) {
+      const cfg = getGuild(guild.id);
+      if (!cfg || cfg.assetsVersion === ASSETS_VERSION) continue;
+      if (!cfg.verifyPosted && !cfg.bannerPosted) { saveGuild(guild.id, { assetsVersion: ASSETS_VERSION }); continue; }
+      try {
+        if (cfg.verifyPosted) await postVerifyPanel(guild, cfg);
+        if (cfg.bannerPosted) await postBanner(guild, cfg);
+        saveGuild(guild.id, { assetsVersion: ASSETS_VERSION });
+        console.log(`[${guild.name}] refreshed posted panels to assets v${ASSETS_VERSION}`);
+      } catch (err) {
+        console.error(`[${guild.name}] panel refresh failed (will retry next boot):`, err.message);
+      }
+    }
+  }, 5000); // let the guild/channel caches settle first
   // Minimum viable: Manage Roles (verified role + channel overwrites), Ban
   // Members, View Channels, Send Messages, Attach Files, Read Message History.
   // If gating a specific channel fails, that channel denies the bot access -

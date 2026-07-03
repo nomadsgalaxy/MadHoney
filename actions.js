@@ -3,6 +3,12 @@
 // returns a human-readable result string.
 import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { renderBanner, DEFAULT_BANNER } from './banner.js';
+import { saveGuild } from './store.js';
+
+// Bump this whenever a code change alters what the posted Verify panel or
+// honeypot banner looks like. On the next boot, every configured server's
+// posted messages are refreshed automatically (see bot.js ClientReady).
+export const ASSETS_VERSION = 1;
 
 export const DEFAULT_VERIFY_TEXT =
   '**Verify & Agree to the Rules**\nClick **Verify** and type the code from the image. ' +
@@ -27,6 +33,7 @@ export async function postVerifyPanel(guild, cfg) {
     new ButtonBuilder().setCustomId('verify_start').setLabel('Verify').setStyle(ButtonStyle.Success),
   );
   await ch.send({ content: cfg.verifyText || DEFAULT_VERIFY_TEXT, components: [row] });
+  saveGuild(guild.id, { verifyPosted: true });
   return `Posted the Verify panel in #${ch.name}.`;
 }
 
@@ -51,6 +58,7 @@ export async function postBanner(guild, cfg) {
     }
   } catch { /* skip cleanup */ }
   await ch.send({ files: [new AttachmentBuilder(png, { name: 'do-not-post.png' })] });
+  saveGuild(guild.id, { bannerPosted: true });
   return `Posted the honeypot banner in #${ch.name}.`;
 }
 
