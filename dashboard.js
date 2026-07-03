@@ -23,7 +23,11 @@ const LANDING = readFileSync(new URL('./landing.html', import.meta.url), 'utf8')
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-function layout(title, body) {
+function layout(title, body, opts = {}) {
+  const invite = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536852`;
+  const navRight = opts.user
+    ? `<span class="navuser">${esc(opts.user)}</span><a href="/logout">Log out</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add server</a>`
+    : `<a href="/login">Log in</a><a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ Add to Discord</a>`;
   return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
 <link rel="icon" href="/logo.svg?v=3" type="image/svg+xml">
@@ -32,10 +36,22 @@ function layout(title, body) {
 <style>
   :root{--honey:#ffb31a;--bg:#0a0b0d;--card:#12141a;--ink:#f2ede2;--dim:#9a948a;--line:#262b34}
   *{box-sizing:border-box}
-  body{font:15px/1.55 "Instrument Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);max-width:880px;margin:0 auto;padding:1rem}
+  html,body{overflow-x:hidden}
+  body{font:15px/1.55 "Instrument Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:0}
   body::before{content:"";position:fixed;inset:0;z-index:-1;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='27.7128' height='48' viewBox='0 0 27.7128 48'%3E%3Cpath d='M0 8L13.8564 0l13.8564 8M0 8v16l13.8564 8 13.8564-8M13.8564 32v16' fill='none' stroke='%23ffb31a' stroke-opacity='.045' stroke-width='1.5'/%3E%3C/svg%3E");
     background-size:27.7128px 48px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 1rem 2.5rem}
+  nav{position:sticky;top:0;z-index:20;background:rgba(10,11,13,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .nin{max-width:880px;margin:0 auto;padding:0 1rem;display:flex;align-items:center;gap:1rem;height:56px}
+  nav .wm{display:inline-flex;align-items:center;gap:.5rem;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.15rem;color:var(--ink);white-space:nowrap}
+  nav .wm img{height:26px;width:auto}
+  nav .wm b{color:var(--honey)}
+  nav .navr{margin-left:auto;display:flex;align-items:center;gap:.9rem;font-size:.9rem;min-width:0}
+  nav .navr>a{color:var(--dim)} nav .navr>a:hover{color:var(--ink);text-decoration:none}
+  nav .navuser{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:12ch}
+  .navtape{height:5px;background:repeating-linear-gradient(-45deg,var(--honey) 0 14px,#101010 14px 28px)}
+  @media(max-width:520px){nav .navuser{display:none} nav .navr{gap:.7rem}}
   a{color:var(--honey);text-decoration:none} a:hover{text-decoration:underline}
   h1,h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;line-height:1.2;letter-spacing:-.02em} h1 span{color:var(--honey)}
   h1 img{height:38px;vertical-align:-8px;margin-right:.4rem}
@@ -118,11 +134,16 @@ function layout(title, body) {
   .chip2.dragging{opacity:.4}
   .chip2 .cn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .chip2 .ctag{font-size:.62rem;letter-spacing:.04em;color:var(--dim);text-transform:uppercase;flex:0 0 auto;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .info{display:flex;gap:.6rem;align-items:center;padding:.3rem .5rem;color:var(--dim)}
-  .stripes{height:12px;border-radius:4px;background:repeating-linear-gradient(-45deg,var(--honey) 0 18px,#111 18px 36px);margin-bottom:1.1rem}
+  .info{display:flex;gap:.6rem;align-items:flex-start;padding:.3rem .5rem;color:var(--dim);flex-wrap:wrap}
+  .tscroll{overflow-x:auto}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
-</style><div class="stripes"></div>${body}
-<p><small>Built on <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">MadHoney</a> by Nomads Galaxy · OCL v1.1 + SWAtt v1 · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></small></p></html>`;
+  footer.f{margin-top:2rem;color:var(--dim);font-size:.85rem;border-top:1px solid var(--line);padding-top:1rem}
+</style>
+<nav><div class="nin"><a class="wm" href="/"><img src="/logo.svg?v=3" alt=""><span>Mad<b>Honey</b></span></a>
+<div class="navr">${navRight}</div></div></nav><div class="navtape"></div>
+<div class="wrap">${body}
+<footer class="f">Built on <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">MadHoney</a> by Nomads Galaxy · OCL v1.1 + SWAtt v1 · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
+</div></html>`;
 }
 
 function cookies(req) {
@@ -318,7 +339,7 @@ ${[
   `<div class="step"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></div>`).join('')}
 </form></div>
 <div class="card"><h2>Recent bans <span class="count">${trappedHere} trapped here</span></h2>
-${recent ? `<table class="btable">${recent}</table>` : '<div class="empty">No bans logged in this server yet.</div>'}</div>`);
+${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` : '<div class="empty">No bans logged in this server yet.</div>'}</div>`, { user: sess.user.username });
   }
 
   // Channel gating picker: classify every channel and let the admin choose
@@ -328,7 +349,7 @@ ${recent ? `<table class="btable">${recent}</table>` : '<div class="empty">No ba
     if (!cfg.verifiedRoleId || !cfg.verifyChannelId || !cfg.honeypotChannelId) {
       return layout('MadHoney - Gate', `<div class="ghead"><div class="gtitle"><h1>Gate channels</h1>
         <div class="crumbs"><a href="/g/${guild.id}">← ${esc(guild.name)}</a></div></div></div>
-        <div class="card"><p>Finish <a href="/g/${guild.id}#config">configuration</a> first - I need the verified role, verify channel and honeypot channel.</p></div>`);
+        <div class="card"><p>Finish <a href="/g/${guild.id}#config">configuration</a> first - I need the verified role, verify channel and honeypot channel.</p></div>`, { user: sess.user.username });
     }
     const chans = (await classifyChannels(guild, cfg)).sort((a, z) => a.position - z.position);
     const override = cfg.channelTreatment ?? {};
@@ -409,7 +430,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
     }
   });
 })();
-</script>`);
+</script>`, { user: sess.user.username });
   }
 
   const server = createServer(async (req, res) => {
@@ -507,15 +528,15 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
           '<span class="spill add">＋ Add MadHoney</span>')).join('');
         const armedCount = present.filter(armed).length;
 
-        return html(layout('MadHoney', `
-<h1><img src="/logo.svg?v=3" alt="">Mad<span>Honey</span></h1>
-<p>Hi ${esc(sess.user.username)} · <a href="/logout">log out</a></p>
+        return html(layout('MadHoney - Your servers', `
+<h1 style="margin:1.1rem 0 .2rem">Your servers</h1>
+<p style="color:var(--dim);margin:0 0 1rem">Pick a server to configure MadHoney, or add it to a new one.</p>
 ${present.length ? `<div class="card"><h2>Your servers <span class="count">${present.length} with MadHoney · ${armedCount} armed</span></h2>
 <ul class="slist">${presentTiles}</ul></div>` : `<div class="card"><h2>Get started</h2>
 <p>MadHoney isn't in any of your servers yet. Add it to one below, then run through setup here.</p></div>`}
 ${absent.length ? `<div class="card"><h2>Add MadHoney to another server <span class="count">${absent.length} available</span></h2>
 <ul class="slist">${absentTiles}</ul></div>` : ''}
-${!manageable.length ? '<div class="card"><p>No servers where you have Manage Server (or a MadHoney staff/admin role). Ask an admin, or add MadHoney to a server you own.</p></div>' : ''}`));
+${!manageable.length ? '<div class="card"><p>No servers where you have Manage Server (or a MadHoney staff/admin role). Ask an admin, or add MadHoney to a server you own.</p></div>' : ''}`, { user: sess.user.username }));
       }
 
       // ---- per-guild ----
