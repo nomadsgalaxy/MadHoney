@@ -60,7 +60,7 @@ function layout(title, body) {
   .stripes{height:12px;border-radius:4px;background:repeating-linear-gradient(-45deg,var(--honey) 0 18px,#111 18px 36px);margin-bottom:1.1rem}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
 </style><div class="stripes"></div>${body}
-<p><small>Built on <a href="https://github.com/nomadsgalaxy/MadHoney">MadHoney</a> by Nomads Galaxy · OCL v1.1 + SWAtt v1 · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></small></p></html>`;
+<p><small>Built on <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">MadHoney</a> by Nomads Galaxy · OCL v1.1 + SWAtt v1 · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></small></p></html>`;
 }
 
 function cookies(req) {
@@ -282,7 +282,7 @@ ${[
             const live = client.guilds.cache.get(g.id);
             return live
               ? `<li><a href="/g/${g.id}">${esc(g.name)}</a> ${getGuild(g.id)?.honeypotChannelId ? '🍯 armed' : '- not configured yet'}</li>`
-              : `<li>${esc(g.name)} - <a href="${inviteUrl()}&guild_id=${g.id}">invite MadHoney</a></li>`;
+              : `<li>${esc(g.name)} - <a href="${inviteUrl()}&guild_id=${g.id}" target="_blank" rel="noopener">invite MadHoney</a></li>`;
           }).join('');
         return html(layout('MadHoney', `
 <h1><img src="/logo.svg?v=3" alt="">Mad<span>Honey</span></h1>
@@ -297,7 +297,7 @@ ${[
         if (!sess) return redirect('/login');
         if (!canManage(sess, m[1])) return html(layout('MadHoney', '<h1>403</h1><p>You need Manage Server permission there.</p>'), 403);
         const guild = client.guilds.cache.get(m[1]);
-        if (!guild) return html(layout('MadHoney', `<h1>Not here yet</h1><p><a href="${inviteUrl()}&guild_id=${m[1]}">Invite MadHoney to this server</a> first.</p>`), 404);
+        if (!guild) return html(layout('MadHoney', `<h1>Not here yet</h1><p><a href="${inviteUrl()}&guild_id=${m[1]}" target="_blank" rel="noopener">Invite MadHoney to this server</a> first.</p>`), 404);
 
         if (m[2] === '/progress') {
           const p = gfJobs.get(guild.id);

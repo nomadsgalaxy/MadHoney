@@ -22,7 +22,7 @@ MadHoney there. What the bot does in your server, it does on your
 instruction: bans issued through the honeypot, channel gating, and role
 changes are your moderation decisions, and the Undo button exists for a
 reason. You are responsible for complying with
-<a href="https://discord.com/terms">Discord's Terms of Service</a> and
+<a href="https://discord.com/terms" target="_blank" rel="noopener">Discord's Terms of Service</a> and
 Community Guidelines.</p>
 <p>If your community includes members who rely on text-to-speech or screen
 readers, you must disclose the honeypot channel in your server rules. A
@@ -44,7 +44,7 @@ to harass people.</p>
 
 <h2>Self-hosting</h2>
 <p>The source is available at
-<a href="https://github.com/nomadsgalaxy/MadHoney">github.com/nomadsgalaxy/MadHoney</a>
+<a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">github.com/nomadsgalaxy/MadHoney</a>
 under OCL v1.1 + SWAtt v1. Self-hosted instances are your own; these terms
 cover only the hosted service.</p>
 
@@ -57,7 +57,7 @@ to the amount you paid for it, which is zero.</p>
 <h2>Changes</h2>
 <p>We may update these terms; the effective date above changes when we do.
 Continued use after a change means you accept it. Questions or problems:
-<a href="https://github.com/nomadsgalaxy/MadHoney/issues">open a GitHub issue</a>.</p>
+<a href="https://github.com/nomadsgalaxy/MadHoney/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p>
 </div>`;
 
 export const PRIVACY = `
@@ -93,7 +93,7 @@ manage. Sessions live in server memory and disappear on logout or when the
 bot restarts. The only cookie is a session ID; there are no tracking
 cookies.</p>
 <p>The site is served through Cloudflare (their edge handles TLS and
-caching; <a href="https://www.cloudflare.com/privacypolicy/">their policy</a>
+caching; <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">their policy</a>
 applies to that hop) and loads fonts from Google Fonts.</p>
 
 <h2>Ban sharing and your data</h2>
@@ -101,7 +101,7 @@ applies to that hop) and loads fonts from Google Fonts.</p>
 your user ID becomes visible in effect to other sharing servers, which may
 ban you on join. An admin unbanning you removes that effect. If you believe
 you're in the pool wrongly, ask the server that banned you to undo it, or
-<a href="https://github.com/nomadsgalaxy/MadHoney/issues">open a GitHub issue</a>
+<a href="https://github.com/nomadsgalaxy/MadHoney/issues" target="_blank" rel="noopener">open a GitHub issue</a>
 and we'll look at the record.</p>
 
 <h2>Retention and deletion</h2>
@@ -109,7 +109,7 @@ and we'll look at the record.</p>
 kicking the bot stops all processing for that server. Ban log entries are
 kept so ban sharing and the Undo button keep working. To have your server's
 configuration or a specific ban record deleted,
-<a href="https://github.com/nomadsgalaxy/MadHoney/issues">open a GitHub issue</a>
+<a href="https://github.com/nomadsgalaxy/MadHoney/issues" target="_blank" rel="noopener">open a GitHub issue</a>
 from an account that can prove server ownership.</p>
 
 <h2>Changes</h2>
