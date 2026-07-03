@@ -74,6 +74,9 @@ header p.sub b{color:var(--ink)}
 section{padding:4.5rem 0}
 .eyebrow{font-family:var(--mono);font-weight:700;font-size:.75rem;letter-spacing:.24em;text-transform:uppercase;color:var(--honey)}
 h2{font-family:var(--display);font-weight:800;font-size:clamp(1.7rem,4vw,2.5rem);letter-spacing:-.02em;margin:.4rem 0 2rem}
+p.lead{font-size:1.15rem;line-height:1.65;color:var(--dim);max-width:62ch;margin:0}
+p.lead b{color:var(--ink)}
+.underline{color:var(--honey)}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
 .step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.5rem;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
 .step:hover{border-color:var(--honey-deep);transform:translateY(-3px)}
@@ -156,6 +159,17 @@ footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;l
 
 <div class="tape"></div>
 
+<section id="why"><div class="wrap">
+  <div class="eyebrow">Why it matters</div>
+  <h2>One bot. Unread dots everywhere.</h2>
+  <p class="lead">A spam bot never posts just once. It blasts every channel it can reach and tries to
+  ping <b>@everyone</b> on the way through. Every message lights up that channel with an unread marker,
+  and here's the part that stings: ban the bot and delete the spam, and those unread dots usually
+  <b>stay</b>. You come back to a whole server flagged with "new messages" for spam nobody should have
+  seen. <b>MadHoney's job is to stop that before it starts</b> - to catch the bot in one place, before it
+  can touch the rest of your server.</p>
+</div></section>
+
 <section id="how"><div class="wrap">
   <div class="eyebrow">The mechanism</div>
   <h2>Three moves. Zero guesswork.</h2>
@@ -166,6 +180,21 @@ footer .attribution{margin-top:1.6rem;font-family:var(--mono);font-size:.78rem;l
       <p>Humans click <b>Verify</b>, read an image captcha, type the code, and the whole server unlocks. Takes about ten seconds. No DMs, no third-party site.</p></div>
     <div class="step"><div class="num">03</div><h3>Trap</h3>
       <p>The decoy is named like a real channel (<b>#general-2</b>) and it's the only place an unverified account can post. Spam bots post everywhere they can, so they post there first. <b>Instant ban</b>, plus their last 7 days of messages get deleted. Verified humans never even see it.</p></div>
+  </div>
+</div></section>
+
+<section id="why-it-works"><div class="wrap">
+  <div class="eyebrow">The thinking</div>
+  <h2>Bots aren't smart. That's the whole plan.</h2>
+  <div class="grid2">
+    <div class="fcard"><div class="ico">🚪</div><h3>They post anywhere</h3>
+      <p>A spam bot doesn't pick targets. It dumps its message in every channel it can see and pings <b>@everyone</b> if it can. Gate everything behind the verified role and the only door left open is the honeypot.</p></div>
+    <div class="fcard"><div class="ico">🎣</div><h3>The name is the bait</h3>
+      <p>Name the decoy like a normal channel (<code>general-2</code>, <code>chat-2</code>) and an indiscriminate bot walks straight in. It looks like just another place to spam.</p></div>
+    <div class="fcard"><div class="ico">🖼️</div><h3>They can't read the warning</h3>
+      <p>The honeypot's only content is an image. A human reads "don't post here" and backs off; a bot can't parse a picture, so it posts anyway and trips the trap.</p></div>
+    <div class="fcard"><div class="ico">🙈</div><h3>No human gets caught</h3>
+      <p>The verified role hides the honeypot from everyone who passed the captcha. Real members never even see the channel, so the only thing that ever lands in it is a bot.</p></div>
   </div>
 </div></section>
 

@@ -9,6 +9,23 @@ Honeypot + captcha verification for Discord servers. Two traps, one bot:
    get banned on the spot, recent messages deleted. Humans never see the
    channel once verified.
 
+## Why it works this way
+
+A spam bot never posts once. It blasts every channel it can reach and tries to
+ping @everyone, and every message leaves that channel marked unread. Ban the
+bot and delete the spam and those unread markers usually stay, so you come back
+to a whole server flagged with "new messages" for spam nobody should have seen.
+The point of MadHoney is to catch the bot in one place before it can touch the
+rest of your server.
+
+Bots aren't smart, and the design leans on that. Gate every channel behind the
+verified role and the only place an unverified account can post is the honeypot.
+Name it like a real channel (`general-2`) and an indiscriminate bot walks
+straight in. Its only content is an image: a human reads the warning and backs
+off, but a bot can't parse a picture, so it posts anyway and trips the trap.
+The verified role hides the honeypot from anyone who passed the captcha, so no
+real member ever lands in it.
+
 Also in the box: a designable warning banner for the honeypot, a mod-log with
 an undo button, optional cross-server ban sharing, a web dashboard, and a
 setup wizard that runs entirely inside Discord. Source-available under
