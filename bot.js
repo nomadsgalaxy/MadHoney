@@ -52,7 +52,9 @@ const command = new SlashCommandBuilder()
     .setName('banshare').setDescription('Share bans with other MadHoney servers, or stay isolated')
     .addStringOption((o) => o.setName('mode').setDescription('shared = auto-ban users banned in other sharing servers').setRequired(true)
       .addChoices({ name: 'shared', value: 'shared' }, { name: 'isolated', value: 'isolated' })))
-  .addSubcommand((s) => s.setName('bansync').setDescription('Ban everyone on the active shared list now (requires ban sharing ON)'));
+  .addSubcommand((s) => s.setName('bansync').setDescription('Ban everyone on the active shared list now (requires ban sharing ON)'))
+  .addSubcommand((s) => s.setName('arm').setDescription('Arm the honeypot - start banning accounts that post in it'))
+  .addSubcommand((s) => s.setName('disarm').setDescription('Disarm the honeypot - stop banning (use while setting up)'));
 
 // ---------- setup panel ----------
 
@@ -67,6 +69,7 @@ function setupContent(guild) {
     `**Staff role (optional):** ${cfg.staffRoleId ? `<@&${cfg.staffRoleId}>` : '*not set*'} - members with it are never trapped (admins with **Manage Server** and the owner are always exempt). Set it under **Staff & log**.`,
     `**Log channel (optional):** ${v(cfg.logChannelId)} - every honeypot ban is reported there with an **Unban** button. Set it under **Staff & log**.`,
     `**Ban sharing:** ${cfg.banShare ? 'shared 🌐' : 'isolated 🔒'} (change with \`/madhoney banshare\`)`,
+    `**Honeypot:** ${cfg.honeypotEnabled === false ? '⏸ **Disarmed** - the trap is off' : '🍯 **Armed** - the trap is live'} (\`/madhoney arm\` · \`/madhoney disarm\`)`,
     '',
     '⚠️ If you use Discord **Onboarding**, make sure it does NOT auto-grant the verified role, or the captcha is bypassable.',
     '♿ Honeypots are visual traps - not recommended for servers serving visually impaired communities. At minimum, name the honeypot in your rules so text-to-speech users hear the warning.',
@@ -216,6 +219,19 @@ client.on(Events.InteractionCreate, async (i) => {
         clearInterval(ticker);
         return i.editReply({ content: String(result).slice(0, 1900) });
       }
+      if (sub === 'arm' || sub === 'disarm') {
+        const on = sub === 'arm';
+        if (on && !getGuild(i.guildId)?.honeypotChannelId) {
+          return i.reply({ content: 'No honeypot channel set yet - run `/madhoney setup` first.', ...EPH });
+        }
+        saveGuild(i.guildId, { honeypotEnabled: on });
+        return i.reply({
+          content: on
+            ? '🍯 **Honeypot armed.** Accounts that post in the honeypot channel are now banned.'
+            : '⏸ **Honeypot disarmed.** The trap is off - nobody gets banned until you `/madhoney arm` again.',
+          ...EPH,
+        });
+      }
       if (sub === 'banner') {
         const prev = getGuild(i.guildId)?.banner ?? {};
         const banner = {
@@ -360,10 +376,12 @@ client.on(Events.MessageCreate, async (msg) => {
   // log first, so we keep the ID even if the ban call fails
   logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date().toISOString() });
   let banned = false;
+  // How much of their recent message history to wipe with the ban (0-7 days).
+  const deleteDays = Math.min(7, Math.max(0, cfg.banDeleteDays ?? 7));
   try {
     await msg.guild.bans.create(msg.author.id, {
       reason: `MadHoney honeypot: posted in #${msg.channel.name}`,
-      deleteMessageSeconds: 7 * 24 * 60 * 60, // also wipes their last week of messages
+      deleteMessageSeconds: deleteDays * 24 * 60 * 60,
     });
     banned = true;
     console.log(`[${msg.guild.name}] banned ${msg.author.tag} (${msg.author.id})`);

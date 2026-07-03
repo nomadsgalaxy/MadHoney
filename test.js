@@ -17,6 +17,8 @@ assert.equal(shouldTrap({ ...base, isStaff: true }, cfg), false, 'staff → no')
 assert.equal(shouldTrap({ ...base, isOwner: true }, cfg), false, 'owner → no');
 assert.equal(shouldTrap(base, null), false, 'unconfigured guild → no');
 assert.equal(shouldTrap(base, {}), false, 'no honeypot set → no');
+assert.equal(shouldTrap(base, { ...cfg, honeypotEnabled: false }), false, 'disarmed → no');
+assert.equal(shouldTrap(base, { ...cfg, honeypotEnabled: true }), true, 'armed → yes');
 
 // captcha logic
 const code = makeCode(5, () => 0.42);

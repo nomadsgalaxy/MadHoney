@@ -92,6 +92,7 @@ verified members so real people rarely see it at all.
 | `/madhoney deploy` | Grandfather, post panels, gate channels |
 | `/madhoney banner` | Design the honeypot warning image |
 | `/madhoney banshare` | `shared` or `isolated` |
+| `/madhoney arm` / `disarm` | Turn the honeypot trap on or off |
 | `/madhoney status` | Current config and ban counts |
 
 All admin commands require Manage Server.

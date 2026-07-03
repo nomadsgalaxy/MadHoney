@@ -171,6 +171,12 @@ function layout(title, body, opts = {}) {
   details.guide .tip{background:#0f1216;border:1px solid var(--line);border-radius:8px;padding:.55rem .8rem;margin:.55rem 0;line-height:1.5}
   .warnbox{background:rgba(214,69,69,.1);border:1px solid rgba(214,69,69,.45);border-radius:8px;padding:.6rem .85rem;margin:.3rem 0 .2rem;font-size:.9rem;line-height:1.5;color:#ffb3aa}
   .warnbox b{color:#fff}
+  .armbar{display:flex;align-items:center;gap:1rem;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:.9rem 1.2rem;margin:0 0 1rem}
+  .armbar.on{border-color:rgba(255,179,26,.5);background:rgba(255,179,26,.06)}
+  .armbar.off{border-color:rgba(214,69,69,.5);background:rgba(214,69,69,.07)}
+  .armbar b{font-family:"Bricolage Grotesque",sans-serif;font-size:1.05rem}
+  .armbar small{color:var(--dim)}
+  .armbar .btn{margin:0;flex:0 0 auto}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
   footer.f{margin-top:2rem;color:var(--dim);font-size:.85rem;border-top:1px solid var(--line);padding-top:1rem}
 </style>
@@ -243,16 +249,24 @@ export function startDashboard(client) {
     const avatar = icon ? `<img class="savatar" src="${icon}" alt="">` : `<span class="savatar">${esc([...guild.name][0]?.toUpperCase() ?? '#')}</span>`;
     const roleName = cfg.verifiedRoleId ? (roles.get(cfg.verifiedRoleId)?.name ?? 'set') : null;
     const verifyOn = cfg.verificationEnabled !== false; // default on
+    const honeypotOn = cfg.honeypotEnabled !== false; // default on (armed)
     // With verification off there's no verified role/gate to require - just the honeypot.
     const configured = cfg.honeypotChannelId && (!verifyOn || (cfg.verifiedRoleId && cfg.verifyChannelId));
     const chips = [
-      configured ? '<span class="chip on"><b>🍯 Armed</b></span>' : '<span class="chip off">Needs setup</span>',
+      !configured ? '<span class="chip off">Needs setup</span>'
+        : honeypotOn ? '<span class="chip on"><b>🍯 Armed</b></span>'
+        : '<span class="chip off"><b>⏸ Disarmed</b></span>',
       `<span class="chip">Trapped here <b>${trappedHere}</b></span>`,
       verifyOn
         ? (roleName ? `<span class="chip">Verified role <b>${esc(roleName)}</b></span>` : '')
         : '<span class="chip off">⚠️ Verification OFF</span>',
       `<span class="chip ${cfg.banShare ? 'on' : 'off'}">Universal list <b>${cfg.banShare ? 'ON' : 'off'}</b></span>`,
     ].filter(Boolean).join('');
+    const armBar = configured ? `<form method="post" action="/g/${guild.id}/action" class="armbar ${honeypotOn ? 'on' : 'off'}">
+      <div><b>${honeypotOn ? '🍯 Honeypot is Armed' : '⏸ Honeypot is Disarmed'}</b>
+      <small>${honeypotOn ? 'Anyone who posts in the honeypot is banned right now.' : 'The trap is off - nobody gets banned. Arm it once everything is set up.'}</small></div>
+      <button class="btn ${honeypotOn ? 'red' : ''}" name="do" value="${honeypotOn ? 'disarm' : 'arm'}">${honeypotOn ? 'Disarm' : 'Arm honeypot'}</button>
+    </form>` : '';
 
     const recent = banRows.slice(-12).reverse().map((x) => {
       const when = esc(String(x.at).replace('T', ' ').slice(0, 16));
@@ -266,6 +280,7 @@ export function startDashboard(client) {
 </div>
 <div class="ghead">${avatar}<div class="gtitle"><h1>${esc(guild.name)}</h1></div></div>
 <div class="chips">${chips}</div>
+${armBar}
 ${problem ? `<div class="card" style="border-color:#d64545"><b style="color:#ff5b4d">⚠️ Setup problem</b><pre style="margin-top:.5rem">${esc(problem)}</pre></div>` : ''}
 ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <details class="card guide" ${configured ? '' : 'open'}>
@@ -282,6 +297,7 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <li><b>Gate channels.</b> Open the drag board, review what MadHoney detected, move anything it misjudged, then apply. Nothing changes until you hit Apply.</li>
 </ol>
 <div class="tip"><b>🍯 Naming the honeypot:</b> name it like a real channel so bots post in it. Good: <code>general-2</code>, <code>chat-2</code>, <code>off-topic-2</code>. Bad: <code>honeypot</code>, <code>do-not-post</code> (some spam tools skip those).</div>
+<div class="tip"><b>🔘 Arm when ready:</b> the trap is controlled by the <b>Armed / Disarmed</b> button at the top of this page. If you'd rather get everything in place first, <b>Disarm</b> it while you set up, then <b>Arm</b> it when you're ready to start catching bots.</div>
 <div class="tip"><b>⚠️ Discord Onboarding:</b> if you use it, make sure it does NOT auto-grant the verified role, or the captcha can be skipped.</div>
 <div class="tip"><b>🔒 Getting a permission error?</b> It's almost always the MadHoney role sitting below your verified role, or missing Manage Roles / Manage Channels. Re-invite MadHoney with <b>＋ Add server</b> in the top bar, then drag its role to the top of your staff roles.</div>
 </div>
@@ -298,6 +314,9 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
     <small>The trap. Name it like a real channel (general-2). Posting here = instant ban.</small></label>
   <label>Log channel (optional) <select name="logChannelId">${chanOpts(cfg.logChannelId)}</select>
     <small>Staff-only channel - each ban is reported there with an Unban button.</small></label>
+  <label>Delete messages on ban <select name="banDeleteDays">
+    ${[[0, "Don't delete any"], [1, 'Last 1 day'], [3, 'Last 3 days'], [7, 'Last 7 days (default)']].map(([v, l]) => `<option value="${v}" ${Number(cfg.banDeleteDays ?? 7) === v ? 'selected' : ''}>${l}</option>`).join('')}
+  </select><small>How much of a trapped user's recent message history to wipe when banned. Discord's max is 7 days.</small></label>
   </div>
   <div class="subh">Staff &amp; dashboard access</div>
   <div class="grid2f">
@@ -652,6 +671,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
           }
           patch.banShare = form.get('banShare') === 'on';
           patch.verificationEnabled = form.get('verificationEnabled') === 'on';
+          if (form.has('banDeleteDays')) patch.banDeleteDays = Math.min(7, Math.max(0, Number(form.get('banDeleteDays')) || 0));
           if (patch.verifyChannelId && patch.verifyChannelId === patch.honeypotChannelId) {
             return html(await guildPage(guild, sess, '❌ Verify and honeypot must be different channels - not saved.', 'config'));
           }
@@ -661,6 +681,14 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
         if (m[2] === '/action' && req.method === 'POST') {
           const form = await body(req);
           const cfg = getGuild(guild.id);
+          // Arm / disarm the honeypot - just a config flip, works regardless of the rest.
+          if (form.get('do') === 'arm' || form.get('do') === 'disarm') {
+            const on = form.get('do') === 'arm';
+            saveGuild(guild.id, { honeypotEnabled: on });
+            return html(await guildPage(guild, sess, on
+              ? '🍯 Honeypot armed. Anyone who posts in the honeypot channel is now banned.'
+              : '⏸ Honeypot disarmed. The trap is off - nobody gets banned until you arm it again.', 'top'));
+          }
           if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
             return html(await guildPage(guild, sess, '❌ Finish configuration first (role + both channels).', 'actions'));
           }
