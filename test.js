@@ -1,6 +1,6 @@
 // npm test - checks the pure logic. No Discord, no network.
 import assert from 'node:assert';
-import { shouldTrap } from './trap.js';
+import { shouldTrap, honeypotMode } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
 import { bannedElsewhere, trappedCount } from './store.js';
 import { renderBanner } from './banner.js';
@@ -17,8 +17,12 @@ assert.equal(shouldTrap({ ...base, isStaff: true }, cfg), false, 'staff → no')
 assert.equal(shouldTrap({ ...base, isOwner: true }, cfg), false, 'owner → no');
 assert.equal(shouldTrap(base, null), false, 'unconfigured guild → no');
 assert.equal(shouldTrap(base, {}), false, 'no honeypot set → no');
-assert.equal(shouldTrap(base, { ...cfg, honeypotEnabled: false }), false, 'disarmed → no');
-assert.equal(shouldTrap(base, { ...cfg, honeypotEnabled: true }), true, 'armed → yes');
+assert.equal(shouldTrap(base, { ...cfg, honeypotEnabled: false }), false, 'legacy disarmed → no');
+assert.equal(shouldTrap(base, { ...cfg, honeypotMode: 'disarmed' }), false, 'disarmed → no');
+assert.equal(shouldTrap(base, { ...cfg, honeypotMode: 'armed' }), true, 'armed → yes');
+assert.equal(shouldTrap(base, { ...cfg, honeypotMode: 'review' }), true, 'review still trips (mode decides action)');
+assert.equal(honeypotMode({}), 'armed', 'default mode is armed');
+assert.equal(honeypotMode({ honeypotEnabled: false }), 'disarmed', 'legacy flag maps to disarmed');
 
 // captcha logic
 const code = makeCode(5, () => 0.42);

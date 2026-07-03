@@ -8,7 +8,7 @@ import {
   RoleSelectMenuBuilder, ChannelSelectMenuBuilder, ChannelType,
   ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder,
 } from 'discord.js';
-import { shouldTrap } from './trap.js';
+import { shouldTrap, honeypotMode } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
@@ -53,6 +53,14 @@ const command = new SlashCommandBuilder()
     .addStringOption((o) => o.setName('mode').setDescription('shared = auto-ban users banned in other sharing servers').setRequired(true)
       .addChoices({ name: 'shared', value: 'shared' }, { name: 'isolated', value: 'isolated' })))
   .addSubcommand((s) => s.setName('bansync').setDescription('Ban everyone on the active shared list now (requires ban sharing ON)'))
+  .addSubcommand((s) => s
+    .setName('honeypot').setDescription('Set the honeypot mode')
+    .addStringOption((o) => o.setName('mode').setDescription('armed = ban now · review = hold for a mod · disarmed = off').setRequired(true)
+      .addChoices(
+        { name: 'armed (ban immediately)', value: 'armed' },
+        { name: 'review (hold each hit for a mod)', value: 'review' },
+        { name: 'disarmed (off)', value: 'disarmed' },
+      )))
   .addSubcommand((s) => s.setName('arm').setDescription('Arm the honeypot - start banning accounts that post in it'))
   .addSubcommand((s) => s.setName('disarm').setDescription('Disarm the honeypot - stop banning (use while setting up)'));
 
@@ -69,7 +77,7 @@ function setupContent(guild) {
     `**Staff role (optional):** ${cfg.staffRoleId ? `<@&${cfg.staffRoleId}>` : '*not set*'} - members with it are never trapped (admins with **Manage Server** and the owner are always exempt). Set it under **Staff & log**.`,
     `**Log channel (optional):** ${v(cfg.logChannelId)} - every honeypot ban is reported there with an **Unban** button. Set it under **Staff & log**.`,
     `**Ban sharing:** ${cfg.banShare ? 'shared 🌐' : 'isolated 🔒'} (change with \`/madhoney banshare\`)`,
-    `**Honeypot:** ${cfg.honeypotEnabled === false ? '⏸ **Disarmed** - the trap is off' : '🍯 **Armed** - the trap is live'} (\`/madhoney arm\` · \`/madhoney disarm\`)`,
+    `**Honeypot:** ${{ armed: '🍯 **Armed** - bans on sight', review: '⏸ **Hold for review** - a mod approves each hit', disarmed: '⭘ **Disarmed** - the trap is off' }[honeypotMode(cfg)]} (\`/madhoney honeypot\`)`,
     '',
     '⚠️ If you use Discord **Onboarding**, make sure it does NOT auto-grant the verified role, or the captcha is bypassable.',
     '♿ Honeypots are visual traps - not recommended for servers serving visually impaired communities. At minimum, name the honeypot in your rules so text-to-speech users hear the warning.',
@@ -219,18 +227,20 @@ client.on(Events.InteractionCreate, async (i) => {
         clearInterval(ticker);
         return i.editReply({ content: String(result).slice(0, 1900) });
       }
-      if (sub === 'arm' || sub === 'disarm') {
-        const on = sub === 'arm';
-        if (on && !getGuild(i.guildId)?.honeypotChannelId) {
+      if (sub === 'arm' || sub === 'disarm' || sub === 'honeypot') {
+        const mode = sub === 'arm' ? 'armed' : sub === 'disarm' ? 'disarmed' : i.options.getString('mode');
+        const cfgNow = getGuild(i.guildId) ?? {};
+        if (mode !== 'disarmed' && !cfgNow.honeypotChannelId) {
           return i.reply({ content: 'No honeypot channel set yet - run `/madhoney setup` first.', ...EPH });
         }
-        saveGuild(i.guildId, { honeypotEnabled: on });
-        return i.reply({
-          content: on
-            ? '🍯 **Honeypot armed.** Accounts that post in the honeypot channel are now banned.'
-            : '⏸ **Honeypot disarmed.** The trap is off - nobody gets banned until you `/madhoney arm` again.',
-          ...EPH,
-        });
+        saveGuild(i.guildId, { honeypotMode: mode });
+        const msg = {
+          armed: '🍯 **Honeypot armed.** Accounts that post in the honeypot are banned immediately.',
+          review: '⏸ **Honeypot set to hold for review.** Honeypot posts are reported to your log channel with Ban / Dismiss buttons instead of an instant ban - a mod decides. Not recommended for busy servers, and it needs a log channel set.',
+          disarmed: '⭘ **Honeypot disarmed.** The trap is off - nobody gets banned until you arm it again.',
+        }[mode];
+        const warn = mode === 'review' && !cfgNow.logChannelId ? '\n⚠️ You have no log channel set, so held posts have nowhere to go. Set one under **Staff & log**.' : '';
+        return i.reply({ content: msg + warn, ...EPH });
       }
       if (sub === 'banner') {
         const prev = getGuild(i.guildId)?.banner ?? {};
@@ -296,6 +306,23 @@ client.on(Events.InteractionCreate, async (i) => {
         content: i.message.content + `\n✅ **Unbanned** by ${i.user} - they can rejoin (send them a fresh invite; ban-share won't re-ban them).`,
         components: [],
       });
+    }
+
+    // Hold-for-review decision buttons
+    if (i.isButton() && i.customId.startsWith('mh_review_ban_')) {
+      const userId = i.customId.slice('mh_review_ban_'.length);
+      const cfg = getGuild(i.guildId) ?? {};
+      const deleteDays = Math.min(7, Math.max(0, cfg.banDeleteDays ?? 7));
+      try {
+        await i.guild.bans.create(userId, { reason: `MadHoney: approved from review by ${i.user.tag}`, deleteMessageSeconds: deleteDays * 24 * 60 * 60 });
+      } catch (e) {
+        return i.reply({ content: `Ban failed: ${e.message}`, ...EPH });
+      }
+      logBan({ id: userId, guildId: i.guildId, channel: '(review-ban)', at: new Date().toISOString() });
+      return i.update({ content: i.message.content + `\n🔨 **Banned** by ${i.user}.`, components: [] });
+    }
+    if (i.isButton() && i.customId.startsWith('mh_review_dismiss_')) {
+      return i.update({ content: i.message.content + `\n☑️ **Dismissed** by ${i.user} - no action taken.`, components: [] });
     }
 
     if (i.isButton() && i.customId === 'mh_text') {
@@ -372,7 +399,37 @@ client.on(Events.MessageCreate, async (msg) => {
   // populated when the privileged Message Content intent is on (MESSAGE_CONTENT=on).
   const spamText = msg.content || null;
   const attachments = [...msg.attachments.values()].map((a) => a.name).join(', ');
+  const quoted = spamText
+    ? spamText.slice(0, 1000).split('\n').map((l) => `> ${l}`).join('\n')
+    : '> *(message content unavailable - enable the Message Content intent and set `MESSAGE_CONTENT=on` to capture it)*';
 
+  // Hold-for-review mode: don't ban. Post the hit to the log channel and let a
+  // mod decide with Ban / Dismiss buttons. Not recommended (a real spam run
+  // buries the log), but supported.
+  if (honeypotMode(cfg) === 'review') {
+    if (!cfg.logChannelId) { console.log(`[${msg.guild.name}] review mode but no log channel - ignoring honeypot hit`); return; }
+    try {
+      const log = await msg.guild.channels.fetch(cfg.logChannelId);
+      await log.send({
+        content: [
+          `⏸ **Held for review.** ${msg.author.tag} (\`${msg.author.id}\`) posted in the honeypot (<#${cfg.honeypotChannelId}>). **Nobody has been banned yet.**`,
+          `[Jump to message](${msg.url})`,
+          quoted,
+          attachments ? `📎 ${attachments}` : null,
+        ].filter(Boolean).join('\n'),
+        components: [new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId(`mh_review_ban_${msg.author.id}`).setLabel('Ban').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId(`mh_review_dismiss_${msg.author.id}`).setLabel('Dismiss (no action)').setStyle(ButtonStyle.Secondary),
+        )],
+      });
+      console.log(`[${msg.guild.name}] held ${msg.author.tag} (${msg.author.id}) for review`);
+    } catch (err) {
+      console.error(`[${msg.guild.name}] review report failed:`, err.message);
+    }
+    return;
+  }
+
+  // --- armed mode: ban now ---
   // log first, so we keep the ID even if the ban call fails
   logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date().toISOString() });
   let banned = false;
@@ -393,9 +450,6 @@ client.on(Events.MessageCreate, async (msg) => {
   if (!cfg.logChannelId) return;
   try {
     const log = await msg.guild.channels.fetch(cfg.logChannelId);
-    const quoted = spamText
-      ? spamText.slice(0, 1000).split('\n').map((l) => `> ${l}`).join('\n')
-      : '> *(message content unavailable - enable the Message Content intent and set `MESSAGE_CONTENT=on` to capture it)*';
     await log.send({
       content: [
         `🍯 **The following message was posted in the honeypot** (<#${cfg.honeypotChannelId}>) **and the user has been ${banned ? 'banned' : '⚠️ NOT banned (ban failed - check my permissions)'}.**`,

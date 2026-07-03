@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans, trappedCount } from './store.js';
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { honeypotMode } from './trap.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
 
@@ -175,8 +176,12 @@ function layout(title, body, opts = {}) {
   .armbar.on{border-color:rgba(255,179,26,.5);background:rgba(255,179,26,.06)}
   .armbar.off{border-color:rgba(214,69,69,.5);background:rgba(214,69,69,.07)}
   .armbar b{font-family:"Bricolage Grotesque",sans-serif;font-size:1.05rem}
-  .armbar small{color:var(--dim)}
+  .armbar small{color:var(--dim);display:block;margin-top:.2rem}
   .armbar .btn{margin:0;flex:0 0 auto}
+  .modebtns{display:flex;gap:.3rem;flex:0 0 auto;background:#0f1216;border:1px solid var(--line);border-radius:9px;padding:.25rem}
+  .modeb{border:0;background:transparent;color:var(--dim);font:inherit;font-weight:600;font-size:.85rem;padding:.35rem .7rem;border-radius:6px;cursor:pointer;white-space:nowrap}
+  .modeb:hover:not(.active){color:var(--ink)}
+  .modeb.active{background:var(--honey);color:#141005;cursor:default}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
   footer.f{margin-top:2rem;color:var(--dim);font-size:.85rem;border-top:1px solid var(--line);padding-top:1rem}
 </style>
@@ -249,23 +254,24 @@ export function startDashboard(client) {
     const avatar = icon ? `<img class="savatar" src="${icon}" alt="">` : `<span class="savatar">${esc([...guild.name][0]?.toUpperCase() ?? '#')}</span>`;
     const roleName = cfg.verifiedRoleId ? (roles.get(cfg.verifiedRoleId)?.name ?? 'set') : null;
     const verifyOn = cfg.verificationEnabled !== false; // default on
-    const honeypotOn = cfg.honeypotEnabled !== false; // default on (armed)
+    const mode = honeypotMode(cfg); // 'armed' | 'review' | 'disarmed'
     // With verification off there's no verified role/gate to require - just the honeypot.
     const configured = cfg.honeypotChannelId && (!verifyOn || (cfg.verifiedRoleId && cfg.verifyChannelId));
+    const modeChip = { armed: '<span class="chip on"><b>🍯 Armed</b></span>', review: '<span class="chip on"><b>⏸ Review</b></span>', disarmed: '<span class="chip off"><b>⭘ Disarmed</b></span>' }[mode];
     const chips = [
-      !configured ? '<span class="chip off">Needs setup</span>'
-        : honeypotOn ? '<span class="chip on"><b>🍯 Armed</b></span>'
-        : '<span class="chip off"><b>⏸ Disarmed</b></span>',
+      !configured ? '<span class="chip off">Needs setup</span>' : modeChip,
       `<span class="chip">Trapped here <b>${trappedHere}</b></span>`,
       verifyOn
         ? (roleName ? `<span class="chip">Verified role <b>${esc(roleName)}</b></span>` : '')
         : '<span class="chip off">⚠️ Verification OFF</span>',
       `<span class="chip ${cfg.banShare ? 'on' : 'off'}">Universal list <b>${cfg.banShare ? 'ON' : 'off'}</b></span>`,
     ].filter(Boolean).join('');
-    const armBar = configured ? `<form method="post" action="/g/${guild.id}/action" class="armbar ${honeypotOn ? 'on' : 'off'}">
-      <div><b>${honeypotOn ? '🍯 Honeypot is Armed' : '⏸ Honeypot is Disarmed'}</b>
-      <small>${honeypotOn ? 'Anyone who posts in the honeypot is banned right now.' : 'The trap is off - nobody gets banned. Arm it once everything is set up.'}</small></div>
-      <button class="btn ${honeypotOn ? 'red' : ''}" name="do" value="${honeypotOn ? 'disarm' : 'arm'}">${honeypotOn ? 'Disarm' : 'Arm honeypot'}</button>
+    const modeBtn = (val, label) => `<button class="modeb ${mode === val ? 'active' : ''}" name="do" value="mode_${val}" ${mode === val ? 'disabled' : ''}>${label}</button>`;
+    const armDesc = { armed: 'Anyone who posts in the honeypot is banned immediately.', review: 'Honeypot posts are held and reported to your log channel with Ban / Dismiss buttons - a mod decides. Not recommended for busy servers.', disarmed: 'The trap is off - nobody gets banned. Arm it once everything is set up.' }[mode];
+    const armBar = configured ? `<form method="post" action="/g/${guild.id}/action" class="armbar ${mode === 'disarmed' ? 'off' : 'on'}">
+      <div><b>${{ armed: '🍯 Honeypot is Armed', review: '⏸ Honeypot: Hold for review', disarmed: '⭘ Honeypot is Disarmed' }[mode]}</b>
+      <small>${armDesc}${mode === 'review' && !cfg.logChannelId ? ' <b style="color:#ff8a7d">Set a log channel below - held posts have nowhere to go otherwise.</b>' : ''}</small></div>
+      <div class="modebtns">${modeBtn('armed', '🍯 Armed')}${modeBtn('review', '⏸ Review')}${modeBtn('disarmed', '⭘ Off')}</div>
     </form>` : '';
 
     const recent = banRows.slice(-12).reverse().map((x) => {
@@ -297,7 +303,7 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 <li><b>Gate channels.</b> Open the drag board, review what MadHoney detected, move anything it misjudged, then apply. Nothing changes until you hit Apply.</li>
 </ol>
 <div class="tip"><b>🍯 Naming the honeypot:</b> name it like a real channel so bots post in it. Good: <code>general-2</code>, <code>chat-2</code>, <code>off-topic-2</code>. Bad: <code>honeypot</code>, <code>do-not-post</code> (some spam tools skip those).</div>
-<div class="tip"><b>🔘 Arm when ready:</b> the trap is controlled by the <b>Armed / Disarmed</b> button at the top of this page. If you'd rather get everything in place first, <b>Disarm</b> it while you set up, then <b>Arm</b> it when you're ready to start catching bots.</div>
+<div class="tip"><b>🔘 Honeypot mode:</b> the control at the top has three settings. <b>Armed</b> bans on sight (recommended). <b>Off</b> disables the trap while you set up. <b>Review</b> holds each hit in your log channel with Ban / Dismiss buttons so a mod decides - not recommended for busy servers (a real spam run floods the log), but it works if you want a human in the loop.</div>
 <div class="tip"><b>⚠️ Discord Onboarding:</b> if you use it, make sure it does NOT auto-grant the verified role, or the captcha can be skipped.</div>
 <div class="tip"><b>🔒 Getting a permission error?</b> It's almost always the MadHoney role sitting below your verified role, or missing Manage Roles / Manage Channels. Re-invite MadHoney with <b>＋ Add server</b> in the top bar, then drag its role to the top of your staff roles.</div>
 </div>
@@ -681,13 +687,17 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
         if (m[2] === '/action' && req.method === 'POST') {
           const form = await body(req);
           const cfg = getGuild(guild.id);
-          // Arm / disarm the honeypot - just a config flip, works regardless of the rest.
-          if (form.get('do') === 'arm' || form.get('do') === 'disarm') {
-            const on = form.get('do') === 'arm';
-            saveGuild(guild.id, { honeypotEnabled: on });
-            return html(await guildPage(guild, sess, on
-              ? '🍯 Honeypot armed. Anyone who posts in the honeypot channel is now banned.'
-              : '⏸ Honeypot disarmed. The trap is off - nobody gets banned until you arm it again.', 'top'));
+          // Set the honeypot mode - just a config flip, works regardless of the rest.
+          const modeMap = { mode_armed: 'armed', mode_review: 'review', mode_disarmed: 'disarmed' };
+          if (modeMap[form.get('do')]) {
+            const m = modeMap[form.get('do')];
+            saveGuild(guild.id, { honeypotMode: m });
+            const note = {
+              armed: '🍯 Honeypot armed. Anyone who posts in the honeypot channel is now banned.',
+              review: '⏸ Honeypot set to Hold for review. Honeypot posts go to your log channel with Ban / Dismiss buttons instead of an instant ban.' + (getGuild(guild.id)?.logChannelId ? '' : ' ⚠️ Set a log channel below so held posts have somewhere to go.'),
+              disarmed: '⭘ Honeypot disarmed. The trap is off - nobody gets banned until you arm it again.',
+            }[m];
+            return html(await guildPage(guild, sess, note, 'top'));
           }
           if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
             return html(await guildPage(guild, sess, '❌ Finish configuration first (role + both channels).', 'actions'));
