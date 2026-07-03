@@ -335,6 +335,9 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <label class="toggle"><input type="checkbox" name="verificationEnabled" ${verifyOn ? 'checked' : ''}>
     <span>Require members to verify <b style="color:var(--honey)">(recommended)</b><small>This is the whole point of MadHoney. It gates your channels behind the verified role so the honeypot is the <b>only</b> place an unverified account can post, and it hides the honeypot from real members so no human ever gets caught. Turn this off and the honeypot still bans, but it's visible to everyone, so a member could wander in and get banned - you'd be relying only on the warning banner.</small></span></label>
   ${!verifyOn ? '<div class="warnbox">⚠️ <b>Verification is OFF.</b> The honeypot is not hidden from your members, so a human could post in it and get banned. Only the warning banner protects them. We strongly recommend turning verification back on.</div>' : ''}
+  <label>Captcha difficulty <select name="captchaDifficulty" ${verifyOn ? '' : 'disabled'}>
+    ${[['easy', 'Easy (4 chars, lighter)'], ['normal', 'Normal (5 chars)'], ['hard', 'Hard (6 chars, heavy)']].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'normal') === v ? 'selected' : ''}>${l}</option>`).join('')}
+  </select><small>Harder = longer code and more OCR-defeating distortion. Raise it if bots start solving your captcha; lower it if real members struggle.</small></label>
   <label>Verify message <textarea name="verifyText" rows="3" ${verifyOn ? '' : 'disabled'}>${esc(cfg.verifyText || DEFAULT_VERIFY_TEXT)}</textarea>
     <small>Shown above the Verify button.</small></label>
   <div class="subh">Universal ban list</div>
@@ -686,7 +689,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             return html(await guildPage(guild, sess, 'Banner saved. Post it from Actions (or /madhoney deploy in Discord).', 'banner'));
           }
           const patch = {};
-          for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText']) {
+          for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText', 'captchaDifficulty']) {
             if (form.has(k)) patch[k] = form.get(k).trim();
           }
           patch.banShare = form.get('banShare') === 'on';

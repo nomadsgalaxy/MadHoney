@@ -116,6 +116,7 @@ export async function renderBanner(opts = {}) {
     for (const word of line.split(' ')) {
       const w = ctx.measureText(word).width;
       const isM = MENTION.test(word);
+      let color = baseColor;
       if (isM) {
         const mc = mentionColorFor(word);
         ctx.globalAlpha = 0.22;
@@ -124,20 +125,27 @@ export async function renderBanner(opts = {}) {
         ctx.roundRect(cx - 5, y - size * 0.82 - 3, w + 10, size * 1.06 + 6, 6);
         ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.fillStyle = mc;
-      } else {
-        ctx.fillStyle = baseColor;
+        color = mc;
       }
-      if (dz) { // draw the word rotated/shifted per-word to break OCR alignment
-        ctx.save();
-        ctx.translate(cx + w / 2, y + jitter(4));
-        ctx.rotate(jitter(0.06));
-        ctx.fillText(word, -w / 2, 0);
-        ctx.restore();
-      } else {
+      ctx.fillStyle = color;
+      if (!dz) {
         ctx.fillText(word, cx, y);
+        cx += w + space;
+      } else {
+        // per-character jitter/rotation/shear so OCR can't segment the word
+        for (const ch of word) {
+          const cw = ctx.measureText(ch).width;
+          ctx.save();
+          ctx.translate(cx + cw / 2 + jitter(3), y + jitter(7));
+          ctx.rotate(jitter(0.12));
+          ctx.transform(1, jitter(0.18), jitter(0.18), 1, 0, 0);
+          ctx.fillStyle = color;
+          ctx.fillText(ch, -cw / 2, 0);
+          ctx.restore();
+          cx += cw + jitter(2);
+        }
+        cx += space;
       }
-      cx += w + space + (isM ? 0 : jitter(3));
     }
   };
 
@@ -150,21 +158,23 @@ export async function renderBanner(opts = {}) {
   for (const line of bodyLines) { drawLine(line, y, o.color, 26); y += 36; }
 
   // Interference curves across the text region + speckle, scaled by distort.
+  // Curves are drawn thick and over the glyphs so they fuse edges (the thing
+  // that actually beats OCR).
   if (dz) {
     const top = textTop, bot = y + 6;
-    for (let i = 0; i < dz * 3; i++) {
+    for (let i = 0; i < dz * 5; i++) {
       const y0 = top + Math.random() * (bot - top);
-      ctx.strokeStyle = i % 2 ? o.accent : o.color;
-      ctx.globalAlpha = 0.35;
-      ctx.lineWidth = 1 + Math.random() * 1.5;
+      ctx.strokeStyle = i % 3 === 0 ? o.bg : (i % 2 ? o.accent : o.color);
+      ctx.globalAlpha = 0.4 + Math.random() * 0.35;
+      ctx.lineWidth = 2 + Math.random() * (1 + dz);
       ctx.beginPath();
       ctx.moveTo(textX - 6, y0);
-      for (let x = textX; x <= W - PAD; x += 14) ctx.lineTo(x, y0 + Math.sin(x / 22 + i) * (4 + dz * 3));
+      for (let x = textX; x <= W - PAD; x += 10) ctx.lineTo(x, y0 + Math.sin(x / (16 + i) + i) * (5 + dz * 4));
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
-    for (let i = 0; i < dz * 120; i++) {
-      ctx.fillStyle = `rgba(200,200,205,${Math.random() * 0.35})`;
+    for (let i = 0; i < dz * 200; i++) {
+      ctx.fillStyle = `rgba(200,200,205,${Math.random() * 0.4})`;
       ctx.fillRect(textX + Math.random() * (W - textX - PAD), top + Math.random() * (bot - top), 2, 2);
     }
   }

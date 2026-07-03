@@ -10,7 +10,7 @@ import {
 } from 'discord.js';
 import { shouldTrap, honeypotMode } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
-import { renderCaptcha } from './captcha.js';
+import { renderCaptcha, captchaLength } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { getGuild, saveGuild, logBan, bans, bannedElsewhere } from './store.js';
 import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, ungateChannels, grandfather, syncBans, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
@@ -157,9 +157,10 @@ client.on(Events.InteractionCreate, async (i) => {
       const cfg = getGuild(i.guildId) ?? {};
       const role = cfg.verifiedRoleId && (await i.guild.roles.fetch(cfg.verifiedRoleId).catch(() => null));
       if (role && i.member.roles.cache.has(role.id)) return i.reply({ content: "You're already verified ✅", ...EPH });
-      const code = makeCode();
+      const difficulty = cfg.captchaDifficulty ?? 'normal';
+      const code = makeCode(captchaLength(difficulty));
       pending.set(i.user.id, code);
-      const img = new AttachmentBuilder(renderCaptcha(code), { name: 'captcha.png' });
+      const img = new AttachmentBuilder(renderCaptcha(code, difficulty), { name: 'captcha.png' });
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('verify_open').setLabel('Enter code').setStyle(ButtonStyle.Success),
       );
