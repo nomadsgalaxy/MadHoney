@@ -2,7 +2,7 @@
   <img src="logo.png" alt="MadHoney" width="140">
 </p>
 
-<h1 align="center">🍯 MadHoney</h1>
+<h1 align="center">MadHoney</h1>
 
 <p align="center"><strong>Spam bots ban themselves.</strong><br>Free honeypot + captcha anti-spam for Discord — <a href="https://madhoney.nomadsgalaxy.com">madhoney.nomadsgalaxy.com</a></p>
 
