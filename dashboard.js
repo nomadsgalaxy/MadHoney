@@ -602,7 +602,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
 <div class="stat-row">
   <div class="stat-tile"><div class="n">${trapped.toLocaleString('en-US')}</div><div class="l">Spammers trapped</div></div>
   <div class="stat-tile"><div class="n">${servers.toLocaleString('en-US')}</div><div class="l">Servers protected</div></div>
-  <div class="stat-tile"><div class="n">${last30.toLocaleString('en-US')}</div><div class="l">Caught in last 30 days</div></div>
+  <div class="stat-tile"><div class="n">${last30.toLocaleString('en-US')}</div><div class="l">Spams prevented (30d)</div></div>
 </div>
 <div class="card"><h2>Honeypot catches · last 30 days</h2>
 <div class="chartwrap">
