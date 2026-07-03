@@ -73,7 +73,10 @@ function session(req) {
   return s;
 }
 
-function canManage(sess, guildId) {
+// Server admins (owner / Manage Server) always have access, from the OAuth
+// guild flags alone. Members holding the configured staff role or dashboard
+// admin role get access too - that requires fetching their member object.
+function isAdmin(sess, guildId) {
   const g = sess.guilds.find((g) => g.id === guildId);
   return !!g && (g.owner || (BigInt(g.permissions) & PermissionsBitField.Flags.ManageGuild) !== 0n);
 }
@@ -90,6 +93,15 @@ export function startDashboard(client) {
   // Minimum viable permission set - see the note in bot.js.
   const inviteUrl = () =>
     `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536836`;
+
+  async function canManage(sess, guildId) {
+    if (isAdmin(sess, guildId)) return true;
+    const cfg = getGuild(guildId);
+    const roleIds = [cfg?.staffRoleId, cfg?.adminRoleId].filter(Boolean);
+    if (!roleIds.length) return false;
+    const member = await client.guilds.cache.get(guildId)?.members.fetch(sess.user.id).catch(() => null);
+    return !!member && roleIds.some((r) => member.roles.cache.has(r));
+  }
 
   // `at` anchors the result: the message renders inside that card and the
   // form's action fragment scrolls the browser back to it after a POST.
@@ -120,7 +132,9 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <label>Honeypot channel <select name="honeypotChannelId">${chanOpts(cfg.honeypotChannelId)}</select>
     <small>The trap. Name it like a real channel (general-2, chat-2). Posting here = instant ban.</small></label>
   <label>Staff role (optional) <select name="staffRoleId">${roleOpts(cfg.staffRoleId)}</select>
-    <small>Members with this role are never trapped by the honeypot. The owner and anyone with Manage Server are always exempt - set this for mods who don't have that permission.</small></label>
+    <small>Members with this role are never trapped by the honeypot, and can manage MadHoney on this dashboard. The owner and anyone with Manage Server always can.</small></label>
+  <label>Dashboard admin role (optional) <select name="adminRoleId">${roleOpts(cfg.adminRoleId)}</select>
+    <small>Grants dashboard access here WITHOUT the honeypot exemption - for helpers who manage the bot but should still play by the trap's rules.</small></label>
   <label>Log channel (optional) <select name="logChannelId">${chanOpts(cfg.logChannelId)}</select>
     <small>Staff-only channel - each honeypot ban is reported there with an Unban button.</small></label>
   <label>Verify message <textarea name="verifyText" rows="4">${esc(cfg.verifyText || DEFAULT_VERIFY_TEXT)}</textarea></label>
@@ -276,8 +290,13 @@ ${[
             .replaceAll('%%GUILDS%%', String(client.guilds.cache.size))
             .replaceAll('%%BANS%%', String(bans().filter((b) => !b.unbanned).length)));
         }
-        const rows = sess.guilds
-          .filter((g) => canManage(sess, g.id))
+        const manageable = [];
+        for (const g of sess.guilds) {
+          // full role check only where the bot is present; elsewhere OAuth flags decide
+          const ok = client.guilds.cache.has(g.id) ? await canManage(sess, g.id) : isAdmin(sess, g.id);
+          if (ok) manageable.push(g);
+        }
+        const rows = manageable
           .map((g) => {
             const live = client.guilds.cache.get(g.id);
             return live
@@ -295,7 +314,9 @@ ${[
       if (m) {
         const sess = session(req);
         if (!sess) return redirect('/login');
-        if (!canManage(sess, m[1])) return html(layout('MadHoney', '<h1>403</h1><p>You need Manage Server permission there.</p>'), 403);
+        if (!(await canManage(sess, m[1]))) {
+          return html(layout('MadHoney', '<h1>403</h1><p>You need Manage Server there (or that server\'s staff / dashboard admin role).</p>'), 403);
+        }
         const guild = client.guilds.cache.get(m[1]);
         if (!guild) return html(layout('MadHoney', `<h1>Not here yet</h1><p><a href="${inviteUrl()}&guild_id=${m[1]}" target="_blank" rel="noopener">Invite MadHoney to this server</a> first.</p>`), 404);
 
@@ -328,7 +349,7 @@ ${[
             return html(guildPage(guild, sess, 'Banner saved. Post it from Actions (or /madhoney deploy in Discord).', 'banner'));
           }
           const patch = {};
-          for (const k of ['verifiedRoleId', 'staffRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText']) {
+          for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText']) {
             if (form.has(k)) patch[k] = form.get(k).trim();
           }
           patch.banShare = form.get('banShare') === 'on';
