@@ -57,6 +57,17 @@ function layout(title, body) {
   .btn.grey{background:#39414c;color:var(--ink)} .btn.red{background:#d64545;color:#fff}
   pre{background:#0f1216;border:1px solid var(--line);padding:.8rem;border-radius:7px;white-space:pre-wrap;overflow-x:auto}
   progress{width:100%;height:14px;accent-color:var(--honey);margin-top:.6rem}
+  .slist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.7rem;list-style:none;padding:0;margin:.4rem 0 0}
+  .stile{display:flex;align-items:center;gap:.75rem;background:#0f1216;border:1px solid var(--line);border-radius:11px;padding:.7rem .8rem;text-decoration:none;color:var(--ink);transition:border-color .15s,transform .15s}
+  .stile:hover{border-color:var(--honey);transform:translateY(-2px);text-decoration:none}
+  .savatar{width:44px;height:44px;border-radius:13px;flex:0 0 44px;object-fit:cover;background:#1c2029;display:flex;align-items:center;justify-content:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;color:var(--honey);font-size:1.25rem}
+  .smeta{min-width:0}
+  .sname{font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .spill{display:inline-block;font-size:.72rem;font-weight:700;padding:.08rem .5rem;border-radius:20px;margin-top:.25rem}
+  .spill.armed{background:rgba(255,179,26,.16);color:var(--honey)}
+  .spill.setup{background:rgba(255,138,125,.14);color:#ff8a7d}
+  .spill.add{background:#1c2029;color:var(--dim)}
+  h2 .count{font:400 .8rem/1 "Instrument Sans",sans-serif;color:var(--dim);margin-left:.5rem}
   .stripes{height:12px;border-radius:4px;background:repeating-linear-gradient(-45deg,var(--honey) 0 18px,#111 18px 36px);margin-bottom:1.1rem}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
 </style><div class="stripes"></div>${body}
@@ -303,17 +314,34 @@ ${[
           const ok = client.guilds.cache.has(g.id) ? await canManage(sess, g.id) : isAdmin(sess, g.id);
           if (ok) manageable.push(g);
         }
-        const rows = manageable
-          .map((g) => {
-            const live = client.guilds.cache.get(g.id);
-            return live
-              ? `<li><a href="/g/${g.id}">${esc(g.name)}</a> ${getGuild(g.id)?.honeypotChannelId ? '🍯 armed' : '- not configured yet'}</li>`
-              : `<li>${esc(g.name)} - <a href="${inviteUrl()}&guild_id=${g.id}" target="_blank" rel="noopener">invite MadHoney</a></li>`;
-          }).join('');
+        const avatar = (g) => g.icon
+          ? `<img class="savatar" src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png" alt="" loading="lazy">`
+          : `<span class="savatar">${esc([...g.name][0]?.toUpperCase() ?? '#')}</span>`;
+        const tile = (g, href, target, pill) =>
+          `<a class="stile" href="${href}"${target}>${avatar(g)}<span class="smeta"><div class="sname">${esc(g.name)}</div>${pill}</span></a>`;
+
+        const present = manageable.filter((g) => client.guilds.cache.has(g.id));
+        const absent = manageable.filter((g) => !client.guilds.cache.has(g.id));
+        const armed = (g) => !!getGuild(g.id)?.honeypotChannelId;
+        // armed servers first, then those needing setup; alphabetical within each
+        present.sort((a, z) => (armed(a) === armed(z) ? a.name.localeCompare(z.name) : armed(a) ? -1 : 1));
+        absent.sort((a, z) => a.name.localeCompare(z.name));
+
+        const presentTiles = present.map((g) => tile(g, `/g/${g.id}`, '',
+          armed(g) ? '<span class="spill armed">🍯 Armed</span>' : '<span class="spill setup">Needs setup</span>')).join('');
+        const absentTiles = absent.map((g) => tile(g, `${inviteUrl()}&guild_id=${g.id}`, ' target="_blank" rel="noopener"',
+          '<span class="spill add">＋ Add MadHoney</span>')).join('');
+        const armedCount = present.filter(armed).length;
+
         return html(layout('MadHoney', `
 <h1><img src="/logo.svg?v=3" alt="">Mad<span>Honey</span></h1>
 <p>Hi ${esc(sess.user.username)} · <a href="/logout">log out</a></p>
-<div class="card"><h2>Your servers</h2><ul>${rows || '<li>No servers where you have Manage Server.</li>'}</ul></div>`));
+${present.length ? `<div class="card"><h2>Your servers <span class="count">${present.length} with MadHoney · ${armedCount} armed</span></h2>
+<ul class="slist">${presentTiles}</ul></div>` : `<div class="card"><h2>Get started</h2>
+<p>MadHoney isn't in any of your servers yet. Add it to one below, then run through setup here.</p></div>`}
+${absent.length ? `<div class="card"><h2>Add MadHoney to another server <span class="count">${absent.length} available</span></h2>
+<ul class="slist">${absentTiles}</ul></div>` : ''}
+${!manageable.length ? '<div class="card"><p>No servers where you have Manage Server (or a MadHoney staff/admin role). Ask an admin, or add MadHoney to a server you own.</p></div>' : ''}`));
       }
 
       // ---- per-guild ----
