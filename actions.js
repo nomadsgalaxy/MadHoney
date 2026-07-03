@@ -107,16 +107,21 @@ export async function gateChannels(guild, cfg, apply = false) {
 // Grandfather: add the verified role to every existing non-bot member so the
 // gate doesn't lock out people who were already in the server.
 // Needs the privileged Server Members intent.
-export async function grandfather(guild, cfg) {
+// Pass a `progress` object to watch it live: {total, done, added, skipped,
+// failed} are updated as the loop runs (one Discord API call per member, so
+// large servers take a while).
+export async function grandfather(guild, cfg, progress = {}) {
   const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
   if (!role) throw new Error('Verified role not found - re-run setup.');
   const members = await guild.members.fetch();
-  let changed = 0, skipped = 0; const failed = [];
+  Object.assign(progress, { total: members.size, done: 0, added: 0, skipped: 0, failed: 0 });
+  const failures = [];
   for (const m of members.values()) {
-    if (m.user.bot || m.roles.cache.has(role.id)) { skipped++; continue; }
+    progress.done++;
+    if (m.user.bot || m.roles.cache.has(role.id)) { progress.skipped++; continue; }
     await m.roles.add(role, 'MadHoney: grandfathered existing member')
-      .then(() => changed++)
-      .catch((e) => failed.push(`${m.user.tag}: ${e.message}`));
+      .then(() => progress.added++)
+      .catch((e) => { progress.failed++; failures.push(`${m.user.tag}: ${e.message}`); });
   }
-  return `Grandfathered "${role.name}": ${changed} added, ${skipped} skipped.${failed.length ? `\n${failed.length} failed (is the MadHoney role ABOVE "${role.name}"?): ` + failed.slice(0, 5).join(', ') : ''}`;
+  return `Grandfathered "${role.name}": ${progress.added} added, ${progress.skipped} skipped.${failures.length ? `\n${failures.length} failed (is the MadHoney role ABOVE "${role.name}"?): ` + failures.slice(0, 5).join(', ') : ''}`;
 }

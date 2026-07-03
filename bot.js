@@ -290,14 +290,28 @@ client.on(Events.InteractionCreate, async (i) => {
       mh_post_banner: (g, cfg) => postBanner(g, cfg),
       mh_gate_dry: (g, cfg) => gateChannels(g, cfg, false),
       mh_gate_apply: (g, cfg) => gateChannels(g, cfg, true),
-      mh_grandfather: (g, cfg) => grandfather(g, cfg),
     };
-    if (i.isButton() && deployActions[i.customId]) {
+    if (i.isButton() && (deployActions[i.customId] || i.customId === 'mh_grandfather')) {
       const cfg = getGuild(i.guildId);
       if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
         return i.reply({ content: 'Setup incomplete - run `/madhoney setup` first.', ...EPH });
       }
       await i.deferReply(EPH);
+      if (i.customId === 'mh_grandfather') {
+        // one API call per member - stream progress into the ephemeral reply
+        const progress = {};
+        const job = grandfather(i.guild, cfg, progress).catch((e) => `❌ ${e.message}`);
+        const ticker = setInterval(() => {
+          if (progress.total) {
+            i.editReply({
+              content: `⏳ Grandfathering… ${progress.done}/${progress.total} members · ${progress.added} added · ${progress.skipped} skipped${progress.failed ? ` · ${progress.failed} FAILED` : ''}`,
+            }).catch(() => {});
+          }
+        }, 2500);
+        const result = await job;
+        clearInterval(ticker);
+        return i.editReply({ content: result.slice(0, 1900) });
+      }
       const result = await deployActions[i.customId](i.guild, cfg).catch((e) => `❌ ${e.message}`);
       return i.editReply({ content: result.slice(0, 1900) });
     }

@@ -18,6 +18,7 @@ const API = 'https://discord.com/api/v10';
 const WEEK = 7 * 24 * 3600 * 1000;
 
 const sessions = new Map(); // sid -> { user, guilds, at }
+const gfJobs = new Map(); // guildId -> live grandfather progress {total, done, added, skipped, failed, finished, result, at}
 const LANDING = readFileSync(new URL('./landing.html', import.meta.url), 'utf8');
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -55,6 +56,7 @@ function layout(title, body) {
   .btn:hover{transform:translateY(-1px);text-decoration:none}
   .btn.grey{background:#39414c;color:var(--ink)} .btn.red{background:#d64545;color:#fff}
   pre{background:#0f1216;border:1px solid var(--line);padding:.8rem;border-radius:7px;white-space:pre-wrap;overflow-x:auto}
+  progress{width:100%;height:14px;accent-color:var(--honey);margin-top:.6rem}
   .stripes{height:12px;border-radius:4px;background:repeating-linear-gradient(-45deg,var(--honey) 0 18px,#111 18px 36px);margin-bottom:1.1rem}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
 </style><div class="stripes"></div>${body}
@@ -167,6 +169,24 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 })();
 </script></div>
 <div class="card" id="actions"><h2>Actions</h2>${msgAt('actions')}
+${gfJobs.has(guild.id) ? `
+<div id="gfwrap"><progress id="gfbar" max="1" value="0"></progress><small id="gftext">Grandfathering: starting…</small></div>
+<script>
+(async function poll() {
+  try {
+    const p = await (await fetch('/g/${guild.id}/progress')).json();
+    if (!p.none) {
+      const bar = document.getElementById('gfbar'), txt = document.getElementById('gftext');
+      bar.max = p.total || 1; bar.value = p.done || 0;
+      txt.textContent = p.finished
+        ? p.result
+        : 'Grandfathering: ' + (p.done ?? 0) + '/' + (p.total ?? '?') + ' members · ' + (p.added ?? 0) + ' added · ' + (p.skipped ?? 0) + ' skipped' + (p.failed ? ' · ' + p.failed + ' FAILED' : '');
+      if (p.finished) { bar.value = bar.max; return; }
+    }
+  } catch {}
+  setTimeout(poll, 1200);
+})();
+</script>` : ''}
 <small>Run in order 1 → 4 on first deploy. Each one is safe to re-run later.</small>
 <form method="post" action="/g/${guild.id}/action#actions">
 ${[
@@ -271,7 +291,7 @@ ${[
       }
 
       // ---- per-guild ----
-      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png)?$/);
+      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/progress)?$/);
       if (m) {
         const sess = session(req);
         if (!sess) return redirect('/login');
@@ -279,6 +299,12 @@ ${[
         const guild = client.guilds.cache.get(m[1]);
         if (!guild) return html(layout('MadHoney', `<h1>Not here yet</h1><p><a href="${inviteUrl()}&guild_id=${m[1]}">Invite MadHoney to this server</a> first.</p>`), 404);
 
+        if (m[2] === '/progress') {
+          const p = gfJobs.get(guild.id);
+          if (p?.finished && Date.now() - p.at > 60_000) gfJobs.delete(guild.id); // prune old results
+          res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
+          return res.end(JSON.stringify(p ?? { none: true }));
+        }
         if (m[2] === '/banner.png') {
           // query params (banner_*) override the saved config so the form can
           // live-preview without saving
@@ -318,12 +344,24 @@ ${[
           if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
             return html(guildPage(guild, sess, '❌ Finish configuration first (role + both channels).', 'actions'));
           }
+          // Grandfathering is one API call per member - on a big server that's
+          // minutes, so it runs as a background job the page polls for.
+          if (form.get('do') === 'grandfather') {
+            if (gfJobs.get(guild.id) && !gfJobs.get(guild.id).finished) {
+              return html(guildPage(guild, sess, 'Grandfathering is already running - watch the bar below.', 'actions'));
+            }
+            const progress = { finished: false, at: Date.now() };
+            gfJobs.set(guild.id, progress);
+            grandfather(guild, getGuild(guild.id), progress)
+              .then((r) => Object.assign(progress, { finished: true, result: r, at: Date.now() }))
+              .catch((e) => Object.assign(progress, { finished: true, result: `❌ ${e.message}`, at: Date.now() }));
+            return html(guildPage(guild, sess, '', 'actions'));
+          }
           const acts = {
             post_verify: () => postVerifyPanel(guild, cfg),
             post_banner: () => postBanner(guild, cfg),
             gate_dry: () => gateChannels(guild, cfg, false),
             gate_apply: () => gateChannels(guild, cfg, true),
-            grandfather: () => grandfather(guild, cfg),
           };
           const act = acts[form.get('do')];
           if (!act) return html(guildPage(guild, sess, 'Unknown action.', 'actions'), 400);
