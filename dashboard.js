@@ -543,16 +543,27 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
     const rows = bans();
     const trapped = trappedCount(rows);
     const servers = client.guilds.cache.size;
-    // daily catches (ban events, excluding unban reversals), last 30 days
+    // UNIQUE spammers, counted once on the day they were first caught (so a
+    // user banned in several servers or re-logged by ban-share isn't double
+    // counted). Only users still trapped somewhere are included.
+    const stillBanned = new Map(); // `${id}:${gid}` -> banned?
+    for (const b of rows) stillBanned.set(`${b.id}:${b.guildId}`, !b.unbanned);
+    const trappedUsers = new Set();
+    for (const [k, v] of stillBanned) if (v) trappedUsers.add(k.slice(0, k.lastIndexOf(':')));
+    const firstSeen = new Map(); // userId -> earliest catch timestamp
+    for (const b of rows) {
+      if (b.unbanned || !trappedUsers.has(b.id)) continue;
+      const cur = firstSeen.get(b.id);
+      if (!cur || String(b.at) < cur) firstSeen.set(b.id, String(b.at));
+    }
     const DAY = 86400000;
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const start = today.getTime() - 29 * DAY;
     const buckets = new Map();
     for (let t = start; t <= today.getTime(); t += DAY) buckets.set(new Date(t).toISOString().slice(0, 10), 0);
     let last30 = 0;
-    for (const b of rows) {
-      if (b.unbanned) continue;
-      const day = String(b.at).slice(0, 10);
+    for (const at of firstSeen.values()) {
+      const day = at.slice(0, 10);
       if (buckets.has(day)) { buckets.set(day, buckets.get(day) + 1); last30++; }
     }
     const series = [...buckets.entries()].map(([d, c]) => ({ d, c }));
@@ -610,11 +621,11 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
 <div class="stat-row">
   <div class="stat-tile"><div class="n">${trapped.toLocaleString('en-US')}</div><div class="l">Spammers trapped</div></div>
   <div class="stat-tile"><div class="n">${servers.toLocaleString('en-US')}</div><div class="l">Servers protected</div></div>
-  <div class="stat-tile"><div class="n">${last30.toLocaleString('en-US')}</div><div class="l">Spams prevented (30d)</div></div>
+  <div class="stat-tile"><div class="n">${last30.toLocaleString('en-US')}</div><div class="l">Caught in last 30 days</div></div>
 </div>
-<div class="card"><h2>Honeypot catches · last 30 days</h2>
+<div class="card"><h2>Unique spammers caught · last 30 days</h2>
 <div class="chartwrap">
-<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Honeypot catches per day over the last 30 days">
+<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Unique spammers caught per day over the last 30 days">
   ${grid}
   <path class="area" d="${area}"/>
   <path class="line" d="${line}"/>
@@ -624,7 +635,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
 </svg>
 <div class="ctip" id="ctip"></div>
 </div>
-<small style="color:var(--dim)">Each catch is one honeypot ban event across the network. Deduplicated unique spammers are shown in the tile above.</small>
+<small style="color:var(--dim)">Each spammer is counted once, on the day they were first caught - a bot banned in several servers is one spammer, not many.</small>
 </div>
 ${mine.length ? `<div class="card"><h2>Your servers <span class="count">${mine.length} you manage</span></h2>
 <div class="tscroll"><table class="btable"><tr><td class="k">Server</td><td class="k">Status</td><td class="k">Trapped</td></tr>
