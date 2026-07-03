@@ -137,7 +137,11 @@ export async function classifyChannels(guild, cfg) {
         ch.permissionOverwrites.cache.get(r.id)?.allow.has(PermissionFlagsBits.ViewChannel));
       kind = adminRoleSees ? 'admin' : 'private';
     }
-    list.push({ id: ch.id, name: ch.name, kind, isCategory: ch.type === ChannelType.GuildCategory, parentId: ch.parentId, position: ch.rawPosition ?? 0, canManage });
+    // Already gated by MadHoney? = hidden from @everyone AND the verified role
+    // is explicitly allowed to view. Lets the board show current state.
+    const gated = kind !== 'public' && kind !== 'verify' && kind !== 'honeypot' &&
+      !!ch.permissionOverwrites.cache.get(cfg.verifiedRoleId)?.allow.has(PermissionFlagsBits.ViewChannel);
+    list.push({ id: ch.id, name: ch.name, kind, gated, isCategory: ch.type === ChannelType.GuildCategory, parentId: ch.parentId, position: ch.rawPosition ?? 0, canManage });
   }
   return list;
 }

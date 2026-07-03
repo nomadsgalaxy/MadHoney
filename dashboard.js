@@ -355,8 +355,10 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
     }
     const chans = (await classifyChannels(guild, cfg)).sort((a, z) => a.position - z.position);
     const override = cfg.channelTreatment ?? {};
-    // Default zone from detection, then apply the admin's saved manual moves.
-    const defaultZone = (c) => (c.kind === 'public' ? 'gate' : 'leave');
+    // Default zone: an explicit saved move wins; else a channel that's already
+    // gated, or a standard public channel, defaults to Gate; everything else
+    // to Leave.
+    const defaultZone = (c) => (c.gated || c.kind === 'public' ? 'gate' : 'leave');
     const zoneOf = (c) => override[c.id] ?? defaultZone(c);
 
     const verify = chans.find((c) => c.kind === 'verify');
