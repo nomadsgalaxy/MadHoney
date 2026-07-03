@@ -5,3 +5,4 @@ bans.jsonl
 appeals.jsonl
 bot.log
 sessions.json
+*.traineddata

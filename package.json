@@ -4,6 +4,23 @@
   "description": "Honeypot + captcha verification bot for Discord",
   "type": "module",
   "license": "SEE LICENSE IN LICENSE.md",
+  "homepage": "https://madhoney.nomadsgalaxy.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nomadsgalaxy/MadHoney.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nomadsgalaxy/MadHoney/issues"
+  },
+  "author": "Nomads Galaxy (https://nomadsgalaxy.com)",
+  "keywords": [
+    "discord",
+    "discord-bot",
+    "anti-spam",
+    "honeypot",
+    "captcha",
+    "moderation"
+  ],
   "scripts": {
     "start": "node bot.js",
     "test": "node test.js"
