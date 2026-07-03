@@ -2,7 +2,7 @@
 import assert from 'node:assert';
 import { shouldTrap } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
-import { bannedElsewhere } from './store.js';
+import { bannedElsewhere, trappedCount } from './store.js';
 import { renderBanner } from './banner.js';
 import { renderCaptcha } from './captcha.js';
 
@@ -34,6 +34,15 @@ assert.ok(bannedElsewhere('u1', 'B', rows), 'banned in guild A → on the univer
 assert.ok(!bannedElsewhere('u1', 'A', rows), 'own guild does not count');
 assert.ok(bannedElsewhere('u2', 'B', rows), 'even an isolated guild\'s catches feed the list');
 assert.ok(!bannedElsewhere('u3', 'B', rows), 'unban reverses the entry');
+
+// trapped count: distinct users, not raw log lines
+const trows = [
+  { id: 'a', guildId: 'G1' }, { id: 'a', guildId: 'G2' },       // same user, 2 servers -> 1
+  { id: 'a', guildId: 'G1', channel: '(ban-sync)' },            // propagation dup -> still 1
+  { id: 'b', guildId: 'G1' },                                    // +1
+  { id: 'c', guildId: 'G1' }, { id: 'c', guildId: 'G1', unbanned: true }, // unbanned -> 0
+];
+assert.equal(trappedCount(trows), 2, 'a and b count once each; c is unbanned');
 
 // renderers produce PNGs
 const png = (buf) => buf.length > 800 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;

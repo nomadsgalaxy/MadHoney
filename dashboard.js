@@ -7,7 +7,7 @@ import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
-import { getGuild, saveGuild, bans } from './store.js';
+import { getGuild, saveGuild, bans, trappedCount } from './store.js';
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, grandfather, syncBans, preflight, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
@@ -306,7 +306,7 @@ ${[
           return html(LANDING
             .replaceAll('%%INVITE%%', inviteUrl())
             .replaceAll('%%GUILDS%%', String(client.guilds.cache.size))
-            .replaceAll('%%BANS%%', String(bans().filter((b) => !b.unbanned).length)));
+            .replaceAll('%%BANS%%', trappedCount().toLocaleString('en-US')));
         }
         const manageable = [];
         for (const g of sess.guilds) {

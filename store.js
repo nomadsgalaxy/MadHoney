@@ -33,6 +33,17 @@ export function bans(guildId = null) {
   return guildId ? rows.filter((b) => b.guildId === guildId) : rows;
 }
 
+// Count distinct users currently trapped, not raw log lines. A user banned in
+// several servers (or propagated by ban-share / ban-sync) is one spammer; a
+// user whose latest state everywhere is unbanned doesn't count.
+export function trappedCount(rows = bans()) {
+  const state = new Map(); // `${id}:${guildId}` -> currently banned?
+  for (const b of rows) state.set(`${b.id}:${b.guildId}`, !b.unbanned);
+  const users = new Set();
+  for (const [key, banned] of state) if (banned) users.add(key.slice(0, key.lastIndexOf(':')));
+  return users.size;
+}
+
 // Every honeypot ban lands on the universal list; banShare only controls
 // whether a server ACTS on it (checked at the call sites). A user is "banned
 // elsewhere" if any OTHER guild has a ban entry for them that wasn't later
