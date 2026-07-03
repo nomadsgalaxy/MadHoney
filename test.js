@@ -1,10 +1,12 @@
 // npm test - checks the pure logic. No Discord, no network.
 import assert from 'node:assert';
+import { readFileSync } from 'node:fs';
 import { shouldTrap, honeypotMode } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
 import { bannedElsewhere, trappedCount, appealableGuildIds, banEpoch } from './store.js';
 import { renderBanner } from './banner.js';
 import { renderCaptcha } from './captcha.js';
+import { t, SUPPORTED, resolveLocale } from './i18n.js';
 
 const cfg = { honeypotChannelId: 'HONEY' };
 const base = { channelId: 'HONEY', authorIsBot: false, isOwner: false, isStaff: false };
@@ -81,5 +83,31 @@ assert.ok(png(await renderBanner({
   text: 'Verify in #rules or ping @Staff about it.',
   mentionMode: 'role', roleColors: { '@staff': '#e91e63' },
 })), 'mention pills render');
+
+// i18n: locale resolution, interpolation, fallback, and full catalog parity
+assert.equal(resolveLocale('es-ES'), 'es', 'es-ES -> es');
+assert.equal(resolveLocale('sv-SE'), 'sv', 'sv-SE -> sv');
+assert.equal(resolveLocale('pt-BR'), 'pt-BR', 'exact pt-BR');
+assert.equal(resolveLocale('en-US'), 'en', 'en-US -> en');
+assert.equal(resolveLocale('zz'), 'en', 'unknown -> en');
+assert.equal(resolveLocale(undefined), 'en', 'undefined -> en');
+assert.equal(t('verify.button', 'en'), 'Verify');
+assert.equal(t('verify.button', 'es'), 'Verificar');
+assert.ok(t('verify.success', 'de', { guild: 'Foo' }).includes('Foo'), 'interpolates {guild}');
+assert.ok(t('verify.wrong', 'en', { left: 3 }).includes('(3 left)'), 'interpolates {left}');
+assert.equal(t('does.not.exist', 'es'), 'does.not.exist', 'unknown key -> key itself');
+
+// every shipped locale has EXACTLY en's keys, and each string keeps en's {placeholders}
+const enCat = JSON.parse(readFileSync(new URL('./locales/en.json', import.meta.url)));
+const flat = (o, p = '') => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? flat(v, `${p}${k}.`) : [`${p}${k}`]));
+const phs = (s) => (String(s).match(/\{\w+\}/g) || []).sort();
+const enKeys = flat(enCat).sort();
+for (const code of SUPPORTED) {
+  if (code === 'en') continue;
+  const cat = JSON.parse(readFileSync(new URL(`./locales/${code}.json`, import.meta.url)));
+  assert.deepEqual(flat(cat).sort(), enKeys, `${code}: same keys as en`);
+  const walk = (en, tr, p = '') => { for (const [k, v] of Object.entries(en)) { if (v && typeof v === 'object') walk(v, tr[k], `${p}${k}.`); else assert.deepEqual(phs(tr[k]), phs(v), `${code}: ${p}${k} keeps placeholders`); } };
+  walk(enCat, cat);
+}
 
 console.log('ok');

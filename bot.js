@@ -16,6 +16,7 @@ import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { getGuild, saveGuild, logBan, bans, bannedElsewhere, appealableGuildIds, banEpoch, hasAppealed, recordAppeal } from './store.js';
 import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, gateNewChannel, ungateChannels, grandfather, syncBans, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { startDashboard } from './dashboard.js';
+import { t } from './i18n.js';
 
 const EPH = { flags: MessageFlags.Ephemeral };
 const pending = new Map(); // userId -> { code, attempts, expires, cooldownUntil } (in-memory; users re-click after a restart)
@@ -205,48 +206,49 @@ client.on(Events.InteractionCreate, async (i) => {
     if (i.isButton() && i.customId === 'verify_start') {
       const cfg = getGuild(i.guildId) ?? {};
       const role = cfg.verifiedRoleId && (await i.guild.roles.fetch(cfg.verifiedRoleId).catch(() => null));
-      if (role && i.member.roles.cache.has(role.id)) return i.reply({ content: "You're already verified ✅", ...EPH });
+      if (role && i.member.roles.cache.has(role.id)) return i.reply({ content: t('verify.alreadyVerified', cfg.locale), ...EPH });
       const now = Date.now();
       const prev = pending.get(i.user.id);
-      if (prev && now < prev.cooldownUntil) return i.reply({ content: 'One sec - wait a moment, then tap **Verify** again.', ...EPH });
+      if (prev && now < prev.cooldownUntil) return i.reply({ content: t('verify.cooldown', cfg.locale), ...EPH });
       const difficulty = cfg.captchaDifficulty ?? 'normal';
       const code = makeCode(captchaLength(difficulty));
       pending.set(i.user.id, { code, attempts: 0, expires: now + VERIFY_TTL, cooldownUntil: now + VERIFY_COOLDOWN });
       const img = new AttachmentBuilder(renderCaptcha(code, difficulty), { name: 'captcha.png' });
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('verify_open').setLabel('Enter code').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('verify_open').setLabel(t('verify.enterCode', cfg.locale)).setStyle(ButtonStyle.Success),
       );
-      return i.reply({ content: 'Type the characters shown below (not case-sensitive). New image each try.', files: [img], components: [row], ...EPH });
+      return i.reply({ content: t('verify.instructions', cfg.locale), files: [img], components: [row], ...EPH });
     }
     if (i.isButton() && i.customId === 'verify_open') {
-      const modal = new ModalBuilder().setCustomId('verify_answer').setTitle('Human check');
+      const loc = getGuild(i.guildId)?.locale;
+      const modal = new ModalBuilder().setCustomId('verify_answer').setTitle(t('verify.modalTitle', loc));
       modal.addComponents(new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId('ans').setLabel('Code shown in the image').setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(8),
+        new TextInputBuilder().setCustomId('ans').setLabel(t('verify.modalLabel', loc)).setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(8),
       ));
       return i.showModal(modal);
     }
     if (i.isModalSubmit() && i.customId === 'verify_answer') {
+      const cfg = getGuild(i.guildId) ?? {};
       const rec = pending.get(i.user.id);
       if (!rec || Date.now() > rec.expires) {
         pending.delete(i.user.id);
-        return i.reply({ content: 'That code expired - tap **Verify** for a fresh one.', ...EPH });
+        return i.reply({ content: t('verify.expired', cfg.locale), ...EPH });
       }
       if (answerOk(i.fields.getTextInputValue('ans'), rec.code)) {
         pending.delete(i.user.id);
-        const cfg = getGuild(i.guildId) ?? {};
         const role = cfg.verifiedRoleId && (await i.guild.roles.fetch(cfg.verifiedRoleId).catch(() => null));
-        if (!role) return i.reply({ content: 'Passed - but the verified role is missing. Ping a mod.', ...EPH });
+        if (!role) return i.reply({ content: t('verify.roleMissing', cfg.locale), ...EPH });
         await i.member.roles.add(role, 'MadHoney: passed verification');
-        return i.reply({ content: `Verified ✅ Welcome to ${i.guild.name}.`, ...EPH });
+        return i.reply({ content: t('verify.success', cfg.locale, { guild: i.guild.name }), ...EPH });
       }
       // wrong answer: count it against this code; burn the code after too many so
       // re-opening the modal (verify_open) can't brute-force one image forever.
       rec.attempts++;
       if (rec.attempts >= VERIFY_MAX_ATTEMPTS) {
         pending.delete(i.user.id);
-        return i.reply({ content: 'Too many wrong tries - tap **Verify** for a new image.', ...EPH });
+        return i.reply({ content: t('verify.tooMany', cfg.locale), ...EPH });
       }
-      return i.reply({ content: `That's not right - tap **Verify** for a new image and try again. (${VERIFY_MAX_ATTEMPTS - rec.attempts} left)`, ...EPH });
+      return i.reply({ content: t('verify.wrong', cfg.locale, { left: VERIFY_MAX_ATTEMPTS - rec.attempts }), ...EPH });
     }
 
     // Appeal button (clicked in a DM). User-facing, so handled before the
@@ -259,8 +261,9 @@ client.on(Events.InteractionCreate, async (i) => {
       // the checks + the in-flight add run synchronously (no await between them),
       // so a flood of parallel replays can't all pass before one wins.
       const [gid, sig] = i.customId.slice('mh_appeal_'.length).split('_');
+      const loc = getGuild(gid)?.locale;
       const epoch = gid ? banEpoch(i.user.id, gid) : null;
-      const nope = 'That appeal link is no longer valid - you may already have been unbanned, or already sent an appeal for this ban.';
+      const nope = t('appeal.invalid', loc);
       if (!epoch || sig !== appealSig(i.user.id, gid, epoch) || !appealableGuildIds(i.user.id).includes(gid)) {
         return i.reply({ content: nope });
       }
@@ -271,7 +274,7 @@ client.on(Events.InteractionCreate, async (i) => {
       const guild = client.guilds.cache.get(gid);
       try {
         if (!logAllow(gid, 'normal')) {
-          return i.reply({ content: "The mod team's inbox is busy right now - please try again in a minute." });
+          return i.reply({ content: t('appeal.busy', loc) });
         }
         const log = await guild.channels.fetch(cfg.logChannelId);
         await log.send({
@@ -282,9 +285,9 @@ client.on(Events.InteractionCreate, async (i) => {
           )],
         });
         recordAppeal(i.user.id, gid, epoch); // persist ONLY after it actually reached the mod team
-        return i.reply({ content: `✅ Your appeal was sent to **${guild.name}**'s mod team. If they approve it, I'll DM you a fresh invite.` });
+        return i.reply({ content: t('appeal.sent', loc, { guild: guild.name }) });
       } catch (e) {
-        return i.reply({ content: `Sorry - I couldn't reach that server's mod team (${e.message}). Try again in a moment.` });
+        return i.reply({ content: t('appeal.unreachable', loc, { error: e.message }) });
       } finally {
         appealInFlight.delete(key); // released; durable dedup is now on recordAppeal (success) or free to retry (failure/throttle)
       }
@@ -446,12 +449,13 @@ client.on(Events.InteractionCreate, async (i) => {
           i.guild.channels.cache.find((c) => c.isTextBased?.() && c.viewable);
         if (ch) invite = (await ch.createInvite({ maxAge: 86400, maxUses: 1, unique: true, reason: 'MadHoney appeal approved' })).url;
       } catch { /* no invite perm - mod can send one manually */ }
-      client.users.send(uid, `✅ Your appeal to **${i.guild.name}** was approved.${invite ? ` Rejoin here: ${invite}` : ' Ask a member for a fresh invite to rejoin.'}`).catch(() => {});
+      const aloc = getGuild(i.guildId)?.locale;
+      client.users.send(uid, invite ? t('appeal.approvedInvite', aloc, { guild: i.guild.name, invite }) : t('appeal.approvedNoInvite', aloc, { guild: i.guild.name })).catch(() => {});
       return i.update({ content: i.message.content + `\n✅ **Approved** by ${i.user} - unbanned${invite ? ' and re-invited' : " (couldn't auto-create an invite)"}.`, components: [] });
     }
     if (i.isButton() && i.customId.startsWith('mh_appno_')) {
       const [, , , uid] = i.customId.split('_');
-      client.users.send(uid, `Your appeal to **${i.guild.name}** was reviewed and not approved.`).catch(() => {});
+      client.users.send(uid, t('appeal.denied', getGuild(i.guildId)?.locale, { guild: i.guild.name })).catch(() => {});
       return i.update({ content: i.message.content + `\n❌ **Denied** by ${i.user}.`, components: [] });
     }
 
@@ -506,7 +510,7 @@ client.on(Events.InteractionCreate, async (i) => {
     }
   } catch (err) {
     console.error('interaction error:', err);
-    if (i.isRepliable() && !i.replied && !i.deferred) i.reply({ content: 'Something broke - try again.', ...EPH }).catch(() => {});
+    if (i.isRepliable() && !i.replied && !i.deferred) i.reply({ content: t('common.broke', getGuild(i.guildId)?.locale), ...EPH }).catch(() => {});
   }
 });
 
@@ -562,13 +566,11 @@ async function offerAppeal(user, guildId) {
   if (!guild) return;
   const epoch = banEpoch(user.id, guildId);
   if (!epoch) return;
+  const loc = getGuild(guildId)?.locale;
   await user.send({
-    content: [
-      '⚠️ You were banned by a **MadHoney** honeypot - a hidden channel that exists only to catch spam bots. Anything posted there is banned automatically.',
-      `If you're a real person who ended up in one by mistake, you can ask **${guild.name}**'s mod team to take another look:`,
-    ].join('\n\n'),
+    content: [t('appeal.dmIntro', loc), t('appeal.dmAsk', loc, { guild: guild.name })].join('\n\n'),
     components: [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`mh_appeal_${guild.id}_${appealSig(user.id, guild.id, epoch)}`).setLabel(`Appeal to ${guild.name}`.slice(0, 80)).setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(`mh_appeal_${guild.id}_${appealSig(user.id, guild.id, epoch)}`).setLabel(t('appeal.button', loc, { guild: guild.name }).slice(0, 80)).setStyle(ButtonStyle.Primary),
     )],
   });
 }

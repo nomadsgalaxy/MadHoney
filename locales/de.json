@@ -1,0 +1,32 @@
+{
+  "verify": {
+    "button": "Verifizieren",
+    "alreadyVerified": "Du bist bereits verifiziert ✅",
+    "cooldown": "Einen Moment - warte kurz und tippe dann erneut auf **Verifizieren**.",
+    "instructions": "Gib die unten angezeigten Zeichen ein (Groß-/Kleinschreibung egal). Bei jedem Versuch ein neues Bild.",
+    "enterCode": "Code eingeben",
+    "modalTitle": "Mensch-Prüfung",
+    "modalLabel": "Im Bild angezeigter Code",
+    "expired": "Dieser Code ist abgelaufen - tippe auf **Verifizieren** für einen neuen.",
+    "roleMissing": "Bestanden - aber die Verifiziert-Rolle fehlt. Sag einem Mod Bescheid.",
+    "success": "Verifiziert ✅ Willkommen auf {guild}.",
+    "tooMany": "Zu viele Fehlversuche - tippe auf **Verifizieren** für ein neues Bild.",
+    "wrong": "Das stimmt nicht - tippe auf **Verifizieren** für ein neues Bild und versuch es erneut. (noch {left})",
+    "panelText": "**Verifiziere dich und akzeptiere die Regeln**\nKlicke auf **Verifizieren** und gib den Code aus dem Bild ein. Mit der Verifizierung bestätigst du, dass du die obigen Regeln gelesen hast und akzeptierst, und schaltest den Server frei."
+  },
+  "appeal": {
+    "button": "Einspruch bei {guild}",
+    "invalid": "Dieser Einspruchs-Link ist nicht mehr gültig - vielleicht wurde dein Bann bereits aufgehoben, oder du hast für diesen Bann schon einen Einspruch gesendet.",
+    "busy": "Das Postfach des Mod-Teams ist gerade überlastet - bitte versuch es in einer Minute erneut.",
+    "sent": "✅ Dein Einspruch wurde an das Mod-Team von **{guild}** gesendet. Wenn sie ihn annehmen, schicke ich dir per DM eine neue Einladung.",
+    "unreachable": "Entschuldigung - ich konnte das Mod-Team dieses Servers nicht erreichen ({error}). Versuch es gleich noch einmal.",
+    "dmIntro": "⚠️ Du wurdest von einem **MadHoney**-Honeypot gebannt - ein versteckter Kanal, der nur existiert, um Spam-Bots zu fangen. Alles, was dort gepostet wird, wird automatisch gebannt.",
+    "dmAsk": "Wenn du eine echte Person bist, die versehentlich dort gelandet ist, kannst du das Mod-Team von **{guild}** bitten, noch einmal draufzuschauen:",
+    "approvedInvite": "✅ Dein Einspruch bei **{guild}** wurde angenommen. Tritt hier wieder bei: {invite}",
+    "approvedNoInvite": "✅ Dein Einspruch bei **{guild}** wurde angenommen. Bitte ein Mitglied um eine neue Einladung, um wieder beizutreten.",
+    "denied": "Dein Einspruch bei **{guild}** wurde geprüft und nicht angenommen."
+  },
+  "common": {
+    "broke": "Etwas ist schiefgelaufen - versuch es erneut."
+  }
+}

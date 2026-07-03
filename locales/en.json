@@ -1,0 +1,32 @@
+{
+  "verify": {
+    "button": "Verify",
+    "alreadyVerified": "You're already verified ✅",
+    "cooldown": "One sec - wait a moment, then tap **Verify** again.",
+    "instructions": "Type the characters shown below (not case-sensitive). New image each try.",
+    "enterCode": "Enter code",
+    "modalTitle": "Human check",
+    "modalLabel": "Code shown in the image",
+    "expired": "That code expired - tap **Verify** for a fresh one.",
+    "roleMissing": "Passed - but the verified role is missing. Ping a mod.",
+    "success": "Verified ✅ Welcome to {guild}.",
+    "tooMany": "Too many wrong tries - tap **Verify** for a new image.",
+    "wrong": "That's not right - tap **Verify** for a new image and try again. ({left} left)",
+    "panelText": "**Verify & Agree to the Rules**\nClick **Verify** and type the code from the image. Verifying confirms you’ve read and agree to the rules above, and unlocks the server."
+  },
+  "appeal": {
+    "button": "Appeal to {guild}",
+    "invalid": "That appeal link is no longer valid - you may already have been unbanned, or already sent an appeal for this ban.",
+    "busy": "The mod team's inbox is busy right now - please try again in a minute.",
+    "sent": "✅ Your appeal was sent to **{guild}**'s mod team. If they approve it, I'll DM you a fresh invite.",
+    "unreachable": "Sorry - I couldn't reach that server's mod team ({error}). Try again in a moment.",
+    "dmIntro": "⚠️ You were banned by a **MadHoney** honeypot - a hidden channel that exists only to catch spam bots. Anything posted there is banned automatically.",
+    "dmAsk": "If you're a real person who ended up in one by mistake, you can ask **{guild}**'s mod team to take another look:",
+    "approvedInvite": "✅ Your appeal to **{guild}** was approved. Rejoin here: {invite}",
+    "approvedNoInvite": "✅ Your appeal to **{guild}** was approved. Ask a member for a fresh invite to rejoin.",
+    "denied": "Your appeal to **{guild}** was reviewed and not approved."
+  },
+  "common": {
+    "broke": "Something broke - try again."
+  }
+}

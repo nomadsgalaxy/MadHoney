@@ -1,0 +1,32 @@
+{
+  "verify": {
+    "button": "Vérifier",
+    "alreadyVerified": "Tu es déjà vérifié ✅",
+    "cooldown": "Un instant - attends un moment, puis appuie de nouveau sur **Vérifier**.",
+    "instructions": "Saisis les caractères affichés ci-dessous (insensible à la casse). Nouvelle image à chaque essai.",
+    "enterCode": "Saisir le code",
+    "modalTitle": "Vérification humaine",
+    "modalLabel": "Code affiché dans l'image",
+    "expired": "Ce code a expiré - appuie sur **Vérifier** pour en obtenir un nouveau.",
+    "roleMissing": "Réussi - mais le rôle vérifié est introuvable. Préviens un modérateur.",
+    "success": "Vérifié ✅ Bienvenue sur {guild}.",
+    "tooMany": "Trop d'essais incorrects - appuie sur **Vérifier** pour une nouvelle image.",
+    "wrong": "Ce n'est pas ça - appuie sur **Vérifier** pour une nouvelle image et réessaie. ({left} restants)",
+    "panelText": "**Vérifie-toi et accepte le règlement**\nClique sur **Vérifier** et saisis le code de l'image. La vérification confirme que tu as lu et accepté le règlement ci-dessus, et débloque le serveur."
+  },
+  "appeal": {
+    "button": "Faire appel auprès de {guild}",
+    "invalid": "Ce lien d'appel n'est plus valide - tu as peut-être déjà été débanni, ou tu as déjà envoyé un appel pour ce bannissement.",
+    "busy": "La boîte de réception de l'équipe de modération est saturée pour le moment - réessaie dans une minute.",
+    "sent": "✅ Ton appel a été envoyé à l'équipe de modération de **{guild}**. S'ils l'acceptent, je t'enverrai une nouvelle invitation en MP.",
+    "unreachable": "Désolé - je n'ai pas pu joindre l'équipe de modération de ce serveur ({error}). Réessaie dans un instant.",
+    "dmIntro": "⚠️ Tu as été banni par un honeypot **MadHoney** - un salon caché qui n'existe que pour piéger les bots de spam. Tout ce qui y est publié est banni automatiquement.",
+    "dmAsk": "Si tu es une vraie personne qui s'y est retrouvée par erreur, tu peux demander à l'équipe de modération de **{guild}** d'y jeter un nouveau coup d'œil :",
+    "approvedInvite": "✅ Ton appel auprès de **{guild}** a été accepté. Reviens ici : {invite}",
+    "approvedNoInvite": "✅ Ton appel auprès de **{guild}** a été accepté. Demande une nouvelle invitation à un membre pour revenir.",
+    "denied": "Ton appel auprès de **{guild}** a été examiné et refusé."
+  },
+  "common": {
+    "broke": "Une erreur est survenue - réessaie."
+  }
+}

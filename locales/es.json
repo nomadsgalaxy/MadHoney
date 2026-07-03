@@ -1,0 +1,32 @@
+{
+  "verify": {
+    "button": "Verificar",
+    "alreadyVerified": "Ya estás verificado ✅",
+    "cooldown": "Un momento - espera un instante y vuelve a tocar **Verificar**.",
+    "instructions": "Escribe los caracteres que aparecen abajo (no distingue mayúsculas). Imagen nueva en cada intento.",
+    "enterCode": "Introducir código",
+    "modalTitle": "Verificación humana",
+    "modalLabel": "Código que aparece en la imagen",
+    "expired": "Ese código caducó - toca **Verificar** para obtener uno nuevo.",
+    "roleMissing": "Superado - pero falta el rol de verificado. Avisa a un moderador.",
+    "success": "Verificado ✅ Bienvenido a {guild}.",
+    "tooMany": "Demasiados intentos fallidos - toca **Verificar** para una imagen nueva.",
+    "wrong": "No es correcto - toca **Verificar** para una imagen nueva e inténtalo de nuevo. ({left} restantes)",
+    "panelText": "**Verifícate y acepta las normas**\nHaz clic en **Verificar** y escribe el código de la imagen. Verificarte confirma que has leído y aceptas las normas de arriba, y desbloquea el servidor."
+  },
+  "appeal": {
+    "button": "Apelar a {guild}",
+    "invalid": "Ese enlace de apelación ya no es válido - puede que ya te hayan desbaneado, o que ya hayas enviado una apelación por este baneo.",
+    "busy": "La bandeja del equipo de moderación está ocupada ahora mismo - inténtalo de nuevo en un minuto.",
+    "sent": "✅ Tu apelación se envió al equipo de moderación de **{guild}**. Si la aprueban, te enviaré una invitación nueva por MD.",
+    "unreachable": "Lo siento - no pude contactar con el equipo de moderación de ese servidor ({error}). Inténtalo de nuevo en un momento.",
+    "dmIntro": "⚠️ Te ha baneado un honeypot de **MadHoney** - un canal oculto que existe solo para atrapar bots de spam. Todo lo que se publica ahí se banea automáticamente.",
+    "dmAsk": "Si eres una persona real que acabó ahí por error, puedes pedir al equipo de moderación de **{guild}** que lo revise de nuevo:",
+    "approvedInvite": "✅ Tu apelación a **{guild}** fue aprobada. Vuelve a unirte aquí: {invite}",
+    "approvedNoInvite": "✅ Tu apelación a **{guild}** fue aprobada. Pide a un miembro una invitación nueva para volver a unirte.",
+    "denied": "Tu apelación a **{guild}** fue revisada y no aprobada."
+  },
+  "common": {
+    "broke": "Algo falló - inténtalo de nuevo."
+  }
+}

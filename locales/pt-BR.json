@@ -1,0 +1,32 @@
+{
+  "verify": {
+    "button": "Verificar",
+    "alreadyVerified": "Você já está verificado ✅",
+    "cooldown": "Um segundo - espere um momento e toque em **Verificar** de novo.",
+    "instructions": "Digite os caracteres mostrados abaixo (não diferencia maiúsculas). Imagem nova a cada tentativa.",
+    "enterCode": "Inserir código",
+    "modalTitle": "Verificação humana",
+    "modalLabel": "Código mostrado na imagem",
+    "expired": "Esse código expirou - toque em **Verificar** para gerar um novo.",
+    "roleMissing": "Aprovado - mas o cargo de verificado não foi encontrado. Avise um moderador.",
+    "success": "Verificado ✅ Bem-vindo(a) ao {guild}.",
+    "tooMany": "Tentativas erradas demais - toque em **Verificar** para uma nova imagem.",
+    "wrong": "Não é isso - toque em **Verificar** para uma nova imagem e tente de novo. (faltam {left})",
+    "panelText": "**Verifique-se e aceite as regras**\nClique em **Verificar** e digite o código da imagem. Verificar confirma que você leu e concorda com as regras acima, e libera o servidor."
+  },
+  "appeal": {
+    "button": "Recorrer a {guild}",
+    "invalid": "Esse link de recurso não é mais válido - talvez seu banimento já tenha sido desfeito, ou você já tenha enviado um recurso para este banimento.",
+    "busy": "A caixa de entrada da equipe de moderação está cheia agora - tente de novo em um minuto.",
+    "sent": "✅ Seu recurso foi enviado à equipe de moderação de **{guild}**. Se aprovarem, vou te mandar um novo convite na DM.",
+    "unreachable": "Desculpe - não consegui falar com a equipe de moderação desse servidor ({error}). Tente de novo daqui a pouco.",
+    "dmIntro": "⚠️ Você foi banido por um honeypot do **MadHoney** - um canal oculto que existe só para pegar bots de spam. Tudo que é postado lá é banido automaticamente.",
+    "dmAsk": "Se você é uma pessoa real que caiu ali por engano, pode pedir para a equipe de moderação de **{guild}** dar mais uma olhada:",
+    "approvedInvite": "✅ Seu recurso para **{guild}** foi aprovado. Entre de novo aqui: {invite}",
+    "approvedNoInvite": "✅ Seu recurso para **{guild}** foi aprovado. Peça um novo convite a um membro para voltar.",
+    "denied": "Seu recurso para **{guild}** foi analisado e não foi aprovado."
+  },
+  "common": {
+    "broke": "Algo deu errado - tente de novo."
+  }
+}

@@ -12,6 +12,7 @@ import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChan
 import { honeypotMode } from './trap.js';
 import { renderBanner, DEFAULT_BANNER, FONTS, SELF_HOSTED } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
+import { SUPPORTED, LOCALE_NAMES } from './i18n.js';
 
 const PORT = Number(process.env.PORT || 8300);
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://127.0.0.1:${PORT}`).replace(/\/$/, '');
@@ -338,8 +339,11 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <label>Captcha difficulty <select name="captchaDifficulty" ${verifyOn ? '' : 'disabled'}>
     ${[['easy', 'Easy (4 chars, lighter)'], ['normal', 'Normal (5 chars)'], ['hard', 'Hard (6 chars, heavy)']].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'normal') === v ? 'selected' : ''}>${l}</option>`).join('')}
   </select><small>Harder = longer code and more OCR-defeating distortion. Raise it if bots start solving your captcha; lower it if real members struggle.</small></label>
-  <label>Verify message <textarea name="verifyText" rows="3" ${verifyOn ? '' : 'disabled'}>${esc(cfg.verifyText || DEFAULT_VERIFY_TEXT)}</textarea>
-    <small>Shown above the Verify button.</small></label>
+  <label>Bot language <select name="locale">
+    ${SUPPORTED.map((c) => `<option value="${c}" ${(cfg.locale || 'en') === c ? 'selected' : ''}>${LOCALE_NAMES[c]}</option>`).join('')}
+  </select><small>The language MadHoney speaks in this server - the verify panel, captcha replies, and appeal DMs. (This dashboard follows <b>your own</b> browser language, which is separate.)</small></label>
+  <label>Verify message <textarea name="verifyText" rows="3" ${verifyOn ? '' : 'disabled'} placeholder="${esc(DEFAULT_VERIFY_TEXT)}">${esc(cfg.verifyText || '')}</textarea>
+    <small>Shown above the Verify button. Leave blank to use the default in your bot language.</small></label>
   ${SELF_HOSTED ? '' : '<label><small>ℹ️ A small "protected by MadHoney" credit line is shown on your <b>verify panel</b> (not the honeypot banner). Want it gone? MadHoney is free and open - self-host it (SELF_HOSTED=true) and you can remove it.</small></label>'}
   <div class="subh">Universal ban list</div>
   <label class="toggle"><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''}>
@@ -831,7 +835,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             return html(await guildPage(guild, sess, 'Banner saved. Post it from Actions (or /madhoney deploy in Discord).', 'banner'));
           }
           const patch = {};
-          for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText', 'captchaDifficulty']) {
+          for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText', 'captchaDifficulty', 'locale']) {
             if (form.has(k)) patch[k] = form.get(k).trim();
           }
           patch.banShare = form.get('banShare') === 'on';

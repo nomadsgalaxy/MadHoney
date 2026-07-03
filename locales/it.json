@@ -1,0 +1,32 @@
+{
+  "verify": {
+    "button": "Verifica",
+    "alreadyVerified": "Sei già verificato ✅",
+    "cooldown": "Un attimo - aspetta un momento, poi tocca di nuovo **Verifica**.",
+    "instructions": "Digita i caratteri mostrati qui sotto (non fa differenza tra maiuscole e minuscole). Immagine nuova a ogni tentativo.",
+    "enterCode": "Inserisci il codice",
+    "modalTitle": "Verifica umana",
+    "modalLabel": "Codice mostrato nell'immagine",
+    "expired": "Quel codice è scaduto - tocca **Verifica** per averne uno nuovo.",
+    "roleMissing": "Superata - ma il ruolo verificato non c'è. Avvisa un moderatore.",
+    "success": "Verificato ✅ Benvenuto in {guild}.",
+    "tooMany": "Troppi tentativi sbagliati - tocca **Verifica** per una nuova immagine.",
+    "wrong": "Non è corretto - tocca **Verifica** per una nuova immagine e riprova. ({left} rimasti)",
+    "panelText": "**Verificati e accetta le regole**\nClicca su **Verifica** e digita il codice dell'immagine. La verifica conferma che hai letto e accetti le regole qui sopra, e sblocca il server."
+  },
+  "appeal": {
+    "button": "Fai ricorso a {guild}",
+    "invalid": "Questo link di ricorso non è più valido - potresti essere già stato sbannato, oppure hai già inviato un ricorso per questo ban.",
+    "busy": "La casella del team di moderazione è occupata in questo momento - riprova tra un minuto.",
+    "sent": "✅ Il tuo ricorso è stato inviato al team di moderazione di **{guild}**. Se lo approvano, ti manderò un nuovo invito in DM.",
+    "unreachable": "Spiacente - non sono riuscito a contattare il team di moderazione di quel server ({error}). Riprova tra un attimo.",
+    "dmIntro": "⚠️ Sei stato bannato da un honeypot di **MadHoney** - un canale nascosto che esiste solo per intrappolare i bot di spam. Tutto ciò che vi viene pubblicato viene bannato automaticamente.",
+    "dmAsk": "Se sei una persona reale finita lì per errore, puoi chiedere al team di moderazione di **{guild}** di dare un'altra occhiata:",
+    "approvedInvite": "✅ Il tuo ricorso a **{guild}** è stato accolto. Rientra qui: {invite}",
+    "approvedNoInvite": "✅ Il tuo ricorso a **{guild}** è stato accolto. Chiedi un nuovo invito a un membro per rientrare.",
+    "denied": "Il tuo ricorso a **{guild}** è stato esaminato e non accolto."
+  },
+  "common": {
+    "broke": "Qualcosa è andato storto - riprova."
+  }
+}

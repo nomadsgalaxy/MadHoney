@@ -4,6 +4,7 @@
 import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { renderBanner, DEFAULT_BANNER, creditSuffix } from './banner.js';
+import { t } from './i18n.js';
 
 // Randomize the banner's attachment filename on every post. A fixed name like
 // "do-not-post.png" is a fingerprint: once MadHoney is popular, spam tooling
@@ -29,20 +30,20 @@ import { saveGuild, bans, logBan } from './store.js';
 const VERIFY_PANEL_VERSION = 2; // v2: attribution line moved onto the verify panel
 const BANNER_RENDER_VERSION = 4; // v4: credit line removed from the banner (moved to verify panel)
 const fp = (s) => createHash('sha1').update(s).digest('hex').slice(0, 12);
-export const verifyFingerprint = (cfg) => fp(`${VERIFY_PANEL_VERSION}|${cfg.verifyText || DEFAULT_VERIFY_TEXT}|${creditSuffix(cfg.banner?.hideCredit)}`);
+export const verifyFingerprint = (cfg) => fp(`${VERIFY_PANEL_VERSION}|${cfg.verifyText || t('verify.panelText', cfg.locale)}|${cfg.locale || 'en'}|${creditSuffix(cfg.banner?.hideCredit)}`);
 export const bannerFingerprint = (cfg) => fp(`${BANNER_RENDER_VERSION}|${JSON.stringify({ ...DEFAULT_BANNER, ...cfg.banner })}`);
 
-const verifyRow = () => new ActionRowBuilder().addComponents(
-  new ButtonBuilder().setCustomId('verify_start').setLabel('Verify').setStyle(ButtonStyle.Success),
+const verifyRow = (loc) => new ActionRowBuilder().addComponents(
+  new ButtonBuilder().setCustomId('verify_start').setLabel(t('verify.button', loc)).setStyle(ButtonStyle.Success),
 );
 
-export const DEFAULT_VERIFY_TEXT =
-  '**Verify & Agree to the Rules**\nClick **Verify** and type the code from the image. ' +
-  'Verifying confirms you’ve read and agree to the rules above, and unlocks the server.';
+// English default, from the catalog. Used as the edit-box placeholder; the
+// posted panel uses the guild's bot language via verifyContent().
+export const DEFAULT_VERIFY_TEXT = t('verify.panelText', 'en');
 
-// The verify panel's full text = the admin's (editable) message + the MadHoney
-// attribution line. The credit lives here now, not on the honeypot banner.
-const verifyContent = (cfg) => (cfg.verifyText || DEFAULT_VERIFY_TEXT) + creditSuffix(cfg.banner?.hideCredit);
+// The verify panel's full text = the admin's custom message (if any) OR the
+// default in the guild's bot language, + the MadHoney attribution line.
+const verifyContent = (cfg) => (cfg.verifyText || t('verify.panelText', cfg.locale)) + creditSuffix(cfg.banner?.hideCredit);
 
 async function textChannel(guild, id, what) {
   const ch = await guild.channels.fetch(id).catch(() => null);
@@ -59,7 +60,7 @@ export async function postVerifyPanel(guild, cfg) {
       await m.delete().catch(() => {});
     }
   } catch { /* no Read History - skip cleanup */ }
-  const msg = await ch.send({ content: verifyContent(cfg), components: [verifyRow()] });
+  const msg = await ch.send({ content: verifyContent(cfg), components: [verifyRow(cfg.locale)] });
   saveGuild(guild.id, { verifyPosted: true, verifyMsgId: msg.id, verifyFp: verifyFingerprint(cfg) });
   return `Posted the Verify panel in #${ch.name}.`;
 }
@@ -71,7 +72,7 @@ export async function refreshVerifyPanel(guild, cfg) {
   if (!cfg.verifyChannelId || cfg.verifyFp === verifyFingerprint(cfg)) return null;
   const ch = await guild.channels.fetch(cfg.verifyChannelId).catch(() => null);
   if (!ch?.isTextBased()) return null;
-  const payload = { content: verifyContent(cfg), components: [verifyRow()] };
+  const payload = { content: verifyContent(cfg), components: [verifyRow(cfg.locale)] };
   let msg = cfg.verifyMsgId ? await ch.messages.fetch(cfg.verifyMsgId).catch(() => null) : null;
   if (!msg) {
     const recent = await ch.messages.fetch({ limit: 20 }).catch(() => null);

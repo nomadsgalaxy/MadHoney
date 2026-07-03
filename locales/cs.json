@@ -1,0 +1,32 @@
+{
+  "verify": {
+    "button": "Ověřit",
+    "alreadyVerified": "Už jsi ověřen(a) ✅",
+    "cooldown": "Momentík - chvíli počkej a pak znovu klepni na **Ověřit**.",
+    "instructions": "Napiš znaky zobrazené níže (nezáleží na velikosti písmen). Při každém pokusu nový obrázek.",
+    "enterCode": "Zadat kód",
+    "modalTitle": "Ověření člověka",
+    "modalLabel": "Kód zobrazený na obrázku",
+    "expired": "Tento kód vypršel - klepni na **Ověřit** pro nový.",
+    "roleMissing": "Prošlo to - ale chybí role ověřeného. Napiš moderátorovi.",
+    "success": "Ověřeno ✅ Vítej na {guild}.",
+    "tooMany": "Příliš mnoho špatných pokusů - klepni na **Ověřit** pro nový obrázek.",
+    "wrong": "To není správně - klepni na **Ověřit** pro nový obrázek a zkus to znovu. (zbývá {left})",
+    "panelText": "**Ověř se a přijmi pravidla**\nKlikni na **Ověřit** a napiš kód z obrázku. Ověřením potvrzuješ, že sis přečetl(a) pravidla výše a souhlasíš s nimi, a odemkneš server."
+  },
+  "appeal": {
+    "button": "Odvolat se u {guild}",
+    "invalid": "Tento odkaz na odvolání už není platný - možná ti už byl ban zrušen, nebo jsi už odvolání k tomuto banu poslal(a).",
+    "busy": "Schránka moderátorského týmu je právě zahlcená - zkus to prosím za minutu znovu.",
+    "sent": "✅ Tvoje odvolání bylo odesláno moderátorskému týmu **{guild}**. Pokud ho schválí, pošlu ti novou pozvánku do DM.",
+    "unreachable": "Omlouvám se - nepodařilo se mi spojit s moderátorským týmem toho serveru ({error}). Zkus to za chvíli znovu.",
+    "dmIntro": "⚠️ Zabanoval tě honeypot od **MadHoney** - skrytý kanál, který existuje jen proto, aby chytal spam boty. Cokoli se tam napíše, je automaticky zabanováno.",
+    "dmAsk": "Pokud jsi skutečný člověk, který tam skončil omylem, můžeš požádat moderátorský tým **{guild}**, aby se na to znovu podíval:",
+    "approvedInvite": "✅ Tvoje odvolání k **{guild}** bylo schváleno. Připoj se znovu tady: {invite}",
+    "approvedNoInvite": "✅ Tvoje odvolání k **{guild}** bylo schváleno. Požádej někoho ze členů o novou pozvánku, aby ses mohl(a) vrátit.",
+    "denied": "Tvoje odvolání k **{guild}** bylo posouzeno a neschváleno."
+  },
+  "common": {
+    "broke": "Něco se pokazilo - zkus to znovu."
+  }
+}

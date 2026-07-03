@@ -1,0 +1,32 @@
+{
+  "verify": {
+    "button": "Verifiera",
+    "alreadyVerified": "Du är redan verifierad ✅",
+    "cooldown": "En sekund - vänta ett ögonblick och tryck sedan på **Verifiera** igen.",
+    "instructions": "Skriv tecknen som visas nedan (ej skiftlägeskänsligt). Ny bild vid varje försök.",
+    "enterCode": "Ange kod",
+    "modalTitle": "Är du människa?",
+    "modalLabel": "Koden som visas i bilden",
+    "expired": "Koden har gått ut - tryck på **Verifiera** för en ny.",
+    "roleMissing": "Godkänd - men den verifierade rollen saknas. Peta på en moderator.",
+    "success": "Verifierad ✅ Välkommen till {guild}.",
+    "tooMany": "För många felaktiga försök - tryck på **Verifiera** för en ny bild.",
+    "wrong": "Det stämmer inte - tryck på **Verifiera** för en ny bild och försök igen. ({left} kvar)",
+    "panelText": "**Verifiera dig och godkänn reglerna**\nKlicka på **Verifiera** och skriv koden från bilden. Att verifiera bekräftar att du har läst och godkänner reglerna ovan, och låser upp servern."
+  },
+  "appeal": {
+    "button": "Överklaga till {guild}",
+    "invalid": "Den här överklagandelänken är inte längre giltig - du kan redan ha blivit avbannad, eller redan ha skickat en överklagan för den här banningen.",
+    "busy": "Moderatorteamets inkorg är upptagen just nu - försök igen om en minut.",
+    "sent": "✅ Din överklagan skickades till moderatorteamet i **{guild}**. Om de godkänner den skickar jag en ny inbjudan via DM.",
+    "unreachable": "Tyvärr - jag kunde inte nå den serverns moderatorteam ({error}). Försök igen om en stund.",
+    "dmIntro": "⚠️ Du blev bannad av en **MadHoney**-honeypot - en dold kanal som bara finns för att fånga spambottar. Allt som postas där bannas automatiskt.",
+    "dmAsk": "Om du är en riktig person som hamnade där av misstag kan du be moderatorteamet i **{guild}** att titta på det igen:",
+    "approvedInvite": "✅ Din överklagan till **{guild}** godkändes. Gå med igen här: {invite}",
+    "approvedNoInvite": "✅ Din överklagan till **{guild}** godkändes. Be en medlem om en ny inbjudan för att gå med igen.",
+    "denied": "Din överklagan till **{guild}** granskades och godkändes inte."
+  },
+  "common": {
+    "broke": "Något gick fel - försök igen."
+  }
+}
