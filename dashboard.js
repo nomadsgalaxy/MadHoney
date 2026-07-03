@@ -574,8 +574,19 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
       if (url.pathname === '/terms') return html(layout('MadHoney - Terms of Service', TERMS));
       if (url.pathname === '/privacy') return html(layout('MadHoney - Privacy Policy', PRIVACY));
 
+      // ---- SEO ----
+      if (url.pathname === '/robots.txt') {
+        res.writeHead(200, { 'content-type': 'text/plain' });
+        return res.end(`User-agent: *\nAllow: /$\nAllow: /terms\nAllow: /privacy\nDisallow: /g/\nDisallow: /login\nDisallow: /callback\nSitemap: ${PUBLIC_URL}/sitemap.xml\n`);
+      }
+      if (url.pathname === '/sitemap.xml') {
+        const pages = ['/', '/terms', '/privacy'];
+        res.writeHead(200, { 'content-type': 'application/xml' });
+        return res.end(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map((p) => `<url><loc>${PUBLIC_URL}${p}</loc><changefreq>weekly</changefreq></url>`).join('\n')}\n</urlset>\n`);
+      }
+
       // ---- public assets ----
-      if (url.pathname === '/logo.svg' || url.pathname === '/logo.png') {
+      if (url.pathname === '/logo.svg' || url.pathname === '/logo.png' || url.pathname === '/og.png') {
         const type = url.pathname.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
         res.writeHead(200, { 'content-type': type, 'cache-control': 'public, max-age=86400' });
         return res.end(readFileSync(new URL('.' + url.pathname, import.meta.url)));
