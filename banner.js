@@ -11,6 +11,13 @@ export const FONTS = ['sans-serif', 'serif', 'monospace', 'DejaVu Sans', 'Libera
 // your own, or 'none' for no logo at all.
 const BUNDLED_LOGO = fileURLToPath(new URL('./logo.png', import.meta.url));
 
+// The attribution/credit line. On the hosted service it's mandatory (marketing
+// + SWAtt); only self-hosters may hide it. Set SELF_HOSTED=true to allow that.
+export const CREDIT_LINE = 'protected by https://madhoney.nomadsgalaxy.com';
+export const SELF_HOSTED = ['true', 'on', '1', 'yes'].includes(String(process.env.SELF_HOSTED).toLowerCase());
+// Resolve what actually gets printed: forced on unless a self-hoster hid it.
+export const resolveCredit = (hideCredit) => (SELF_HOSTED && hideCredit ? '' : CREDIT_LINE);
+
 export const DEFAULT_BANNER = {
   title: 'HONEYPOT IS ACTIVE',
   text: 'This channel is a trap for spam bots. Anything posted here triggers an instant, automated ban. Real humans: verify in #rules and back away slowly.',
@@ -21,14 +28,9 @@ export const DEFAULT_BANNER = {
   logoUrl: '',        // '' -> bundled MadHoney logo, 'none' -> no logo
   mentionColor: '#5865f2', // #channel / @role highlight (Discord blurple)
   mentionMode: 'custom',   // 'custom' -> mentionColor for all; 'role' -> real role colors via opts.roleColors
-  credit: '',              // optional footer line; OFF by default - a fixed credit string is a fingerprint (see CREDIT_LINE)
+  credit: CREDIT_LINE,     // effective value is set via resolveCredit() per render
   distort: 0,              // 0 none .. 3 heavy: garble the text against OCR/bot detection
 };
-
-// The optional credit line. It's OFF by default on purpose: a string that's
-// identical on every MadHoney banner is a crib - detect it once and you can
-// skip every MadHoney honeypot. Admins can opt in, but they're warned.
-export const CREDIT_LINE = 'protected by https://madhoney.nomadsgalaxy.com';
 
 // A word is a "mention" if it starts with # or @ (like #rules or @Staff).
 const MENTION = /^[#@][\w-]/;

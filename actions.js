@@ -3,7 +3,7 @@
 // returns a human-readable result string.
 import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { createHash, randomBytes } from 'node:crypto';
-import { renderBanner, DEFAULT_BANNER } from './banner.js';
+import { renderBanner, DEFAULT_BANNER, resolveCredit } from './banner.js';
 
 // Randomize the banner's attachment filename on every post. A fixed name like
 // "do-not-post.png" is a fingerprint: once MadHoney is popular, spam tooling
@@ -27,10 +27,10 @@ import { saveGuild, bans, logBan } from './store.js';
 // on boot the posted message is edited in place (no notification) only if that
 // fingerprint changed, so plain bot updates never re-post anything.
 const VERIFY_PANEL_VERSION = 1;
-const BANNER_RENDER_VERSION = 2; // v2: HONEYPOT IS ACTIVE headline + credit line
+const BANNER_RENDER_VERSION = 3; // v3: credit line resolved via SELF_HOSTED, per-render noise
 const fp = (s) => createHash('sha1').update(s).digest('hex').slice(0, 12);
 export const verifyFingerprint = (cfg) => fp(`${VERIFY_PANEL_VERSION}|${cfg.verifyText || DEFAULT_VERIFY_TEXT}`);
-export const bannerFingerprint = (cfg) => fp(`${BANNER_RENDER_VERSION}|${JSON.stringify({ ...DEFAULT_BANNER, ...cfg.banner })}`);
+export const bannerFingerprint = (cfg) => fp(`${BANNER_RENDER_VERSION}|${JSON.stringify({ ...DEFAULT_BANNER, ...cfg.banner, credit: resolveCredit(cfg.banner?.hideCredit) })}`);
 
 const verifyRow = () => new ActionRowBuilder().addComponents(
   new ButtonBuilder().setCustomId('verify_start').setLabel('Verify').setStyle(ButtonStyle.Success),
@@ -91,7 +91,7 @@ export function roleColorMap(guild) {
 // Render the configured banner and post it in the honeypot channel.
 export async function postBanner(guild, cfg) {
   const ch = await textChannel(guild, cfg.honeypotChannelId, 'Honeypot');
-  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), roleColors: roleColorMap(guild) });
+  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), credit: resolveCredit(cfg.banner?.hideCredit), roleColors: roleColorMap(guild) });
   try {
     const recent = await ch.messages.fetch({ limit: 50 });
     for (const m of recent.filter((m) => m.author.id === guild.client.user.id).values()) {
@@ -109,7 +109,7 @@ export async function refreshBanner(guild, cfg) {
   if (!cfg.honeypotChannelId || cfg.bannerFp === bannerFingerprint(cfg)) return null;
   const ch = await guild.channels.fetch(cfg.honeypotChannelId).catch(() => null);
   if (!ch?.isTextBased()) return null;
-  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), roleColors: roleColorMap(guild) });
+  const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), credit: resolveCredit(cfg.banner?.hideCredit), roleColors: roleColorMap(guild) });
   const file = new AttachmentBuilder(png, { name: bannerFileName() });
   let msg = cfg.bannerMsgId ? await ch.messages.fetch(cfg.bannerMsgId).catch(() => null) : null;
   if (!msg) {
