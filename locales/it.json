@@ -27,7 +27,8 @@
     "denied": "Il tuo ricorso a **{guild}** è stato esaminato e non accolto."
   },
   "common": {
-    "broke": "Qualcosa è andato storto - riprova."
+    "broke": "Qualcosa è andato storto - riprova.",
+    "notSet": "*non impostato*"
   },
   "reply": {
     "needManageServer": "Ti serve il permesso **Gestisci server** per usare i controlli di MadHoney.",
@@ -62,5 +63,59 @@
     "approvedReinvited": "✅ **Approvato** da {mod} - sbannato e reinvitato.",
     "approvedNoInvite": "✅ **Approvato** da {mod} - sbannato (impossibile creare automaticamente un invito).",
     "deniedBy": "❌ **Rifiutato** da {mod}."
+  },
+  "setup": {
+    "title": "## Configurazione di MadHoney",
+    "dashHint": "💡 **La dashboard web è il modo più semplice per farlo.** {dash} è molto più potente e intuitiva di questi comandi in chat - gating dei canali con trascina e rilascia, un designer di banner in tempo reale, ricorsi e istruzioni più chiare. Anche questi comandi funzionano, se preferisci Discord.",
+    "verifiedRole": "**Ruolo verificato:** {role} - scegli un ruolo esistente, o creane prima uno (Impostazioni server → Ruoli, es. \"Verificato\").",
+    "verifyChannel": "**Canale di verifica:** {channel} - dove si trova il pulsante Verifica. Il tuo canale **#rules** è il posto classico.",
+    "honeypotChannel": "**Canale honeypot:** {channel} - crea un canale esca in cui i bot pubblicheranno. Chiamalo come un canale vero: `general-2`, `general2`, `chat-2`. Chiunque vi pubblichi viene bannato.",
+    "staffRole": "**Ruolo staff (opzionale):** {role} - i membri che lo hanno non vengono mai intrappolati (gli admin con **Gestisci server** e il proprietario sono sempre esenti). Impostalo sotto **Staff e log**.",
+    "logChannel": "**Canale di log (opzionale):** {channel} - ogni ban dell'honeypot viene segnalato lì con un pulsante **Sbanna**. Impostalo sotto **Staff e log**.",
+    "banSharing": "**Condivisione ban:** {mode} (cambia con `/madhoney banshare`)",
+    "banShared": "condivisa 🌐",
+    "banIsolated": "isolata 🔒",
+    "honeypotLine": "**Honeypot:** {mode} (`/madhoney honeypot`)",
+    "hpArmed": "🍯 **Armato** - banna a vista",
+    "hpReview": "⏸ **In attesa di revisione** - un mod approva ogni cattura",
+    "hpDisarmed": "⭘ **Disarmato** - la trappola è spenta",
+    "onboarding": "⚠️ Se usi l'**Onboarding** di Discord, assicurati che NON assegni automaticamente il ruolo verificato, altrimenti il captcha è aggirabile.",
+    "accessibility": "♿ Gli honeypot sono trappole visive - sconsigliati per i server al servizio di comunità con disabilità visive. Come minimo, nomina l'honeypot nelle tue regole affinché gli utenti che usano il text-to-speech sentano l'avviso.",
+    "whenReady": "Quando tutti e tre sono impostati, esegui **/madhoney deploy**.",
+    "phRole": "Ruolo verificato…",
+    "phVerifyCh": "Canale di verifica (suggerito: #rules)…",
+    "phHoneyCh": "Canale honeypot (es. #general-2)…",
+    "btnEditVerify": "Modifica messaggio di verifica",
+    "btnStaffLog": "Staff e log",
+    "btnDeploy": "Deploy →",
+    "clash": "❌ Il canale di verifica e quello honeypot devono essere **diversi**.",
+    "statusCounts": "**Ban registrati qui:** {mine} · **pool condiviso:** {pool}"
+  },
+  "more": {
+    "title": "## Staff e log",
+    "staffRole": "**Ruolo staff:** {role} - chiunque abbia questo ruolo può pubblicare nell'honeypot senza essere bannato. Il proprietario e chiunque abbia **Gestisci server** sono sempre esenti; imposta questo per i mod che non hanno quel permesso.",
+    "logChannel": "**Canale di log:** {channel} - un canale riservato allo staff; ogni ban dell'honeypot viene segnalato lì con un pulsante **Sbanna** nel caso qualcuno ci finisca per sbaglio.",
+    "phStaff": "Ruolo staff - mai intrappolato (opzionale)…",
+    "phLog": "Canale di log per i report dei ban (opzionale)…"
+  },
+  "deploy": {
+    "title": "## Deploy di MadHoney",
+    "dashHint": "💡 Preferisci pulsanti e un'anteprima in tempo reale? Fai tutto questo dalla dashboard: {dash}",
+    "order": "Ordine consigliato:",
+    "step1": "1. **Assegna il ruolo ai membri esistenti** - dai a tutti quelli già qui il ruolo verificato",
+    "step2": "2. **Pubblica il pannello Verifica** - il pulsante + captcha, nel tuo canale di verifica",
+    "step3": "3. **Pubblica il banner honeypot** - l'immagine di avviso (progettala con `/madhoney banner`)",
+    "step4": "4. **Applica il gating ai canali (prova a vuoto)** - anteprima, poi **APPLICA**",
+    "incomplete": "⚠️ Configurazione incompleta - esegui prima `/madhoney setup`.",
+    "btnGrandfather": "1 Ruolo ai membri esistenti",
+    "btnPostVerify": "2 Pubblica pannello Verifica",
+    "btnPostBanner": "3 Pubblica banner honeypot",
+    "btnGateDry": "4 Gating (prova a vuoto)",
+    "btnGateApply": "4 Gating APPLICA",
+    "btnRestore": "↩ Ripristina"
+  },
+  "banner": {
+    "preview": "Anteprima del banner - salvata. Modificala con `/madhoney banner`, o pubblicala:",
+    "btnPost": "Pubblica nel canale honeypot"
   }
 }

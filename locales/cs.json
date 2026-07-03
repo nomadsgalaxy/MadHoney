@@ -27,7 +27,62 @@
     "denied": "Tvoje odvolání k **{guild}** bylo posouzeno a neschváleno."
   },
   "common": {
-    "broke": "Něco se pokazilo - zkus to znovu."
+    "broke": "Něco se pokazilo - zkus to znovu.",
+    "notSet": "*nenastaveno*"
+  },
+  "setup": {
+    "title": "## Nastavení MadHoney",
+    "dashHint": "💡 **Webový dashboard je jednodušší cesta, jak to udělat.** {dash} je mnohem výkonnější a uživatelsky přívětivější než tyto chatové příkazy - přetahování kanálů pro uzamčení, živý návrhář banneru, odvolání a jasnější rady. Tyto příkazy fungují také, pokud dáváš přednost Discordu.",
+    "verifiedRole": "**Role ověřeného:** {role} - vyber existující roli, nebo si nejdřív nějakou vytvoř (Nastavení serveru → Role, např. „Ověřený“).",
+    "verifyChannel": "**Ověřovací kanál:** {channel} - kde je tlačítko Ověřit. Klasické místo je tvůj kanál **#rules**.",
+    "honeypotChannel": "**Honeypot kanál:** {channel} - vytvoř návnadový kanál, do kterého budou boti psát. Pojmenuj ho jako skutečný kanál: `general-2`, `general2`, `chat-2`. Kdokoli tam něco napíše, dostane ban.",
+    "staffRole": "**Role týmu (volitelné):** {role} - členové s ní se nikdy nechytí do pasti (administrátoři s oprávněním **Spravovat server** a vlastník jsou vždy vyňati). Nastav ji v sekci **Tým a log**.",
+    "logChannel": "**Log kanál (volitelné):** {channel} - každý ban z honeypotu se sem nahlásí s tlačítkem **Zrušit ban**. Nastav ho v sekci **Tým a log**.",
+    "banSharing": "**Sdílení banů:** {mode} (změníš přes `/madhoney banshare`)",
+    "banShared": "sdíleno 🌐",
+    "banIsolated": "izolováno 🔒",
+    "honeypotLine": "**Honeypot:** {mode} (`/madhoney honeypot`)",
+    "hpArmed": "🍯 **Nastražen** - banuje na potkání",
+    "hpReview": "⏸ **Pozdržet ke kontrole** - každý úlovek schvaluje moderátor",
+    "hpDisarmed": "⭘ **Vypnut** - past je vypnutá",
+    "onboarding": "⚠️ Pokud používáš Discord **Onboarding**, ujisti se, že NEuděluje roli ověřeného automaticky, jinak lze captchu obejít.",
+    "accessibility": "♿ Honeypoty jsou vizuální pasti - nedoporučují se pro servery sloužící zrakově postiženým komunitám. Přinejmenším honeypot pojmenuj ve svých pravidlech, aby uživatelé čteček obrazovky slyšeli varování.",
+    "whenReady": "Až budou všechny tři nastaveny, spusť **/madhoney deploy**.",
+    "phRole": "Role ověřeného…",
+    "phVerifyCh": "Ověřovací kanál (návrh: #rules)…",
+    "phHoneyCh": "Honeypot kanál (např. #general-2)…",
+    "btnEditVerify": "Upravit ověřovací zprávu",
+    "btnStaffLog": "Tým a log",
+    "btnDeploy": "Nasadit →",
+    "clash": "❌ Ověřovací a honeypot kanál musí být **různé** kanály.",
+    "statusCounts": "**Banů zalogováno zde:** {mine} · **sdílený seznam:** {pool}"
+  },
+  "more": {
+    "title": "## Tým a log",
+    "staffRole": "**Role týmu:** {role} - kdokoli s touto rolí může psát do honeypotu, aniž by dostal ban. Vlastník a kdokoli s oprávněním **Spravovat server** jsou vždy vyňati; nastav ji pro moderátory, kteří toto oprávnění nemají.",
+    "logChannel": "**Log kanál:** {channel} - kanál jen pro tým; každý ban z honeypotu se sem nahlásí s tlačítkem **Zrušit ban** pro případ, že by ho někdo spustil omylem.",
+    "phStaff": "Role týmu - nikdy se nechytí do pasti (volitelné)…",
+    "phLog": "Log kanál pro hlášení banů (volitelné)…"
+  },
+  "deploy": {
+    "title": "## Nasadit MadHoney",
+    "dashHint": "💡 Dáváš přednost tlačítkům a živému náhledu? Udělej to všechno na dashboardu: {dash}",
+    "order": "Doporučené pořadí:",
+    "step1": "1. **Přidělit roli stávajícím členům** - dej všem, kdo tu už jsou, roli ověřeného",
+    "step2": "2. **Vyvěsit ověřovací panel** - tlačítko + captcha, do tvého ověřovacího kanálu",
+    "step3": "3. **Vyvěsit honeypot banner** - varovný obrázek (navrhni ho přes `/madhoney banner`)",
+    "step4": "4. **Uzamknout kanály (nanečisto)** - náhled, pak **POUŽÍT**",
+    "incomplete": "⚠️ Nastavení není dokončeno - nejdřív spusť `/madhoney setup`.",
+    "btnGrandfather": "1 Přidělit stávajícím",
+    "btnPostVerify": "2 Vyvěsit ověřovací panel",
+    "btnPostBanner": "3 Vyvěsit honeypot banner",
+    "btnGateDry": "4 Uzamknout (nanečisto)",
+    "btnGateApply": "4 Uzamknout POUŽÍT",
+    "btnRestore": "↩ Obnovit"
+  },
+  "banner": {
+    "preview": "Náhled banneru - uloženo. Uprav přes `/madhoney banner`, nebo ho vyvěs:",
+    "btnPost": "Vyvěsit do honeypot kanálu"
   },
   "reply": {
     "needManageServer": "Pro ovládání MadHoney potřebuješ oprávnění **Spravovat server**.",

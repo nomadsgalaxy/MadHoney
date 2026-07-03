@@ -27,7 +27,8 @@
     "denied": "Tu apelación a **{guild}** fue revisada y no aprobada."
   },
   "common": {
-    "broke": "Algo falló - inténtalo de nuevo."
+    "broke": "Algo falló - inténtalo de nuevo.",
+    "notSet": "*sin definir*"
   },
   "reply": {
     "needManageServer": "Necesitas **Gestionar servidor** para usar los controles de MadHoney.",
@@ -62,5 +63,59 @@
     "approvedReinvited": "✅ **Aprobado** por {mod} - desbaneado y reinvitado.",
     "approvedNoInvite": "✅ **Aprobado** por {mod} - desbaneado (no se pudo crear una invitación automáticamente).",
     "deniedBy": "❌ **Denegado** por {mod}."
+  },
+  "setup": {
+    "title": "## Configuración de MadHoney",
+    "dashHint": "💡 **El panel web es la forma fácil de hacer esto.** {dash} es mucho más potente y fácil de usar que estos comandos de chat - restricción de canales con arrastrar y soltar, un diseñador de banners en vivo, apelaciones y guía más clara. Estos comandos también funcionan, si prefieres Discord.",
+    "verifiedRole": "**Rol de verificado:** {role} - elige un rol existente, o crea uno primero (Configuración del servidor → Roles, p. ej. \"Verificado\").",
+    "verifyChannel": "**Canal de verificación:** {channel} - donde vive el botón Verificar. Tu canal **#rules** es el sitio clásico.",
+    "honeypotChannel": "**Canal honeypot:** {channel} - crea un canal señuelo en el que publicarán los bots. Ponle un nombre como el de un canal real: `general-2`, `general2`, `chat-2`. Cualquiera que publique ahí es baneado.",
+    "staffRole": "**Rol de equipo (opcional):** {role} - los miembros que lo tengan nunca caen en la trampa (los administradores con **Gestionar servidor** y el propietario siempre están exentos). Configúralo en **Equipo y registro**.",
+    "logChannel": "**Canal de registro (opcional):** {channel} - cada baneo del honeypot se informa ahí con un botón de **Desbanear**. Configúralo en **Equipo y registro**.",
+    "banSharing": "**Uso compartido de baneos:** {mode} (cambia con `/madhoney banshare`)",
+    "banShared": "compartido 🌐",
+    "banIsolated": "aislado 🔒",
+    "honeypotLine": "**Honeypot:** {mode} (`/madhoney honeypot`)",
+    "hpArmed": "🍯 **Armado** - banea a la vista",
+    "hpReview": "⏸ **Retener para revisión** - un moderador aprueba cada captura",
+    "hpDisarmed": "⭘ **Desarmado** - la trampa está desactivada",
+    "onboarding": "⚠️ Si usas la **Incorporación** de Discord, asegúrate de que NO otorgue automáticamente el rol de verificado, o el captcha se puede saltar.",
+    "accessibility": "♿ Los honeypots son trampas visuales - no se recomiendan para servidores que atienden a comunidades con discapacidad visual. Como mínimo, nombra el honeypot en tus normas para que los usuarios de texto a voz oigan la advertencia.",
+    "whenReady": "Cuando los tres estén configurados, ejecuta **/madhoney deploy**.",
+    "phRole": "Rol de verificado…",
+    "phVerifyCh": "Canal de verificación (sugerencia: #rules)…",
+    "phHoneyCh": "Canal honeypot (p. ej. #general-2)…",
+    "btnEditVerify": "Editar mensaje de verificación",
+    "btnStaffLog": "Equipo y registro",
+    "btnDeploy": "Desplegar →",
+    "clash": "❌ Los canales de verificación y honeypot deben ser **diferentes**.",
+    "statusCounts": "**Baneos registrados aquí:** {mine} · **lista compartida:** {pool}"
+  },
+  "more": {
+    "title": "## Equipo y registro",
+    "staffRole": "**Rol de equipo:** {role} - cualquiera con este rol puede publicar en el honeypot sin ser baneado. El propietario y cualquiera con **Gestionar servidor** siempre están exentos; configura esto para los moderadores que no tengan ese permiso.",
+    "logChannel": "**Canal de registro:** {channel} - un canal solo para el equipo; cada baneo del honeypot se informa ahí con un botón de **Desbanear** por si alguien cae en la trampa por accidente.",
+    "phStaff": "Rol de equipo - nunca cae en la trampa (opcional)…",
+    "phLog": "Canal de registro para informes de baneos (opcional)…"
+  },
+  "deploy": {
+    "title": "## Desplegar MadHoney",
+    "dashHint": "💡 ¿Prefieres botones y una vista previa en vivo? Haz todo esto en el panel: {dash}",
+    "order": "Orden recomendado:",
+    "step1": "1. **Otorgar rol a los miembros actuales** - da a todos los que ya están aquí el rol de verificado",
+    "step2": "2. **Publicar panel de verificación** - el botón + captcha, en tu canal de verificación",
+    "step3": "3. **Publicar banner del honeypot** - la imagen de advertencia (diséñala con `/madhoney banner`)",
+    "step4": "4. **Restringir canales (simulación)** - previsualiza, luego **APLICAR**",
+    "incomplete": "⚠️ Configuración incompleta - ejecuta primero `/madhoney setup`.",
+    "btnGrandfather": "1 Otorgar a miembros actuales",
+    "btnPostVerify": "2 Publicar panel de verificación",
+    "btnPostBanner": "3 Publicar banner del honeypot",
+    "btnGateDry": "4 Restringir (simulación)",
+    "btnGateApply": "4 Restringir APLICAR",
+    "btnRestore": "↩ Restaurar"
+  },
+  "banner": {
+    "preview": "Vista previa del banner - guardada. Ajústala con `/madhoney banner`, o publícala:",
+    "btnPost": "Publicar en el canal honeypot"
   }
 }

@@ -27,7 +27,8 @@
     "denied": "Your appeal to **{guild}** was reviewed and not approved."
   },
   "common": {
-    "broke": "Something broke - try again."
+    "broke": "Something broke - try again.",
+    "notSet": "*not set*"
   },
   "reply": {
     "needManageServer": "You need **Manage Server** to use MadHoney controls.",
@@ -62,5 +63,59 @@
     "approvedReinvited": "✅ **Approved** by {mod} - unbanned and re-invited.",
     "approvedNoInvite": "✅ **Approved** by {mod} - unbanned (couldn't auto-create an invite).",
     "deniedBy": "❌ **Denied** by {mod}."
+  },
+  "setup": {
+    "title": "## MadHoney setup",
+    "dashHint": "💡 **The web dashboard is the easy way to do this.** {dash} is far more powerful and user-friendly than these chat commands - drag-and-drop channel gating, a live banner designer, appeals, and clearer guidance. These commands work too, if you prefer Discord.",
+    "verifiedRole": "**Verified role:** {role} - pick an existing role, or create one first (Server Settings → Roles, e.g. \"Verified\").",
+    "verifyChannel": "**Verify channel:** {channel} - where the Verify button lives. Your **#rules** channel is the classic spot.",
+    "honeypotChannel": "**Honeypot channel:** {channel} - create a decoy channel bots will post in. Name it like a real channel: `general-2`, `general2`, `chat-2`. Anyone who posts there is banned.",
+    "staffRole": "**Staff role (optional):** {role} - members with it are never trapped (admins with **Manage Server** and the owner are always exempt). Set it under **Staff & log**.",
+    "logChannel": "**Log channel (optional):** {channel} - every honeypot ban is reported there with an **Unban** button. Set it under **Staff & log**.",
+    "banSharing": "**Ban sharing:** {mode} (change with `/madhoney banshare`)",
+    "banShared": "shared 🌐",
+    "banIsolated": "isolated 🔒",
+    "honeypotLine": "**Honeypot:** {mode} (`/madhoney honeypot`)",
+    "hpArmed": "🍯 **Armed** - bans on sight",
+    "hpReview": "⏸ **Hold for review** - a mod approves each hit",
+    "hpDisarmed": "⭘ **Disarmed** - the trap is off",
+    "onboarding": "⚠️ If you use Discord **Onboarding**, make sure it does NOT auto-grant the verified role, or the captcha is bypassable.",
+    "accessibility": "♿ Honeypots are visual traps - not recommended for servers serving visually impaired communities. At minimum, name the honeypot in your rules so text-to-speech users hear the warning.",
+    "whenReady": "When all three are set, run **/madhoney deploy**.",
+    "phRole": "Verified role…",
+    "phVerifyCh": "Verify channel (suggest: #rules)…",
+    "phHoneyCh": "Honeypot channel (e.g. #general-2)…",
+    "btnEditVerify": "Edit verify message",
+    "btnStaffLog": "Staff & log",
+    "btnDeploy": "Deploy →",
+    "clash": "❌ Verify and honeypot must be **different** channels.",
+    "statusCounts": "**Bans logged here:** {mine} · **shared pool:** {pool}"
+  },
+  "more": {
+    "title": "## Staff & log",
+    "staffRole": "**Staff role:** {role} - anyone with this role can post in the honeypot without being banned. The owner and anyone with **Manage Server** are always exempt; set this for mods who don't have that permission.",
+    "logChannel": "**Log channel:** {channel} - a staff-only channel; every honeypot ban is reported there with an **Unban** button in case someone trips it by accident.",
+    "phStaff": "Staff role - never trapped (optional)…",
+    "phLog": "Log channel for ban reports (optional)…"
+  },
+  "deploy": {
+    "title": "## Deploy MadHoney",
+    "dashHint": "💡 Prefer buttons and a live preview? Do all of this on the dashboard: {dash}",
+    "order": "Recommended order:",
+    "step1": "1. **Grandfather members** - give everyone already here the verified role",
+    "step2": "2. **Post Verify panel** - the button + captcha, in your verify channel",
+    "step3": "3. **Post honeypot banner** - the warning image (design it with `/madhoney banner`)",
+    "step4": "4. **Gate channels (dry run)** - preview, then **APPLY**",
+    "incomplete": "⚠️ Setup incomplete - run `/madhoney setup` first.",
+    "btnGrandfather": "1 Grandfather members",
+    "btnPostVerify": "2 Post Verify panel",
+    "btnPostBanner": "3 Post honeypot banner",
+    "btnGateDry": "4 Gate (dry run)",
+    "btnGateApply": "4 Gate APPLY",
+    "btnRestore": "↩ Restore"
+  },
+  "banner": {
+    "preview": "Banner preview - saved. Tweak with `/madhoney banner`, or post it:",
+    "btnPost": "Post to honeypot channel"
   }
 }

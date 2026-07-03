@@ -116,40 +116,45 @@ const command = new SlashCommandBuilder()
 
 function setupContent(guild) {
   const cfg = getGuild(guild.id) ?? {};
-  const v = (id) => (id ? `<#${id}>` : '*not set*');
+  const loc = cfg.locale;
+  const ns = t('common.notSet', loc);
+  const v = (id) => (id ? `<#${id}>` : ns);
+  const role = (id) => (id ? `<@&${id}>` : ns);
+  const hp = { armed: t('setup.hpArmed', loc), review: t('setup.hpReview', loc), disarmed: t('setup.hpDisarmed', loc) }[honeypotMode(cfg)];
   return [
-    '## MadHoney setup',
-    `💡 **The web dashboard is the easy way to do this.** ${dashLink(guild.id)} is far more powerful and user-friendly than these chat commands - drag-and-drop channel gating, a live banner designer, appeals, and clearer guidance. These commands work too, if you prefer Discord.`,
+    t('setup.title', loc),
+    t('setup.dashHint', loc, { dash: dashLink(guild.id) }),
     '',
-    `**Verified role:** ${cfg.verifiedRoleId ? `<@&${cfg.verifiedRoleId}>` : '*not set*'} - pick an existing role, or create one first (Server Settings → Roles, e.g. "Verified").`,
-    `**Verify channel:** ${v(cfg.verifyChannelId)} - where the Verify button lives. Your **#rules** channel is the classic spot.`,
-    `**Honeypot channel:** ${v(cfg.honeypotChannelId)} - create a decoy channel bots will post in. Name it like a real channel: \`general-2\`, \`general2\`, \`chat-2\`. Anyone who posts there is banned.`,
-    `**Staff role (optional):** ${cfg.staffRoleId ? `<@&${cfg.staffRoleId}>` : '*not set*'} - members with it are never trapped (admins with **Manage Server** and the owner are always exempt). Set it under **Staff & log**.`,
-    `**Log channel (optional):** ${v(cfg.logChannelId)} - every honeypot ban is reported there with an **Unban** button. Set it under **Staff & log**.`,
-    `**Ban sharing:** ${cfg.banShare ? 'shared 🌐' : 'isolated 🔒'} (change with \`/madhoney banshare\`)`,
-    `**Honeypot:** ${{ armed: '🍯 **Armed** - bans on sight', review: '⏸ **Hold for review** - a mod approves each hit', disarmed: '⭘ **Disarmed** - the trap is off' }[honeypotMode(cfg)]} (\`/madhoney honeypot\`)`,
+    t('setup.verifiedRole', loc, { role: role(cfg.verifiedRoleId) }),
+    t('setup.verifyChannel', loc, { channel: v(cfg.verifyChannelId) }),
+    t('setup.honeypotChannel', loc, { channel: v(cfg.honeypotChannelId) }),
+    t('setup.staffRole', loc, { role: role(cfg.staffRoleId) }),
+    t('setup.logChannel', loc, { channel: v(cfg.logChannelId) }),
+    t('setup.banSharing', loc, { mode: cfg.banShare ? t('setup.banShared', loc) : t('setup.banIsolated', loc) }),
+    t('setup.honeypotLine', loc, { mode: hp }),
     '',
-    '⚠️ If you use Discord **Onboarding**, make sure it does NOT auto-grant the verified role, or the captcha is bypassable.',
-    '♿ Honeypots are visual traps - not recommended for servers serving visually impaired communities. At minimum, name the honeypot in your rules so text-to-speech users hear the warning.',
-    'When all three are set, run **/madhoney deploy**.',
+    t('setup.onboarding', loc),
+    t('setup.accessibility', loc),
+    t('setup.whenReady', loc),
   ].join('\n');
 }
 
 function setupComponents(cfg = {}) {
-  const role = new RoleSelectMenuBuilder().setCustomId('mh_role').setPlaceholder('Verified role…');
+  const loc = cfg.locale;
+  const role = new RoleSelectMenuBuilder().setCustomId('mh_role').setPlaceholder(t('setup.phRole', loc));
   if (cfg.verifiedRoleId) role.setDefaultRoles(cfg.verifiedRoleId);
-  const verifyCh = new ChannelSelectMenuBuilder().setCustomId('mh_verifych').setPlaceholder('Verify channel (suggest: #rules)…').setChannelTypes(ChannelType.GuildText);
+  const verifyCh = new ChannelSelectMenuBuilder().setCustomId('mh_verifych').setPlaceholder(t('setup.phVerifyCh', loc)).setChannelTypes(ChannelType.GuildText);
   if (cfg.verifyChannelId) verifyCh.setDefaultChannels(cfg.verifyChannelId);
-  const honeyCh = new ChannelSelectMenuBuilder().setCustomId('mh_honeych').setPlaceholder('Honeypot channel (e.g. #general-2)…').setChannelTypes(ChannelType.GuildText);
+  const honeyCh = new ChannelSelectMenuBuilder().setCustomId('mh_honeych').setPlaceholder(t('setup.phHoneyCh', loc)).setChannelTypes(ChannelType.GuildText);
   if (cfg.honeypotChannelId) honeyCh.setDefaultChannels(cfg.honeypotChannelId);
   return [
     new ActionRowBuilder().addComponents(role),
     new ActionRowBuilder().addComponents(verifyCh),
     new ActionRowBuilder().addComponents(honeyCh),
     new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('mh_text').setLabel('Edit verify message').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('mh_more').setLabel('Staff & log').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('mh_deploy_open').setLabel('Deploy →').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('mh_text').setLabel(t('setup.btnEditVerify', loc)).setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('mh_more').setLabel(t('setup.btnStaffLog', loc)).setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('mh_deploy_open').setLabel(t('setup.btnDeploy', loc)).setStyle(ButtonStyle.Primary),
     ),
   ];
 }
@@ -158,15 +163,17 @@ function setupComponents(cfg = {}) {
 // message at 5 component rows, so these live behind the "Staff & log" button).
 function morePanel(guild) {
   const cfg = getGuild(guild.id) ?? {};
-  const staff = new RoleSelectMenuBuilder().setCustomId('mh_staffrole').setPlaceholder('Staff role - never trapped (optional)…');
+  const loc = cfg.locale;
+  const ns = t('common.notSet', loc);
+  const staff = new RoleSelectMenuBuilder().setCustomId('mh_staffrole').setPlaceholder(t('more.phStaff', loc));
   if (cfg.staffRoleId) staff.setDefaultRoles(cfg.staffRoleId);
-  const logCh = new ChannelSelectMenuBuilder().setCustomId('mh_logch').setPlaceholder('Log channel for ban reports (optional)…').setChannelTypes(ChannelType.GuildText);
+  const logCh = new ChannelSelectMenuBuilder().setCustomId('mh_logch').setPlaceholder(t('more.phLog', loc)).setChannelTypes(ChannelType.GuildText);
   if (cfg.logChannelId) logCh.setDefaultChannels(cfg.logChannelId);
   return {
     content: [
-      '## Staff & log',
-      `**Staff role:** ${cfg.staffRoleId ? `<@&${cfg.staffRoleId}>` : '*not set*'} - anyone with this role can post in the honeypot without being banned. The owner and anyone with **Manage Server** are always exempt; set this for mods who don't have that permission.`,
-      `**Log channel:** ${cfg.logChannelId ? `<#${cfg.logChannelId}>` : '*not set*'} - a staff-only channel; every honeypot ban is reported there with an **Unban** button in case someone trips it by accident.`,
+      t('more.title', loc),
+      t('more.staffRole', loc, { role: cfg.staffRoleId ? `<@&${cfg.staffRoleId}>` : ns }),
+      t('more.logChannel', loc, { channel: cfg.logChannelId ? `<#${cfg.logChannelId}>` : ns }),
     ].join('\n'),
     components: [new ActionRowBuilder().addComponents(staff), new ActionRowBuilder().addComponents(logCh)],
     ...EPH,
@@ -175,22 +182,20 @@ function morePanel(guild) {
 
 function deployPanel(guild) {
   const cfg = getGuild(guild.id) ?? {};
+  const loc = cfg.locale;
   const ready = cfg.verifiedRoleId && cfg.verifyChannelId && cfg.honeypotChannelId;
   return {
     content: ready
-      ? ['## Deploy MadHoney', `💡 Prefer buttons and a live preview? Do all of this on the dashboard: ${dashLink(guild.id)}`, '', 'Recommended order:',
-        '1. **Grandfather members** - give everyone already here the verified role',
-        '2. **Post Verify panel** - the button + captcha, in your verify channel',
-        '3. **Post honeypot banner** - the warning image (design it with `/madhoney banner`)',
-        '4. **Gate channels (dry run)** - preview, then **APPLY**'].join('\n')
-      : '⚠️ Setup incomplete - run `/madhoney setup` first.',
+      ? [t('deploy.title', loc), t('deploy.dashHint', loc, { dash: dashLink(guild.id) }), '', t('deploy.order', loc),
+        t('deploy.step1', loc), t('deploy.step2', loc), t('deploy.step3', loc), t('deploy.step4', loc)].join('\n')
+      : t('deploy.incomplete', loc),
     components: ready ? [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('mh_grandfather').setLabel('1 Grandfather members').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('mh_post_verify').setLabel('2 Post Verify panel').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('mh_post_banner').setLabel('3 Post honeypot banner').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('mh_gate_dry').setLabel('4 Gate (dry run)').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('mh_gate_apply').setLabel('4 Gate APPLY').setStyle(ButtonStyle.Danger),
-      new ButtonBuilder().setCustomId('mh_ungate').setLabel('↩ Restore').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('mh_grandfather').setLabel(t('deploy.btnGrandfather', loc)).setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('mh_post_verify').setLabel(t('deploy.btnPostVerify', loc)).setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('mh_post_banner').setLabel(t('deploy.btnPostBanner', loc)).setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('mh_gate_dry').setLabel(t('deploy.btnGateDry', loc)).setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('mh_gate_apply').setLabel(t('deploy.btnGateApply', loc)).setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId('mh_ungate').setLabel(t('deploy.btnRestore', loc)).setStyle(ButtonStyle.Secondary),
     )] : [],
     ...EPH,
   };
@@ -310,7 +315,7 @@ client.on(Events.InteractionCreate, async (i) => {
       if (sub === 'status') {
         const cfg = getGuild(i.guildId) ?? {};
         const mine = bans(i.guildId).length;
-        return i.reply({ content: setupContent(i.guild) + `\n\n**Bans logged here:** ${mine} · **shared pool:** ${bans().length}`, ...EPH });
+        return i.reply({ content: setupContent(i.guild) + '\n\n' + t('setup.statusCounts', cfg.locale, { mine, pool: bans().length }), ...EPH });
       }
       if (sub === 'banshare') {
         const shared = i.options.getString('mode') === 'shared';
@@ -357,11 +362,12 @@ client.on(Events.InteractionCreate, async (i) => {
         await i.deferReply(EPH);
         saveGuild(i.guildId, { banner });
         const png = await renderBanner({ ...banner, roleColors: roleColorMap(i.guild) });
+        const bloc = getGuild(i.guildId)?.locale;
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId('mh_post_banner').setLabel('Post to honeypot channel').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId('mh_post_banner').setLabel(t('banner.btnPost', bloc)).setStyle(ButtonStyle.Primary),
         );
         return i.editReply({
-          content: 'Banner preview - saved. Tweak with `/madhoney banner`, or post it:',
+          content: t('banner.preview', bloc),
           files: [new AttachmentBuilder(png, { name: 'banner-preview.png' })], components: [row],
         });
       }
@@ -386,7 +392,7 @@ client.on(Events.InteractionCreate, async (i) => {
       const cfg = getGuild(i.guildId) ?? {};
       const clash = i.values[0] === (key === 'verifyChannelId' ? cfg.honeypotChannelId : cfg.verifyChannelId);
       if (clash) {
-        return i.update({ content: setupContent(i.guild) + '\n\n❌ Verify and honeypot must be **different** channels.', components: setupComponents(cfg) });
+        return i.update({ content: setupContent(i.guild) + '\n\n' + t('setup.clash', cfg.locale), components: setupComponents(cfg) });
       }
       saveGuild(i.guildId, { [key]: i.values[0] });
       return i.update({ content: setupContent(i.guild), components: setupComponents(getGuild(i.guildId)) });
@@ -480,7 +486,7 @@ client.on(Events.InteractionCreate, async (i) => {
     if (i.isButton() && (deployActions[i.customId] || i.customId === 'mh_grandfather')) {
       const cfg = getGuild(i.guildId);
       if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
-        return i.reply({ content: 'Setup incomplete - run `/madhoney setup` first.', ...EPH });
+        return i.reply({ content: t('deploy.incomplete', cfg?.locale), ...EPH });
       }
       await i.deferReply(EPH);
       if (i.customId === 'mh_grandfather') {

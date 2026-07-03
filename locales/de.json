@@ -27,7 +27,8 @@
     "denied": "Dein Einspruch bei **{guild}** wurde geprüft und nicht angenommen."
   },
   "common": {
-    "broke": "Etwas ist schiefgelaufen - versuch es erneut."
+    "broke": "Etwas ist schiefgelaufen - versuch es erneut.",
+    "notSet": "*nicht festgelegt*"
   },
   "reply": {
     "needManageServer": "Du benötigst **Server verwalten**, um die MadHoney-Steuerung zu nutzen.",
@@ -62,5 +63,59 @@
     "approvedReinvited": "✅ **Angenommen** von {mod} - entbannt und erneut eingeladen.",
     "approvedNoInvite": "✅ **Angenommen** von {mod} - entbannt (Einladung konnte nicht automatisch erstellt werden).",
     "deniedBy": "❌ **Abgelehnt** von {mod}."
+  },
+  "setup": {
+    "title": "## MadHoney-Einrichtung",
+    "dashHint": "💡 **Das Web-Dashboard ist der einfache Weg dafür.** {dash} ist weitaus leistungsfähiger und benutzerfreundlicher als diese Chat-Befehle - Kanal-Sperrung per Drag-and-drop, ein Live-Banner-Designer, Einsprüche und klarere Anleitung. Diese Befehle funktionieren aber auch, falls du Discord bevorzugst.",
+    "verifiedRole": "**Verifiziert-Rolle:** {role} - wähle eine bestehende Rolle oder erstelle zuerst eine (Servereinstellungen → Rollen, z. B. \"Verifiziert\").",
+    "verifyChannel": "**Verifizierungs-Kanal:** {channel} - dort befindet sich der Verifizieren-Button. Dein **#rules**-Kanal ist der klassische Ort.",
+    "honeypotChannel": "**Honeypot-Kanal:** {channel} - erstelle einen Köder-Kanal, in dem Bots posten. Benenne ihn wie einen echten Kanal: `general-2`, `general2`, `chat-2`. Wer dort postet, wird gebannt.",
+    "staffRole": "**Team-Rolle (optional):** {role} - Mitglieder mit ihr tappen nie in die Falle (Admins mit **Server verwalten** und der Inhaber sind immer ausgenommen). Lege sie unter **Team & Log** fest.",
+    "logChannel": "**Log-Kanal (optional):** {channel} - jeder Honeypot-Bann wird dort mit einem **Entbannen**-Button gemeldet. Lege ihn unter **Team & Log** fest.",
+    "banSharing": "**Bann-Teilung:** {mode} (ändern mit `/madhoney banshare`)",
+    "banShared": "geteilt 🌐",
+    "banIsolated": "isoliert 🔒",
+    "honeypotLine": "**Honeypot:** {mode} (`/madhoney honeypot`)",
+    "hpArmed": "🍯 **Scharf** - bannt sofort",
+    "hpReview": "⏸ **Zur Prüfung zurückhalten** - ein Mod genehmigt jeden Treffer",
+    "hpDisarmed": "⭘ **Entschärft** - die Falle ist aus",
+    "onboarding": "⚠️ Wenn du das Discord-**Onboarding** nutzt, stelle sicher, dass es die Verifiziert-Rolle NICHT automatisch vergibt, sonst lässt sich das Captcha umgehen.",
+    "accessibility": "♿ Honeypots sind visuelle Fallen - nicht empfohlen für Server, die sehbehinderte Communitys betreuen. Benenne den Honeypot zumindest in deinen Regeln, damit Nutzer von Text-to-Speech die Warnung hören.",
+    "whenReady": "Wenn alle drei festgelegt sind, führe **/madhoney deploy** aus.",
+    "phRole": "Verifiziert-Rolle…",
+    "phVerifyCh": "Verifizierungs-Kanal (Vorschlag: #rules)…",
+    "phHoneyCh": "Honeypot-Kanal (z. B. #general-2)…",
+    "btnEditVerify": "Verifizierungs-Nachricht bearbeiten",
+    "btnStaffLog": "Team & Log",
+    "btnDeploy": "Bereitstellen →",
+    "clash": "❌ Verifizierungs- und Honeypot-Kanal müssen **unterschiedlich** sein.",
+    "statusCounts": "**Hier protokollierte Banns:** {mine} · **geteilter Pool:** {pool}"
+  },
+  "more": {
+    "title": "## Team & Log",
+    "staffRole": "**Team-Rolle:** {role} - wer diese Rolle hat, kann im Honeypot posten, ohne gebannt zu werden. Der Inhaber und alle mit **Server verwalten** sind immer ausgenommen; lege das für Mods fest, die diese Berechtigung nicht haben.",
+    "logChannel": "**Log-Kanal:** {channel} - ein nur für das Team zugänglicher Kanal; jeder Honeypot-Bann wird dort mit einem **Entbannen**-Button gemeldet, falls jemand versehentlich hineintappt.",
+    "phStaff": "Team-Rolle - nie in der Falle (optional)…",
+    "phLog": "Log-Kanal für Bann-Meldungen (optional)…"
+  },
+  "deploy": {
+    "title": "## MadHoney bereitstellen",
+    "dashHint": "💡 Lieber Buttons und eine Live-Vorschau? Erledige das alles im Dashboard: {dash}",
+    "order": "Empfohlene Reihenfolge:",
+    "step1": "1. **Bestandsmitglieder freischalten** - gib allen, die schon hier sind, die Verifiziert-Rolle",
+    "step2": "2. **Verifizierungs-Panel posten** - der Button + Captcha, in deinem Verifizierungs-Kanal",
+    "step3": "3. **Honeypot-Banner posten** - das Warnbild (gestalte es mit `/madhoney banner`)",
+    "step4": "4. **Kanäle sperren (Probelauf)** - Vorschau, dann **ANWENDEN**",
+    "incomplete": "⚠️ Einrichtung unvollständig - führe zuerst `/madhoney setup` aus.",
+    "btnGrandfather": "1 Bestand freischalten",
+    "btnPostVerify": "2 Verifizierungs-Panel posten",
+    "btnPostBanner": "3 Honeypot-Banner posten",
+    "btnGateDry": "4 Sperren (Probelauf)",
+    "btnGateApply": "4 Sperren ANWENDEN",
+    "btnRestore": "↩ Wiederherstellen"
+  },
+  "banner": {
+    "preview": "Banner-Vorschau - gespeichert. Anpassen mit `/madhoney banner`, oder poste es:",
+    "btnPost": "In Honeypot-Kanal posten"
   }
 }

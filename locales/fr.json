@@ -27,7 +27,8 @@
     "denied": "Ton appel auprès de **{guild}** a été examiné et refusé."
   },
   "common": {
-    "broke": "Une erreur est survenue - réessaie."
+    "broke": "Une erreur est survenue - réessaie.",
+    "notSet": "*non défini*"
   },
   "reply": {
     "needManageServer": "Tu as besoin de la permission **Gérer le serveur** pour utiliser les commandes de MadHoney.",
@@ -62,5 +63,59 @@
     "approvedReinvited": "✅ **Approuvé** par {mod} - débanni et réinvité.",
     "approvedNoInvite": "✅ **Approuvé** par {mod} - débanni (impossible de créer automatiquement une invitation).",
     "deniedBy": "❌ **Refusé** par {mod}."
+  },
+  "setup": {
+    "title": "## Configuration de MadHoney",
+    "dashHint": "💡 **Le tableau de bord web est la façon la plus simple de faire tout ça.** {dash} est bien plus puissant et convivial que ces commandes de chat - filtrage des salons par glisser-déposer, un concepteur de bannière en direct, les appels et des explications plus claires. Ces commandes fonctionnent aussi, si tu préfères Discord.",
+    "verifiedRole": "**Rôle vérifié :** {role} - choisis un rôle existant, ou crées-en un d'abord (Paramètres du serveur → Rôles, par ex. « Vérifié »).",
+    "verifyChannel": "**Salon de vérification :** {channel} - là où se trouve le bouton Vérifier. Ton salon **#rules** est l'emplacement classique.",
+    "honeypotChannel": "**Salon honeypot :** {channel} - crée un salon leurre où les bots publieront. Nomme-le comme un vrai salon : `general-2`, `general2`, `chat-2`. Quiconque y publie est banni.",
+    "staffRole": "**Rôle d'équipe (facultatif) :** {role} - les membres qui l'ont ne sont jamais piégés (les admins ayant **Gérer le serveur** et le propriétaire sont toujours exemptés). Définis-le sous **Équipe & journal**.",
+    "logChannel": "**Salon de journal (facultatif) :** {channel} - chaque bannissement par honeypot y est signalé avec un bouton **Débannir**. Définis-le sous **Équipe & journal**.",
+    "banSharing": "**Partage des bannissements :** {mode} (modifier avec `/madhoney banshare`)",
+    "banShared": "partagé 🌐",
+    "banIsolated": "isolé 🔒",
+    "honeypotLine": "**Honeypot :** {mode} (`/madhoney honeypot`)",
+    "hpArmed": "🍯 **Armé** - bannit à vue",
+    "hpReview": "⏸ **En attente de révision** - un modérateur approuve chaque capture",
+    "hpDisarmed": "⭘ **Désarmé** - le piège est désactivé",
+    "onboarding": "⚠️ Si tu utilises l'**Intégration** de Discord, assure-toi qu'elle n'attribue PAS automatiquement le rôle vérifié, sinon le captcha peut être contourné.",
+    "accessibility": "♿ Les honeypots sont des pièges visuels - déconseillés pour les serveurs desservant des communautés de personnes malvoyantes. Au minimum, mentionne le honeypot dans ton règlement afin que les utilisateurs de la synthèse vocale entendent l'avertissement.",
+    "whenReady": "Une fois les trois définis, lance **/madhoney deploy**.",
+    "phRole": "Rôle vérifié…",
+    "phVerifyCh": "Salon de vérification (suggestion : #rules)…",
+    "phHoneyCh": "Salon honeypot (par ex. #general-2)…",
+    "btnEditVerify": "Modifier le message de vérification",
+    "btnStaffLog": "Équipe & journal",
+    "btnDeploy": "Déployer →",
+    "clash": "❌ Les salons de vérification et honeypot doivent être **différents**.",
+    "statusCounts": "**Bannissements enregistrés ici :** {mine} · **liste partagée :** {pool}"
+  },
+  "more": {
+    "title": "## Équipe & journal",
+    "staffRole": "**Rôle d'équipe :** {role} - toute personne ayant ce rôle peut publier dans le honeypot sans être bannie. Le propriétaire et toute personne ayant **Gérer le serveur** sont toujours exemptés ; définis ceci pour les modérateurs qui n'ont pas cette permission.",
+    "logChannel": "**Salon de journal :** {channel} - un salon réservé à l'équipe ; chaque bannissement par honeypot y est signalé avec un bouton **Débannir** au cas où quelqu'un déclencherait le piège par accident.",
+    "phStaff": "Rôle d'équipe - jamais piégé (facultatif)…",
+    "phLog": "Salon de journal pour les rapports de bannissement (facultatif)…"
+  },
+  "deploy": {
+    "title": "## Déployer MadHoney",
+    "dashHint": "💡 Tu préfères des boutons et un aperçu en direct ? Fais tout ça sur le tableau de bord : {dash}",
+    "order": "Ordre recommandé :",
+    "step1": "1. **Attribuer le rôle aux membres existants** - donner à toutes les personnes déjà présentes le rôle vérifié",
+    "step2": "2. **Publier le panneau de vérification** - le bouton + le captcha, dans ton salon de vérification",
+    "step3": "3. **Publier la bannière du honeypot** - l'image d'avertissement (conçois-la avec `/madhoney banner`)",
+    "step4": "4. **Filtrer les salons (test à blanc)** - aperçu, puis **APPLIQUER**",
+    "incomplete": "⚠️ Configuration incomplète - lance d'abord `/madhoney setup`.",
+    "btnGrandfather": "1 Membres existants",
+    "btnPostVerify": "2 Publier le panneau de vérification",
+    "btnPostBanner": "3 Publier la bannière du honeypot",
+    "btnGateDry": "4 Filtrer (test à blanc)",
+    "btnGateApply": "4 Filtrer APPLIQUER",
+    "btnRestore": "↩ Restaurer"
+  },
+  "banner": {
+    "preview": "Aperçu de la bannière - enregistré. Ajuste-la avec `/madhoney banner`, ou publie-la :",
+    "btnPost": "Publier dans le salon honeypot"
   }
 }

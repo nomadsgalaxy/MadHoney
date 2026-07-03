@@ -27,7 +27,8 @@
     "denied": "Din överklagan till **{guild}** granskades och godkändes inte."
   },
   "common": {
-    "broke": "Något gick fel - försök igen."
+    "broke": "Något gick fel - försök igen.",
+    "notSet": "*ej inställd*"
   },
   "reply": {
     "needManageServer": "Du behöver **Hantera server** för att använda MadHoney-kontrollerna.",
@@ -62,5 +63,59 @@
     "approvedReinvited": "✅ **Godkänd** av {mod} - avbannad och inbjuden igen.",
     "approvedNoInvite": "✅ **Godkänd** av {mod} - avbannad (kunde inte skapa en inbjudan automatiskt).",
     "deniedBy": "❌ **Nekad** av {mod}."
+  },
+  "setup": {
+    "title": "## MadHoney-inställningar",
+    "dashHint": "💡 **Webbpanelen är det enkla sättet att göra detta.** {dash} är betydligt kraftfullare och mer användarvänlig än dessa chattkommandon - kanalspärr med dra-och-släpp, en live-bannerdesigner, överklaganden och tydligare vägledning. De här kommandona fungerar också, om du föredrar Discord.",
+    "verifiedRole": "**Verifierad roll:** {role} - välj en befintlig roll, eller skapa en först (Serverinställningar → Roller, t.ex. \"Verifierad\").",
+    "verifyChannel": "**Verifieringskanal:** {channel} - där Verifiera-knappen finns. Din **#rules**-kanal är den klassiska platsen.",
+    "honeypotChannel": "**Honeypot-kanal:** {channel} - skapa en lockkanal som bottar postar i. Namnge den som en riktig kanal: `general-2`, `general2`, `chat-2`. Alla som postar där bannas.",
+    "staffRole": "**Personalroll (valfritt):** {role} - medlemmar med den fastnar aldrig (administratörer med **Hantera server** och ägaren är alltid undantagna). Ställ in den under **Personal & logg**.",
+    "logChannel": "**Loggkanal (valfritt):** {channel} - varje honeypot-banning rapporteras där med en **Avbanna**-knapp. Ställ in den under **Personal & logg**.",
+    "banSharing": "**Bandelning:** {mode} (ändra med `/madhoney banshare`)",
+    "banShared": "delad 🌐",
+    "banIsolated": "isolerad 🔒",
+    "honeypotLine": "**Honeypot:** {mode} (`/madhoney honeypot`)",
+    "hpArmed": "🍯 **Aktiverad** - bannar direkt",
+    "hpReview": "⏸ **Håll för granskning** - en moderator godkänner varje träff",
+    "hpDisarmed": "⭘ **Avaktiverad** - fällan är av",
+    "onboarding": "⚠️ Om du använder Discords **Onboarding**, se till att den INTE automatiskt tilldelar den verifierade rollen, annars går det att kringgå captchan.",
+    "accessibility": "♿ Honeypots är visuella fällor - rekommenderas inte för servrar som riktar sig till synskadade grupper. Namnge åtminstone honeypotten i dina regler så att användare av text-till-tal hör varningen.",
+    "whenReady": "När alla tre är inställda, kör **/madhoney deploy**.",
+    "phRole": "Verifierad roll…",
+    "phVerifyCh": "Verifieringskanal (förslag: #rules)…",
+    "phHoneyCh": "Honeypot-kanal (t.ex. #general-2)…",
+    "btnEditVerify": "Redigera verifieringsmeddelande",
+    "btnStaffLog": "Personal & logg",
+    "btnDeploy": "Driftsätt →",
+    "clash": "❌ Verifierings- och honeypot-kanalerna måste vara **olika** kanaler.",
+    "statusCounts": "**Banningar loggade här:** {mine} · **delad pool:** {pool}"
+  },
+  "more": {
+    "title": "## Personal & logg",
+    "staffRole": "**Personalroll:** {role} - alla med den här rollen kan posta i honeypotten utan att bannas. Ägaren och alla med **Hantera server** är alltid undantagna; ställ in detta för moderatorer som inte har den behörigheten.",
+    "logChannel": "**Loggkanal:** {channel} - en kanal endast för personal; varje honeypot-banning rapporteras där med en **Avbanna**-knapp ifall någon råkar utlösa den av misstag.",
+    "phStaff": "Personalroll - fastnar aldrig (valfritt)…",
+    "phLog": "Loggkanal för banningrapporter (valfritt)…"
+  },
+  "deploy": {
+    "title": "## Driftsätt MadHoney",
+    "dashHint": "💡 Föredrar du knappar och en live-förhandsvisning? Gör allt detta på panelen: {dash}",
+    "order": "Rekommenderad ordning:",
+    "step1": "1. **Ge befintliga medlemmar rollen** - ge alla som redan finns här den verifierade rollen",
+    "step2": "2. **Posta verifieringspanelen** - knappen + captcha, i din verifieringskanal",
+    "step3": "3. **Posta honeypot-bannern** - varningsbilden (designa den med `/madhoney banner`)",
+    "step4": "4. **Spärra kanaler (testkörning)** - förhandsvisa, tryck sedan på **VERKSTÄLL**",
+    "incomplete": "⚠️ Inställningarna är ofullständiga - kör `/madhoney setup` först.",
+    "btnGrandfather": "1 Ge befintliga rollen",
+    "btnPostVerify": "2 Posta verifieringspanel",
+    "btnPostBanner": "3 Posta honeypot-banner",
+    "btnGateDry": "4 Spärra (testkörning)",
+    "btnGateApply": "4 Spärra VERKSTÄLL",
+    "btnRestore": "↩ Återställ"
+  },
+  "banner": {
+    "preview": "Bannerförhandsvisning - sparad. Justera med `/madhoney banner`, eller posta den:",
+    "btnPost": "Posta till honeypot-kanalen"
   }
 }
