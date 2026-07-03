@@ -5,7 +5,7 @@
 // only if this ever serves more than a handful of admins.
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans, trappedCount } from './store.js';
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
@@ -20,6 +20,15 @@ const WEEK = 7 * 24 * 3600 * 1000;
 const sessions = new Map(); // sid -> { user, guilds, at }
 const gfJobs = new Map(); // guildId -> live grandfather progress {total, done, added, skipped, failed, finished, result, at}
 const LANDING = readFileSync(new URL('./landing.html', import.meta.url), 'utf8');
+
+// Persist login sessions across restarts so deploying the bot doesn't log
+// everyone out. Stores only profile + guild list (no OAuth tokens).
+// ponytail: plain gitignored JSON file, fine at this scale.
+const SESS_FILE = new URL('./sessions.json', import.meta.url);
+if (existsSync(SESS_FILE)) {
+  try { for (const [k, v] of Object.entries(JSON.parse(readFileSync(SESS_FILE, 'utf8')))) sessions.set(k, v); } catch { /* corrupt file, start fresh */ }
+}
+const persistSessions = () => { try { writeFileSync(SESS_FILE, JSON.stringify(Object.fromEntries(sessions))); } catch { /* best effort */ } };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -527,10 +536,12 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
         const sid = randomBytes(24).toString('hex');
         sessions.set(sid, { user, guilds: Array.isArray(guilds) ? guilds : [], at: Date.now() });
         for (const [k, v] of sessions) if (Date.now() - v.at > WEEK) sessions.delete(k); // prune
+        persistSessions();
         return redirect('/', { 'set-cookie': `sid=${sid}; HttpOnly; Path=/; Max-Age=604800; SameSite=Lax${PUBLIC_URL.startsWith('https') ? '; Secure' : ''}` });
       }
       if (url.pathname === '/logout') {
         sessions.delete(cookies(req).sid);
+        persistSessions();
         return redirect('/', { 'set-cookie': 'sid=; Path=/; Max-Age=0' });
       }
 

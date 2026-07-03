@@ -3,3 +3,4 @@ node_modules/
 guilds.json
 bans.jsonl
 bot.log
+sessions.json
