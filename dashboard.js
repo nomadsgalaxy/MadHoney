@@ -8,7 +8,7 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 import { getGuild, saveGuild, bans, trappedCount } from './store.js';
-import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
 
@@ -148,6 +148,18 @@ function layout(title, body, opts = {}) {
   .chip2 .ctag{font-size:.62rem;letter-spacing:.04em;color:var(--dim);text-transform:uppercase;flex:0 1 auto;min-width:0;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .info{display:flex;gap:.6rem;align-items:flex-start;padding:.3rem .5rem;color:var(--dim);flex-wrap:wrap}
   .tscroll{overflow-x:auto}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.86em;background:#0f1216;border:1px solid var(--line);border-radius:5px;padding:.05em .35em;color:var(--honey)}
+  details.guide{border-color:rgba(255,179,26,.35)}
+  details.guide summary{cursor:pointer;list-style:none;font-size:1rem;display:flex;align-items:center;gap:.5rem}
+  details.guide summary::-webkit-details-marker{display:none}
+  details.guide summary::before{content:"▸";color:var(--honey);transition:transform .15s;display:inline-block}
+  details.guide[open] summary::before{transform:rotate(90deg)}
+  details.guide summary b{font-family:"Bricolage Grotesque",sans-serif;font-size:1.05rem}
+  details.guide .gb{margin-top:.9rem;color:var(--dim);font-size:.93rem}
+  details.guide .gb ol{padding-left:1.2rem;margin:.5rem 0}
+  details.guide .gb li{margin:.45rem 0}
+  details.guide .gb b{color:var(--ink)}
+  details.guide .tip{background:#0f1216;border:1px solid var(--line);border-radius:8px;padding:.55rem .8rem;margin:.55rem 0;line-height:1.5}
   img.banner{max-width:100%;border-radius:8px;border:1px solid var(--line)}
   footer.f{margin-top:2rem;color:var(--dim);font-size:.85rem;border-top:1px solid var(--line);padding-top:1rem}
 </style>
@@ -241,6 +253,22 @@ export function startDashboard(client) {
 <div class="chips">${chips}</div>
 ${problem ? `<div class="card" style="border-color:#d64545"><b style="color:#ff5b4d">⚠️ Setup problem</b><pre style="margin-top:.5rem">${esc(problem)}</pre></div>` : ''}
 ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
+<details class="card guide" ${configured ? '' : 'open'}>
+<summary><b>📋 Best practices &amp; setup guide</b></summary>
+<div class="gb">
+<p>MadHoney hides your server behind a verified role and leaves one decoy channel open for spam bots. Set it up in this order:</p>
+<ol>
+<li><b>Verified role first.</b> Create a role (e.g. "Verified") in Server Settings → Roles, then drag the <b>MadHoney</b> role ABOVE it. If MadHoney's role sits below the verified role, gating and grandfathering fail with a permission error - this is the single most common mistake.</li>
+<li><b>Configure below.</b> Pick the verified role, your verify channel (usually <code>#rules</code>), and a honeypot channel. Optionally add a staff role and a log channel.</li>
+<li><b>Grandfather members.</b> Run this first so everyone already in the server gets the verified role and nobody is locked out when you gate.</li>
+<li><b>Post the Verify panel and honeypot banner.</b></li>
+<li><b>Gate channels.</b> Open the drag board, review what MadHoney detected, move anything it misjudged, then apply. Nothing changes until you hit Apply.</li>
+</ol>
+<div class="tip"><b>🍯 Naming the honeypot:</b> name it like a real channel so bots post in it. Good: <code>general-2</code>, <code>chat-2</code>, <code>off-topic-2</code>. Bad: <code>honeypot</code>, <code>do-not-post</code> (some spam tools skip those).</div>
+<div class="tip"><b>⚠️ Discord Onboarding:</b> if you use it, make sure it does NOT auto-grant the verified role, or the captcha can be skipped.</div>
+<div class="tip"><b>🔒 Getting a permission error?</b> It's almost always the MadHoney role sitting below your verified role, or missing Manage Roles / Manage Channels. Re-invite MadHoney with <b>＋ Add server</b> in the top bar, then drag its role to the top of your staff roles.</div>
+</div>
+</details>
 <div class="card" id="config"><h2>Configuration</h2>${msgAt('config')}
 <form method="post" action="/g/${guild.id}/save#config">
   <div class="subh first">Core setup</div>
@@ -624,7 +652,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
             gfJobs.set(guild.id, progress);
             slowJobs[form.get('do')](guild, getGuild(guild.id), progress)
               .then((r) => Object.assign(progress, { finished: true, result: r, at: Date.now() }))
-              .catch((e) => Object.assign(progress, { finished: true, result: `❌ ${e.message}`, at: Date.now() }));
+              .catch((e) => Object.assign(progress, { finished: true, result: `❌ ${explainError(e.message)}`, at: Date.now() }));
             return html(await guildPage(guild, sess, '', 'actions'));
           }
           const acts = {
@@ -634,7 +662,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
           };
           const act = acts[form.get('do')];
           if (!act) return html(await guildPage(guild, sess, 'Unknown action.', 'actions'), 400);
-          const result = await act().catch((e) => `❌ ${e.message}`);
+          const result = await act().catch((e) => `❌ ${explainError(e.message)}`);
           return html(await guildPage(guild, sess, result, 'actions'));
         }
         if (m[2] === '/gate') {
@@ -645,7 +673,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
               saveGuild(guild.id, { channelTreatment: {} });
               return html(await gatePage(guild, sess, 'Cleared manual moves - channels are back to auto-detected placement.'));
             }
-            const result = await gateChannels(guild, cfg, true, { gate: form.getAll('gate'), public: form.getAll('public') }).catch((e) => `❌ ${e.message}`);
+            const result = await gateChannels(guild, cfg, true, { gate: form.getAll('gate'), public: form.getAll('public') }).catch((e) => `❌ ${explainError(e.message)}`);
             return html(await gatePage(guild, sess, result));
           }
           return html(await gatePage(guild, sess));

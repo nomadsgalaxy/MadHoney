@@ -13,7 +13,7 @@ import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 import { getGuild, saveGuild, logBan, bans, bannedElsewhere } from './store.js';
-import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, ungateChannels, grandfather, syncBans, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, ungateChannels, grandfather, syncBans, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { startDashboard } from './dashboard.js';
 
 const EPH = { flags: MessageFlags.Ephemeral };
@@ -206,7 +206,7 @@ client.on(Events.InteractionCreate, async (i) => {
       if (sub === 'bansync') {
         await i.deferReply(EPH);
         const progress = {};
-        const job = syncBans(i.guild, getGuild(i.guildId) ?? {}, progress).catch((e) => `❌ ${e.message}`);
+        const job = syncBans(i.guild, getGuild(i.guildId) ?? {}, progress).catch((e) => `❌ ${explainError(e.message)}`);
         const ticker = setInterval(() => {
           if (progress.total !== undefined) {
             i.editReply({ content: `⏳ Ban sync… ${progress.done}/${progress.total} · ${progress.added} banned · ${progress.skipped} skipped` }).catch(() => {});
@@ -316,7 +316,7 @@ client.on(Events.InteractionCreate, async (i) => {
       if (i.customId === 'mh_grandfather') {
         // one API call per member - stream progress into the ephemeral reply
         const progress = {};
-        const job = grandfather(i.guild, cfg, progress).catch((e) => `❌ ${e.message}`);
+        const job = grandfather(i.guild, cfg, progress).catch((e) => `❌ ${explainError(e.message)}`);
         const ticker = setInterval(() => {
           if (progress.total) {
             i.editReply({
@@ -328,7 +328,7 @@ client.on(Events.InteractionCreate, async (i) => {
         clearInterval(ticker);
         return i.editReply({ content: result.slice(0, 1900) });
       }
-      const result = await deployActions[i.customId](i.guild, cfg).catch((e) => `❌ ${e.message}`);
+      const result = await deployActions[i.customId](i.guild, cfg).catch((e) => `❌ ${explainError(e.message)}`);
       return i.editReply({ content: result.slice(0, 1900) });
     }
   } catch (err) {

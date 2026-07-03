@@ -285,6 +285,22 @@ export async function ungateChannels(guild, cfg) {
 // Grandfather: add the verified role to every existing non-bot member so the
 // gate doesn't lock out people who were already in the server.
 // Needs the privileged Server Members intent.
+// Turn a raw Discord API error into plain, step-by-step guidance. Most setup
+// failures are one of two permission problems; spell out the exact fix.
+export function explainError(msg) {
+  const m = String(msg ?? '');
+  if (/Missing Permissions|\b50013\b/i.test(m)) {
+    return `${m}\n\nWhat this means: Discord blocked the change because of MadHoney's permissions. Fix it in Server Settings → Roles:\n` +
+      `  1. Drag the MadHoney role ABOVE your verified role (a bot can't touch roles or channels above its own). This is the #1 cause of this error.\n` +
+      `  2. Make sure the MadHoney role still has Manage Roles, Manage Channels and Ban Members. The quickest fix is to re-invite MadHoney with the "Add server" button in the top bar, which re-grants everything.\n` +
+      `Then run the action again.`;
+  }
+  if (/Missing Access|\b50001\b/i.test(m)) {
+    return `${m}\n\nWhat this means: MadHoney can't see one or more channels, so it can't change them. Either grant the MadHoney role "View Channel" on those channels, or temporarily give MadHoney the Administrator permission (Server Settings → Roles), run the action, then remove it.`;
+  }
+  return m;
+}
+
 // Can the bot actually grant the verified role here? Returns null when
 // everything checks out, or a human-readable problem with the exact fix.
 export async function preflight(guild, cfg) {
