@@ -38,7 +38,7 @@ const command = new SlashCommandBuilder()
   .addSubcommand((s) => s.setName('status').setDescription('Show current MadHoney config and ban count'))
   .addSubcommand((s) => s
     .setName('banner').setDescription('Design the honeypot warning banner')
-    .addStringOption((o) => o.setName('title').setDescription('Headline (default: DO NOT POST IN THIS CHANNEL)'))
+    .addStringOption((o) => o.setName('title').setDescription('Headline (default: HONEYPOT IS ACTIVE)'))
     .addStringOption((o) => o.setName('text').setDescription('Body text'))
     .addStringOption((o) => o.setName('accent').setDescription('Stripe/title color, hex (default #ffb31a)'))
     .addStringOption((o) => o.setName('color').setDescription('Body text color, hex (default #e9ecf1)'))

@@ -8,7 +8,7 @@ import { saveGuild } from './store.js';
 // Bump this whenever a code change alters what the posted Verify panel or
 // honeypot banner looks like. On the next boot, every configured server's
 // posted messages are refreshed automatically (see bot.js ClientReady).
-export const ASSETS_VERSION = 1;
+export const ASSETS_VERSION = 2; // v2: "protected by" credit line on the banner
 
 export const DEFAULT_VERIFY_TEXT =
   '**Verify & Agree to the Rules**\nClick **Verify** and type the code from the image. ' +

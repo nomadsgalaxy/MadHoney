@@ -12,7 +12,7 @@ export const FONTS = ['sans-serif', 'serif', 'monospace', 'DejaVu Sans', 'Libera
 const BUNDLED_LOGO = fileURLToPath(new URL('./logo.png', import.meta.url));
 
 export const DEFAULT_BANNER = {
-  title: 'DO NOT POST IN THIS CHANNEL',
+  title: 'HONEYPOT IS ACTIVE',
   text: 'This channel is a trap for spam bots. Anything posted here triggers an instant, automated ban. Real humans: verify in #rules and back away slowly.',
   color: '#e9ecf1',   // body text
   accent: '#ffb31a',  // hazard stripes + title
@@ -21,6 +21,7 @@ export const DEFAULT_BANNER = {
   logoUrl: '',        // '' -> bundled MadHoney logo, 'none' -> no logo
   mentionColor: '#5865f2', // #channel / @role highlight (Discord blurple)
   mentionMode: 'custom',   // 'custom' -> mentionColor for all; 'role' -> real role colors via opts.roleColors
+  credit: 'protected by https://madhoney.nomadsgalaxy.com', // small footer line
 };
 
 // A word is a "mention" if it starts with # or @ (like #rules or @Staff).
@@ -79,7 +80,8 @@ export async function renderBanner(opts = {}) {
   const titleLines = wrap(measure, o.title, textWidth);
 
   const contentH = titleLines.length * 54 + 16 + bodyLines.length * 36;
-  const H = Math.max(STRIPE * 2 + PAD * 2 + contentH, logo ? STRIPE * 2 + PAD * 2 + logoW : 0, 280);
+  const creditH = o.credit ? 26 : 0;
+  const H = Math.max(STRIPE * 2 + PAD * 2 + contentH + creditH, logo ? STRIPE * 2 + PAD * 2 + logoW : 0, 280);
 
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
@@ -129,6 +131,14 @@ export async function renderBanner(opts = {}) {
   y += 16;
   ctx.font = `26px ${o.font}`;
   for (const line of bodyLines) { drawLine(line, y, o.color, 26); y += 36; }
+
+  if (o.credit) {
+    ctx.font = `14px ${o.font}`;
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = o.color;
+    ctx.fillText(o.credit, W - PAD - ctx.measureText(o.credit).width, H - STRIPE - 10);
+    ctx.globalAlpha = 1;
+  }
 
   return canvas.toBuffer('image/png');
 }
