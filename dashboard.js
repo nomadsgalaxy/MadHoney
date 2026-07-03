@@ -572,11 +572,19 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
       ? `<text x="${xAt(i).toFixed(1)}" y="${H - 8}" class="xtick">${s.d.slice(5)}</text>` : '').join('');
     const dots = series.map((s, i) => JSON.stringify({ x: +xAt(i).toFixed(1), y: +yAt(s.c).toFixed(1), d: s.d, c: s.c }));
 
-    const mine = sess ? sess.guilds
-      .filter((g) => client.guilds.cache.has(g.id))
-      .map((g) => ({ name: g.name, n: trappedCount(bans(g.id)), armed: !!getGuild(g.id)?.honeypotChannelId }))
-      .filter((g) => sess.guilds.length)
-      .sort((a, z) => z.n - a.n) : [];
+    // Per-server breakdown: ONLY servers the viewer actually staffs/moderates
+    // (owner / Manage Server / staff role / dashboard-admin role). Public
+    // visitors get the fleet aggregate above and no server names at all.
+    const mine = [];
+    if (sess) {
+      for (const g of sess.guilds) {
+        if (!client.guilds.cache.has(g.id)) continue;
+        if (await canManage(sess, g.id)) {
+          mine.push({ name: g.name, n: trappedCount(bans(g.id)), armed: !!getGuild(g.id)?.honeypotChannelId });
+        }
+      }
+      mine.sort((a, z) => z.n - a.n);
+    }
 
     return layout('MadHoney - Statistics', `
 <style>
@@ -618,10 +626,10 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
 </div>
 <small style="color:var(--dim)">Each catch is one honeypot ban event across the network. Deduplicated unique spammers are shown in the tile above.</small>
 </div>
-${sess && mine.length ? `<div class="card"><h2>Your servers</h2>
-<table class="btable"><tr><td class="k">Server</td><td class="k">Status</td><td class="k">Trapped</td></tr>
-${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? '<span class="badge un">armed</span>' : '<span class="k">setup</span>'}</td><td>${g.n}</td></tr>`).join('')}
-</table></div>` : ''}
+${mine.length ? `<div class="card"><h2>Your servers <span class="count">${mine.length} you manage</span></h2>
+<div class="tscroll"><table class="btable"><tr><td class="k">Server</td><td class="k">Status</td><td class="k">Trapped</td></tr>
+${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? '<span class="badge un">armed</span>' : '<span class="k">needs setup</span>'}</td><td>${g.n}</td></tr>`).join('')}
+</table></div><small style="color:var(--dim)">Only shown to you - the servers you own, have Manage Server in, or hold a staff/admin role in.</small></div>` : ''}
 <script>
 (() => {
   const pts = [${dots.join(',')}];
