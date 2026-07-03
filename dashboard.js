@@ -568,7 +568,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">⚠️ Can't access $
     const area = `M${xAt(0).toFixed(1)},${(padT + plotH).toFixed(1)} ${line.replace(/^M/, 'L')} L${xAt(n - 1).toFixed(1)},${(padT + plotH).toFixed(1)} Z`;
     const yTicks = [0, 0.5, 1].map((f) => Math.round(max * f));
     const grid = yTicks.map((v) => `<line x1="${padL}" x2="${W - padR}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}" class="grid"/><text x="${padL - 6}" y="${(yAt(v) + 4).toFixed(1)}" class="ytick">${v}</text>`).join('');
-    const xLabels = series.map((s, i) => (i % 7 === 0 || i === n - 1)
+    const xLabels = series.map((s, i) => ((i % 7 === 0 && i < n - 3) || i === n - 1)
       ? `<text x="${xAt(i).toFixed(1)}" y="${H - 8}" class="xtick">${s.d.slice(5)}</text>` : '').join('');
     const dots = series.map((s, i) => JSON.stringify({ x: +xAt(i).toFixed(1), y: +yAt(s.c).toFixed(1), d: s.d, c: s.c }));
 
