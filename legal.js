@@ -6,7 +6,7 @@ export const TERMS = `
 <h1><img src="/logo.svg?v=3" alt="">Terms of <span>Service</span></h1>
 <p><a href="/">← home</a></p>
 <div class="card">
-<p><small>Effective 2026-07-02. MadHoney is operated by Nomads Galaxy ("we").
+<p><small>Effective 2026-07-02. MadHoney is operated by <a href="https://nomadsgalaxy.com" target="_blank" rel="noopener">Nomads Galaxy</a> ("we").
 "The service" means the hosted MadHoney Discord bot and the dashboard at
 madhoney.nomadsgalaxy.com.</small></p>
 
@@ -66,7 +66,7 @@ export const PRIVACY = `
 <p><a href="/">← home</a></p>
 <div class="card">
 <p><small>Effective 2026-07-02. This covers the hosted MadHoney bot and the
-dashboard at madhoney.nomadsgalaxy.com, operated by Nomads Galaxy.</small></p>
+dashboard at madhoney.nomadsgalaxy.com, operated by <a href="https://nomadsgalaxy.com" target="_blank" rel="noopener">Nomads Galaxy</a>.</small></p>
 
 <h2>What we store</h2>
 <p>Two files, and that's the whole database:</p>

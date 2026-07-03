@@ -140,5 +140,5 @@ removes the user from the list's effect everywhere.
 
 ## License
 
-OCL v1.1 + SWAtt v1, see [LICENSE.md](LICENSE.md). Built by Nomads Galaxy.
+OCL v1.1 + SWAtt v1, see [LICENSE.md](LICENSE.md). Built by [Nomads Galaxy](https://nomadsgalaxy.com).
 Derivatives must keep the attribution ("built on MadHoney by Nomads Galaxy").

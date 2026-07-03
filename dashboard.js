@@ -154,7 +154,7 @@ function layout(title, body, opts = {}) {
 <nav><div class="nin"><a class="wm" href="/"><img src="/logo.svg?v=3" alt=""><span>Mad<b>Honey</b></span></a>
 <div class="navr">${navRight}</div></div></nav><div class="navtape"></div>
 <div class="wrap">${body}
-<footer class="f">Built on <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">MadHoney</a> by Nomads Galaxy · OCL v1.1 + SWAtt v1 · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
+<footer class="f">Built on <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">MadHoney</a> by <a href="https://nomadsgalaxy.com" target="_blank" rel="noopener">Nomads Galaxy</a> · OCL v1.1 + SWAtt v1 · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
 </div></html>`;
 }
 
