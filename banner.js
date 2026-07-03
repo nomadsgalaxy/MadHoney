@@ -22,6 +22,7 @@ export const DEFAULT_BANNER = {
   mentionColor: '#5865f2', // #channel / @role highlight (Discord blurple)
   mentionMode: 'custom',   // 'custom' -> mentionColor for all; 'role' -> real role colors via opts.roleColors
   credit: 'protected by https://madhoney.nomadsgalaxy.com', // small footer line
+  distort: 0,              // 0 none .. 3 heavy: garble the text against OCR/bot detection
 };
 
 // A word is a "mention" if it starts with # or @ (like #rules or @Staff).
@@ -102,12 +103,20 @@ export async function renderBanner(opts = {}) {
     const token = word.match(/^[#@][\w-]+/)?.[0].toLowerCase();
     return (o.mentionMode === 'role' && o.roleColors?.[token]) || o.mentionColor;
   };
+  // distort level (0-3): captcha-style garbling so OCR can't lift the text and
+  // bots can't fingerprint the warning. Higher = harder for machines (and a bit
+  // harder for humans), so it's the admin's call.
+  const dz = Math.min(3, Math.max(0, Math.round(o.distort ?? 0)));
+  const jitter = (n) => (dz ? (Math.random() - 0.5) * n * dz : 0); // ponytail: cosmetic only, no seed needed
+  const textTop = (H - contentH) / 2 + 4;
+
   const drawLine = (line, y, baseColor, size) => {
     let cx = textX;
     const space = ctx.measureText(' ').width;
     for (const word of line.split(' ')) {
       const w = ctx.measureText(word).width;
-      if (MENTION.test(word)) {
+      const isM = MENTION.test(word);
+      if (isM) {
         const mc = mentionColorFor(word);
         ctx.globalAlpha = 0.22;
         ctx.fillStyle = mc;
@@ -119,18 +128,46 @@ export async function renderBanner(opts = {}) {
       } else {
         ctx.fillStyle = baseColor;
       }
-      ctx.fillText(word, cx, y);
-      cx += w + space;
+      if (dz) { // draw the word rotated/shifted per-word to break OCR alignment
+        ctx.save();
+        ctx.translate(cx + w / 2, y + jitter(4));
+        ctx.rotate(jitter(0.06));
+        ctx.fillText(word, -w / 2, 0);
+        ctx.restore();
+      } else {
+        ctx.fillText(word, cx, y);
+      }
+      cx += w + space + (isM ? 0 : jitter(3));
     }
   };
 
-  let y = (H - contentH) / 2 + 36;
+  let y = textTop + 32;
   ctx.textBaseline = 'alphabetic';
   ctx.font = `bold 44px ${o.font}`;
   for (const line of titleLines) { drawLine(line, y, o.accent, 44); y += 54; }
   y += 16;
   ctx.font = `26px ${o.font}`;
   for (const line of bodyLines) { drawLine(line, y, o.color, 26); y += 36; }
+
+  // Interference curves across the text region + speckle, scaled by distort.
+  if (dz) {
+    const top = textTop, bot = y + 6;
+    for (let i = 0; i < dz * 3; i++) {
+      const y0 = top + Math.random() * (bot - top);
+      ctx.strokeStyle = i % 2 ? o.accent : o.color;
+      ctx.globalAlpha = 0.35;
+      ctx.lineWidth = 1 + Math.random() * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(textX - 6, y0);
+      for (let x = textX; x <= W - PAD; x += 14) ctx.lineTo(x, y0 + Math.sin(x / 22 + i) * (4 + dz * 3));
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    for (let i = 0; i < dz * 120; i++) {
+      ctx.fillStyle = `rgba(200,200,205,${Math.random() * 0.35})`;
+      ctx.fillRect(textX + Math.random() * (W - textX - PAD), top + Math.random() * (bot - top), 2, 2);
+    }
+  }
 
   if (o.credit) {
     ctx.font = `14px ${o.font}`;

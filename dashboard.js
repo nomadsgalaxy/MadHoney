@@ -343,7 +343,7 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <button class="btn">Save configuration</button>
 </form></div>
 <div class="card" id="banner"><h2>Honeypot banner</h2>${msgAt('banner')}
-<small>Live preview - it re-renders as you tweak. Save, then post it from Actions below.</small>
+<small>Live preview - it re-renders as you tweak. Save, then post it from Actions below.<br><b style="color:var(--honey)">Make it yours.</b> If every MadHoney honeypot looked identical, bots could learn to recognize and skip it. Change the text, colors, font or logo so your banner is one of a kind. (The file is also posted under a random name each time, for the same reason.)</small>
 <img class="banner" id="bannerPreview" src="/g/${guild.id}/banner.png?${Date.now()}" alt="banner preview" style="margin-top:.6rem">
 <form method="post" action="/g/${guild.id}/save#banner" id="bannerForm">
   <label>Headline <input type="text" name="banner_title" value="${esc(b.title)}"></label>
@@ -367,6 +367,9 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
       <small>Direct PNG/JPG URL for your own logo, or type <b>none</b> for no logo.</small></label>
     <label>Font <select name="banner_font">${FONTS.map((f) => `<option ${f === b.font ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
   </div>
+  <label>Distortion <select name="banner_distort">
+    ${[[0, 'None (clean)'], [1, 'Light'], [2, 'Medium'], [3, 'Heavy']].map(([v, l]) => `<option value="${v}" ${Number(b.distort ?? 0) === v ? 'selected' : ''}>${l}</option>`).join('')}
+  </select><small>Garbles the text captcha-style so OCR bots can't read the warning and skip the trap. Higher = harder for machines (and slightly harder for humans). Preview it above before you post.</small></label>
   <button class="btn">Save banner</button>
 </form>
 <script>
@@ -664,7 +667,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
           // query params (banner_*) override the saved config so the form can
           // live-preview without saving
           const opts = { ...getGuild(guild.id)?.banner };
-          for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl', 'mentionColor', 'mentionMode']) {
+          for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl', 'mentionColor', 'mentionMode', 'distort']) {
             const v = url.searchParams.get(`banner_${k}`);
             if (v !== null) opts[k] = v;
           }
@@ -676,7 +679,7 @@ ${!manageable.length ? '<div class="card"><p>No servers where you have Manage Se
           const form = await body(req);
           if (form.has('banner_title') || form.has('banner_text')) {
             const banner = { ...DEFAULT_BANNER, ...getGuild(guild.id)?.banner };
-            for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl', 'mentionColor', 'mentionMode']) {
+            for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl', 'mentionColor', 'mentionMode', 'distort']) {
               if (form.has(`banner_${k}`)) banner[k] = form.get(`banner_${k}`).trim();
             }
             saveGuild(guild.id, { banner });

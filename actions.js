@@ -2,8 +2,24 @@
 // (dashboard.js). Each takes a discord.js Guild + the stored config and
 // returns a human-readable result string.
 import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { renderBanner, DEFAULT_BANNER } from './banner.js';
+
+// Randomize the banner's attachment filename on every post. A fixed name like
+// "do-not-post.png" is a fingerprint: once MadHoney is popular, spam tooling
+// could learn to skip any channel holding that exact file. These blend in with
+// names real uploads use.
+function bannerFileName() {
+  const r = randomBytes(6);
+  const kinds = [
+    () => 'image.png',
+    () => 'unknown.png',
+    () => `IMG_${1000 + (r.readUInt16BE(0) % 9000)}.png`,
+    () => `${r.toString('hex')}.png`,
+    () => `Screenshot_${r.toString('hex').slice(0, 6)}.png`,
+  ];
+  return kinds[r[5] % kinds.length]();
+}
 import { saveGuild, bans, logBan } from './store.js';
 
 // Bump these ONLY when a code change alters how the posted Verify panel or
@@ -82,7 +98,7 @@ export async function postBanner(guild, cfg) {
       await m.delete().catch(() => {});
     }
   } catch { /* skip cleanup */ }
-  const msg = await ch.send({ files: [new AttachmentBuilder(png, { name: 'do-not-post.png' })] });
+  const msg = await ch.send({ files: [new AttachmentBuilder(png, { name: bannerFileName() })] });
   saveGuild(guild.id, { bannerPosted: true, bannerMsgId: msg.id, bannerFp: bannerFingerprint(cfg) });
   return `Posted the honeypot banner in #${ch.name}.`;
 }
@@ -94,7 +110,7 @@ export async function refreshBanner(guild, cfg) {
   const ch = await guild.channels.fetch(cfg.honeypotChannelId).catch(() => null);
   if (!ch?.isTextBased()) return null;
   const png = await renderBanner({ ...(cfg.banner ?? DEFAULT_BANNER), roleColors: roleColorMap(guild) });
-  const file = new AttachmentBuilder(png, { name: 'do-not-post.png' });
+  const file = new AttachmentBuilder(png, { name: bannerFileName() });
   let msg = cfg.bannerMsgId ? await ch.messages.fetch(cfg.bannerMsgId).catch(() => null) : null;
   if (!msg) {
     const recent = await ch.messages.fetch({ limit: 50 }).catch(() => null);
