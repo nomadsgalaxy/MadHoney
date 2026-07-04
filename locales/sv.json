@@ -485,6 +485,8 @@
     "costFailover": "Molnreserv i standby (tar över om hemmaservern förlorar strömmen)",
     "costDomain": "Domän & webbinfrastruktur",
     "costTotal": "Totalt",
-    "costNote": "Beräknas live från den här instansens verkliga konfiguration - {watts} W serverandel till {rate}/kWh. Hostingen doneras av underhållaren; stöd via Ko-fi går direkt till de här kostnaderna."
+    "costNote": "Beräknas live från den här instansens verkliga konfiguration - {watts} W serverandel till {rate}/kWh. Hostingen doneras av underhållaren; stöd via Ko-fi går direkt till de här kostnaderna.",
+    "costStory": "Jag ville mecka ihop en dynamisk kostnadsberäknare för att få koll på hur mycket mina projekt faktiskt kostar mig. Jag tyckte det var en kul datapunkt att följa och visa upp, för full transparens. Om du vill hjälpa till att täcka kostnaden får du gärna donera via Ko-fi. MadHoney kommer alltid att vara gratis.",
+    "costChartTitle": "Månatlig driftskostnad över tid"
   }
 }

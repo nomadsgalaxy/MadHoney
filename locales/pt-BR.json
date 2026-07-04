@@ -485,6 +485,8 @@
     "costFailover": "Reserva de failover na nuvem (entra em ação se o servidor doméstico ficar sem energia)",
     "costDomain": "Domínio e infraestrutura web",
     "costTotal": "Total",
-    "costNote": "Calculado ao vivo a partir da configuração real desta instância - {watts} W de parcela do servidor a {rate}/kWh. A hospedagem é doada pelo mantenedor; o apoio via Ko-fi vai direto para esses custos."
+    "costNote": "Calculado ao vivo a partir da configuração real desta instância - {watts} W de parcela do servidor a {rate}/kWh. A hospedagem é doada pelo mantenedor; o apoio via Ko-fi vai direto para esses custos.",
+    "costStory": "Eu queria brincar com um estimador dinâmico de custos para me ajudar a entender quanto meus projetos me custam. Achei que seria um dado legal para acompanhar e mostrar, por questão de transparência total. Se você quiser ajudar a cobrir esse custo, fique à vontade para doar pelo Ko-fi. O MadHoney sempre será grátis.",
+    "costChartTitle": "Custo mensal de operação ao longo do tempo"
   }
 }

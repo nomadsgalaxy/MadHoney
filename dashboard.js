@@ -5,7 +5,7 @@
 // only if this ever serves more than a handful of admins.
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 const { getGuild, saveGuild, bans, trappedCount } = await import(process.env.MADHONEY_STORE ?? './store.js'); // pluggable store backend
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
@@ -60,6 +60,34 @@ function maintenanceNotice() {
 // costs.json next to the app (deployment content, like notice.txt; absent =
 // widget hidden). Read per request, so tuning the numbers applies instantly.
 // Shape: { kwhRate, serverWatts, share, monthly: { failover, domain } }
+// Step chart of the sampled monthly total over time: server-side SVG, single
+// honey series on a recessive grid, y anchored at zero (it's a magnitude).
+// Hidden until there are two+ samples - a one-point chart is just a dot.
+function costChart(hist, dl) {
+  if (hist.length < 2) return '';
+  const W = 400, H = 110, PL = 34, PR = 8, PT = 8, PB = 18;
+  const t0 = Date.parse(hist[0].date), t1 = Date.parse(hist[hist.length - 1].date);
+  const yMax = Math.max(...hist.map((h) => h.total)) * 1.15;
+  const x = (d) => PL + (t1 === t0 ? 0 : (Date.parse(d) - t0) / (t1 - t0)) * (W - PL - PR);
+  const y = (v) => PT + (1 - v / yMax) * (H - PT - PB);
+  // step-after: a cost holds until the config changes
+  let path = `M${x(hist[0].date).toFixed(1)},${y(hist[0].total).toFixed(1)}`;
+  for (let i = 1; i < hist.length; i++) {
+    path += `H${x(hist[i].date).toFixed(1)}V${y(hist[i].total).toFixed(1)}`;
+  }
+  const grid = [0.5, 1].map((f) => `<line x1="${PL}" y1="${y(yMax * f).toFixed(1)}" x2="${W - PR}" y2="${y(yMax * f).toFixed(1)}" stroke="#262b34" stroke-width="1"/>`).join('');
+  return `<div style="margin-top:.8rem"><small style="color:var(--dim)">${t('landing.costChartTitle', dl)}</small>
+  <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="${t('landing.costChartTitle', dl)}">
+    ${grid}
+    <line x1="${PL}" y1="${y(0)}" x2="${W - PR}" y2="${y(0)}" stroke="#262b34" stroke-width="1"/>
+    <path d="${path}" fill="none" stroke="#ffb31a" stroke-width="2"/>
+    <text x="${PL - 4}" y="${y(yMax * 1) + 4}" text-anchor="end" font-size="9" fill="#9a948a">$${(yMax).toFixed(0)}</text>
+    <text x="${PL - 4}" y="${y(0)}" text-anchor="end" font-size="9" fill="#9a948a">$0</text>
+    <text x="${PL}" y="${H - 4}" font-size="9" fill="#9a948a">${hist[0].date}</text>
+    <text x="${W - PR}" y="${H - 4}" text-anchor="end" font-size="9" fill="#9a948a">${hist[hist.length - 1].date}</text>
+  </svg></div>`;
+}
+
 function costsWidget(dl) {
   let c;
   try { c = JSON.parse(readFileSync(new URL('./costs.json', import.meta.url), 'utf8')); } catch { return ''; }
@@ -73,13 +101,29 @@ function costsWidget(dl) {
   if (!rows.length) return '';
   const total = rows.reduce((s, [, v]) => s + v, 0);
   const usd = (v) => `$${v.toFixed(2)}`;
+
+  // daily sample of the computed total -> costs-history.jsonl (drives the chart)
+  const HIST = new URL('./costs-history.jsonl', import.meta.url);
+  const today = new Date().toISOString().slice(0, 10);
+  let hist = [];
+  try {
+    hist = readFileSync(HIST, 'utf8').trim().split('\n').filter(Boolean)
+      .map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  } catch { /* first run */ }
+  if (!hist.some((h) => h.date === today)) {
+    const entry = { date: today, total: +total.toFixed(2) };
+    try { appendFileSync(HIST, JSON.stringify(entry) + '\n'); hist.push(entry); } catch { /* best effort */ }
+  }
+
   return `<div style="background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;margin:1.1rem auto;max-width:460px;text-align:left">
     <b>${t('landing.costTitle', dl)}</b>
+    <p style="color:var(--dim);font-size:.9rem;margin:.5rem 0 .3rem">${t('landing.costStory', dl)}</p>
     <table style="width:100%;margin-top:.5rem;border-collapse:collapse;font-size:.92rem">
       ${rows.map(([l, v]) => `<tr><td style="padding:.2rem .6rem .2rem 0;color:var(--dim)">${l}</td><td style="text-align:right;white-space:nowrap;vertical-align:top">${usd(v)}/mo</td></tr>`).join('')}
       <tr><td style="padding:.35rem 0;border-top:1px solid var(--line)"><b>${t('landing.costTotal', dl)}</b></td><td style="text-align:right;border-top:1px solid var(--line)"><b>${usd(total)}/mo</b></td></tr>
     </table>
     <small style="color:var(--dim);display:block;margin-top:.5rem">${t('landing.costNote', dl, { watts, rate: `$${(c.kwhRate ?? 0).toFixed(2)}` })}</small>
+    ${costChart(hist, dl)}
   </div>`;
 }
 

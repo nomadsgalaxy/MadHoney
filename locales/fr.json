@@ -485,6 +485,8 @@
     "costFailover": "Serveur cloud de secours en veille (prend le relais en cas de coupure de courant du serveur domestique)",
     "costDomain": "Domaine et infrastructure web",
     "costTotal": "Total",
-    "costNote": "Calculé en direct à partir de la configuration réelle de cette instance - une part serveur de {watts} W, à {rate}/kWh. L'hébergement est offert par le mainteneur ; les dons sur Ko-fi servent directement à couvrir ces coûts."
+    "costNote": "Calculé en direct à partir de la configuration réelle de cette instance - une part serveur de {watts} W, à {rate}/kWh. L'hébergement est offert par le mainteneur ; les dons sur Ko-fi servent directement à couvrir ces coûts.",
+    "costStory": "J'avais envie de bricoler un estimateur de coûts dynamique pour savoir combien mes projets me coûtent vraiment. Je me suis dit que ce serait une donnée sympa à suivre et à afficher, en toute transparence. Si tu veux aider à compenser ce coût, n'hésite pas à faire un don via Ko-fi. MadHoney restera toujours gratuit.",
+    "costChartTitle": "Évolution du coût mensuel de fonctionnement"
   }
 }

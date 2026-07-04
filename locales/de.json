@@ -485,6 +485,8 @@
     "costFailover": "Cloud-Failover in Bereitschaft (springt ein, wenn der Heimserver keinen Strom hat)",
     "costDomain": "Domain & Web-Infrastruktur",
     "costTotal": "Gesamt",
-    "costNote": "Live aus der tatsächlichen Konfiguration dieser Instanz berechnet — {watts} W Server-Anteil zu {rate}/kWh. Das Hosting spendet der Maintainer; Ko-fi-Unterstützung fließt direkt in diese Kosten."
+    "costNote": "Live aus der tatsächlichen Konfiguration dieser Instanz berechnet — {watts} W Server-Anteil zu {rate}/kWh. Das Hosting spendet der Maintainer; Ko-fi-Unterstützung fließt direkt in diese Kosten.",
+    "costStory": "Ich wollte an einem dynamischen Kosten-Schätzer herumbasteln, um herauszufinden, wie viel mich meine Projekte eigentlich kosten. Ich fand, das wäre ein netter Datenpunkt zum Verfolgen und Zeigen - ganz im Sinne voller Transparenz. Wenn du helfen möchtest, diese Kosten auszugleichen, kannst du gerne über Ko-fi spenden. MadHoney wird immer kostenlos bleiben.",
+    "costChartTitle": "Monatliche Betriebskosten im Zeitverlauf"
   }
 }
