@@ -512,7 +512,8 @@ client.on(Events.InteractionCreate, async (i) => {
 
     // Hold-for-review decision buttons
     if (i.isButton() && i.customId.startsWith('mh_review_ban_')) {
-      const userId = i.customId.slice('mh_review_ban_'.length);
+      // customId: mh_review_ban_<userId>[_<msgId>] (msgId absent on older buttons)
+      const [userId, msgId] = i.customId.slice('mh_review_ban_'.length).split('_');
       const cfg = getGuild(i.guildId) ?? {};
       const deleteDays = Math.min(7, Math.max(0, cfg.banDeleteDays ?? 7));
       try {
@@ -521,6 +522,10 @@ client.on(Events.InteractionCreate, async (i) => {
         return i.reply({ content: t('reply.banFailed', cfg.locale, { error: e.message }), ...EPH });
       }
       logBan({ id: userId, guildId: i.guildId, channel: '(review-ban)', at: new Date().toISOString() });
+      // approved as spam -> remove the held trap post too (best-effort)
+      if (msgId && cfg.honeypotChannelId) {
+        i.guild.channels.fetch(cfg.honeypotChannelId).then((ch) => ch.messages.delete(msgId)).catch(() => {});
+      }
       return i.update({ content: i.message.content + '\n' + t('log.bannedBy', cfg.locale, { mod: `${i.user}` }), components: [] });
     }
     if (i.isButton() && i.customId.startsWith('mh_review_dismiss_')) {
@@ -717,7 +722,7 @@ client.on(Events.MessageCreate, async (msg) => {
         attachments ? t('log.attach', cfg.locale, { names: attachments }) : null,
       ].filter(Boolean).join('\n'),
       components: [new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`mh_review_ban_${msg.author.id}`).setLabel(t('log.banBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`mh_review_ban_${msg.author.id}_${msg.id}`).setLabel(t('log.banBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
         new ButtonBuilder().setCustomId(`mh_review_dismiss_${msg.author.id}`).setLabel(t('log.dismissBtn', cfg.locale)).setStyle(ButtonStyle.Secondary),
       )],
     }, 'critical');
@@ -763,6 +768,12 @@ client.on(Events.MessageCreate, async (msg) => {
       new ButtonBuilder().setCustomId(`mh_unban_${msg.author.id}`).setLabel(t('log.undoBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
     )] : [],
   }, 'critical');
+
+  // The post is now preserved in the report above (text + attachment names), so
+  // remove it - a caught spammer's message shouldn't linger in the decoy channel.
+  // The ban's deleteMessageSeconds can miss a message this recent, so delete it
+  // explicitly. Best-effort: needs Manage Messages in the honeypot channel.
+  await msg.delete().catch(() => {});
 });
 
 // ---------- cross-server ban sharing (opt-in) ----------
