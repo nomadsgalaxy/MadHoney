@@ -13,3 +13,6 @@ store.d1.js
 d1-pending.jsonl
 failover/
 *.failover.*
+
+# operator maintenance banner (deployment content)
+notice.txt

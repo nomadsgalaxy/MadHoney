@@ -48,8 +48,17 @@ function dashLocale(req) {
   return resolveLocale((req.headers['accept-language'] || '').split(',')[0].trim());
 }
 
+// Operator maintenance notice: if notice.txt exists next to the app, its text
+// banners every dashboard page. Read per request, so writing/removing the file
+// applies instantly - no restart. (echo "..." > notice.txt / rm notice.txt)
+function maintenanceNotice() {
+  try { return readFileSync(new URL('./notice.txt', import.meta.url), 'utf8').trim(); }
+  catch { return ''; }
+}
+
 function layout(title, body, opts = {}) {
   const dl = curLocale;
+  const notice = maintenanceNotice();
   const invite = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268536852`;
   const picker = `<select class="langsel" onchange="document.cookie='mh_lang='+this.value+';path=/;max-age=31536000';location.reload()" aria-label="${esc(t('dash.lang', dl))}">${SUPPORTED.map((c) => `<option value="${c}" ${c === dl ? 'selected' : ''}>${esc(LOCALE_NAMES[c])}</option>`).join('')}</select>`;
   const navRight = opts.user
@@ -207,6 +216,7 @@ function layout(title, body, opts = {}) {
 </style>
 <nav><div class="nin"><a class="wm" href="/"><img src="/logo.svg?v=3" alt=""><span>Mad<b>Honey</b></span></a>
 <div class="navr">${navRight}</div></div></nav><div class="navtape"></div>
+${notice ? `<div style="background:#3a2b00;border-bottom:1px solid var(--honey);color:var(--ink);padding:.6rem 1rem;text-align:center;font-weight:600">🛠️ ${esc(notice)}</div>` : ''}
 <div class="wrap">${body}
 <footer class="f">Built on <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">MadHoney</a> by <a href="https://nomadsgalaxy.com" target="_blank" rel="noopener">Nomads Galaxy</a> · OCL v1.1 + SWAtt v1 · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></footer>
 </div></html>`;
