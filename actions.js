@@ -429,14 +429,27 @@ export async function syncBans(guild, cfg, progress = {}, loc = cfg?.locale) {
   const already = new Set([...existing.keys(), ...bans(guild.id).filter((b) => !b.unbanned).map((b) => b.id)]);
 
   Object.assign(progress, { label: 'Ban sync', total: pool.size, done: 0, added: 0, skipped: 0, failed: 0 });
+  // users already banned here need no API call; ban the rest with a bounded pool
+  // (same rationale as grandfather() above - ~10x faster on big shared lists,
+  // and logBan is synchronous so concurrent workers can't race the ban log)
+  const targets = [];
   for (const [id, tag] of pool) {
-    progress.done++;
-    if (already.has(id)) { progress.skipped++; continue; }
-    try {
-      await guild.bans.create(id, { reason: 'MadHoney: synced from the shared ban list' });
-      logBan({ id, tag, guildId: guild.id, channel: '(ban-sync)', at: new Date().toISOString() });
-      progress.added++;
-    } catch { progress.failed++; }
+    if (already.has(id)) { progress.skipped++; progress.done++; }
+    else targets.push([id, tag]);
   }
+  const CONCURRENCY = 10;
+  let i = 0;
+  const worker = async () => {
+    while (i < targets.length) {
+      const [id, tag] = targets[i++];
+      try {
+        await guild.bans.create(id, { reason: 'MadHoney: synced from the shared ban list' });
+        logBan({ id, tag, guildId: guild.id, channel: '(ban-sync)', at: new Date().toISOString() });
+        progress.added++;
+      } catch { progress.failed++; }
+      progress.done++;
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length || 1) }, worker));
   return t('dash.act.sbDone', loc, { added: progress.added, skipped: progress.skipped, failedPart: progress.failed ? t('dash.act.sbFailed', loc, { n: progress.failed }) : '', pool: pool.size });
 }
