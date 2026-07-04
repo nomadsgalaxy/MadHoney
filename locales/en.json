@@ -357,13 +357,19 @@
       "badState": "Bad state or missing code. {retry}.",
       "tokenFailed": "Token exchange failed. {retry}.",
       "retry": "Try again",
-      "e403Body": "You need Manage Server there (or that server's staff / dashboard admin role).",
+      "e403Body": "You don’t manage this server — you need Manage Server there (or that server’s staff / dashboard admin role).",
       "notHereTitle": "Not here yet",
       "notHereBody": "{invite} first.",
       "inviteLink": "Invite MadHoney to this server",
-      "e404Body": "{home}",
+      "e404Body": "This page doesn’t exist — consider it a little honeypot. Unlike the bots we catch, you’re free to walk away.",
       "home": "home",
-      "e500Body": "Something broke - check the bot logs."
+      "e500Body": "Something went wrong on our side. It’s been logged — give it a moment and try again.",
+      "e401Title": "Verification required",
+      "e401Body": "You need to log in with Discord before this page will talk to you.",
+      "e403Title": "Missing the right role",
+      "e404Title": "You found a decoy",
+      "e500Title": "We tripped our own trap",
+      "homeBtn": "🍯 Back to safety"
     },
     "act": {
       "gLineGate": "GATE behind \"{role}\" ({n}): {list}",

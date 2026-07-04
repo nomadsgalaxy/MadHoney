@@ -357,13 +357,19 @@
       "badState": "Estado inválido ou código ausente. {retry}.",
       "tokenFailed": "Falha na troca de token. {retry}.",
       "retry": "Tente de novo",
-      "e403Body": "Você precisa de Gerenciar Servidor lá (ou o cargo de equipe / admin do painel desse servidor).",
+      "e403Body": "Você não gerencia este servidor - você precisa de Gerenciar Servidor lá (ou do cargo de equipe / admin do painel desse servidor).",
       "notHereTitle": "Ainda não está aqui",
       "notHereBody": "{invite} primeiro.",
       "inviteLink": "Convide o MadHoney para este servidor",
-      "e404Body": "{home}",
+      "e404Body": "Esta página não existe - considere isto um pequeno honeypot. Ao contrário dos bots que capturamos, você está livre para ir embora.",
       "home": "início",
-      "e500Body": "Algo deu errado - verifique os logs do bot."
+      "e500Body": "Algo deu errado do nosso lado. Já ficou registrado - espere um momento e tente de novo.",
+      "e401Title": "Verificação necessária",
+      "e401Body": "Você precisa entrar com o Discord antes que esta página converse com você.",
+      "e403Title": "Faltou o cargo certo",
+      "e404Title": "Você encontrou uma isca",
+      "e500Title": "Caímos na nossa própria armadilha",
+      "homeBtn": "🍯 Voltar para a segurança"
     },
     "act": {
       "gLineGate": "RESTRINGIR atrás de \"{role}\" ({n}): {list}",

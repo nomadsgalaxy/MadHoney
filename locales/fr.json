@@ -357,13 +357,19 @@
       "badState": "État incorrect ou code manquant. {retry}.",
       "tokenFailed": "Échec de l'échange de jeton. {retry}.",
       "retry": "Réessaie",
-      "e403Body": "Tu as besoin de Gérer le serveur là-bas (ou du rôle d'équipe / admin du tableau de bord de ce serveur).",
+      "e403Body": "Tu ne gères pas ce serveur — il te faut Gérer le serveur là-bas (ou le rôle d'équipe / admin du tableau de bord de ce serveur).",
       "notHereTitle": "Pas encore ici",
       "notHereBody": "{invite} d'abord.",
       "inviteLink": "Invite MadHoney sur ce serveur",
-      "e404Body": "{home}",
+      "e404Body": "Cette page n'existe pas — considère-la comme un petit honeypot. Contrairement aux bots que nous attrapons, tu es libre de repartir.",
       "home": "accueil",
-      "e500Body": "Une erreur est survenue - vérifie les journaux du bot."
+      "e500Body": "Quelque chose a mal tourné de notre côté. C'est déjà consigné — patiente un instant et réessaie.",
+      "e401Title": "Vérification requise",
+      "e401Body": "Tu dois te connecter avec Discord avant que cette page n'accepte de te parler.",
+      "e403Title": "Il te manque le bon rôle",
+      "e404Title": "Tu as trouvé un leurre",
+      "e500Title": "Pris à notre propre piège",
+      "homeBtn": "🍯 Retour en lieu sûr"
     },
     "act": {
       "gLineGate": "FILTRER derrière « {role} » ({n}) : {list}",

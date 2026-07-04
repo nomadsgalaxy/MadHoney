@@ -357,13 +357,19 @@
       "badState": "Ungültiger Status oder fehlender Code. {retry}.",
       "tokenFailed": "Token-Austausch fehlgeschlagen. {retry}.",
       "retry": "Erneut versuchen",
-      "e403Body": "Du benötigst dort Server verwalten (oder die Team- / Dashboard-Admin-Rolle dieses Servers).",
+      "e403Body": "Du verwaltest diesen Server nicht — du benötigst dort Server verwalten (oder die Team- / Dashboard-Admin-Rolle dieses Servers).",
       "notHereTitle": "Noch nicht hier",
       "notHereBody": "{invite} zuerst.",
       "inviteLink": "MadHoney zu diesem Server einladen",
-      "e404Body": "{home}",
+      "e404Body": "Diese Seite existiert nicht — betrachte sie als kleinen Honeypot. Anders als die Bots, die wir fangen, darfst du einfach wieder gehen.",
       "home": "Startseite",
-      "e500Body": "Etwas ist schiefgelaufen - prüfe die Bot-Logs."
+      "e500Body": "Bei uns ist etwas schiefgelaufen. Es wurde protokolliert — warte einen Moment und versuch es dann erneut.",
+      "e401Title": "Verifizierung erforderlich",
+      "e401Body": "Du musst dich erst mit Discord anmelden, bevor diese Seite mit dir spricht.",
+      "e403Title": "Dir fehlt die richtige Rolle",
+      "e404Title": "Du hast einen Köder gefunden",
+      "e500Title": "Wir sind in die eigene Falle getappt",
+      "homeBtn": "🍯 Zurück in Sicherheit"
     },
     "act": {
       "gLineGate": "SPERREN hinter \"{role}\" ({n}): {list}",

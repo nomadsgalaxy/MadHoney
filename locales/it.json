@@ -357,13 +357,19 @@
       "badState": "Stato non valido o codice mancante. {retry}.",
       "tokenFailed": "Scambio del token non riuscito. {retry}.",
       "retry": "Riprova",
-      "e403Body": "Ti serve Gestisci server lì (o il ruolo staff / admin dashboard di quel server).",
+      "e403Body": "Non gestisci questo server — lì ti serve il permesso Gestisci server (oppure il ruolo staff / admin dashboard di quel server).",
       "notHereTitle": "Non ancora qui",
       "notHereBody": "{invite} prima.",
       "inviteLink": "Invita MadHoney in questo server",
-      "e404Body": "{home}",
+      "e404Body": "Questa pagina non esiste — consideralo un piccolo honeypot. A differenza dei bot che catturiamo, tu sei libero di andartene.",
       "home": "home",
-      "e500Body": "Qualcosa è andato storto - controlla i log del bot."
+      "e500Body": "Qualcosa è andato storto da parte nostra. È tutto registrato nei log — aspetta un momento e riprova.",
+      "e401Title": "Verifica richiesta",
+      "e401Body": "Devi accedere con Discord prima che questa pagina ti rivolga la parola.",
+      "e403Title": "Ti manca il ruolo giusto",
+      "e404Title": "Hai trovato un'esca",
+      "e500Title": "Siamo caduti nella nostra stessa trappola",
+      "homeBtn": "🍯 Torna al sicuro"
     },
     "act": {
       "gLineGate": "GATING dietro \"{role}\" ({n}): {list}",

@@ -357,13 +357,19 @@
       "badState": "Felaktigt tillstånd eller saknad kod. {retry}.",
       "tokenFailed": "Tokenutbyte misslyckades. {retry}.",
       "retry": "Försök igen",
-      "e403Body": "Du behöver Hantera server där (eller den serverns personal- / paneladminroll).",
+      "e403Body": "Du hanterar inte den här servern – du behöver Hantera server där (eller den serverns personal- / paneladminroll).",
       "notHereTitle": "Inte här än",
       "notHereBody": "{invite} först.",
       "inviteLink": "Bjud in MadHoney till den här servern",
-      "e404Body": "{home}",
+      "e404Body": "Den här sidan finns inte – se den som en liten honungsfälla. Till skillnad från bottarna vi fångar är du fri att gå din väg.",
       "home": "hem",
-      "e500Body": "Något gick fel - kontrollera bottloggarna."
+      "e500Body": "Något gick fel på vår sida. Det har loggats – vänta en stund och försök igen.",
+      "e401Title": "Verifiering krävs",
+      "e401Body": "Du måste logga in med Discord innan den här sidan vill prata med dig.",
+      "e403Title": "Rätt roll saknas",
+      "e404Title": "Du hittade ett lockbete",
+      "e500Title": "Vi gick i vår egen fälla",
+      "homeBtn": "🍯 Tillbaka till tryggheten"
     },
     "act": {
       "gLineGate": "SPÄRRA bakom \"{role}\" ({n}): {list}",

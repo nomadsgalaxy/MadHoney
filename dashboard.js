@@ -88,6 +88,23 @@ function costChart(hist, dl) {
   </svg></div>`;
 }
 
+// Branded error page: big honey status code, themed copy (the 404 IS a decoy),
+// and a way home. opts.title/opts.body override for context-specific errors
+// (e.g. "bot isn't in that server"); opts.login adds a log-in button.
+function errPage(code, dl, opts = {}) {
+  const K = { 401: 'e401', 403: 'e403', 404: 'e404', 500: 'e500' }[code];
+  const title = opts.title ?? (K ? t(`dash.err.${K}Title`, dl) : 'MadHoney');
+  const body = opts.body ?? (K ? t(`dash.err.${K}Body`, dl) : '');
+  return layout(`${code} - MadHoney`, `
+<div class="errpage">
+  <div class="errcode">${code}</div>
+  <h1>${title}</h1>
+  <p>${body}</p>
+  <a class="btn" href="/">${t('dash.err.homeBtn', dl)}</a>
+  ${opts.login ? ` <a class="btn" href="/login" style="background:transparent;border:1px solid var(--honey);color:var(--honey)">${t('dash.nav.login', dl)}</a>` : ''}
+</div>`);
+}
+
 function costsWidget(dl) {
   let c;
   try { c = JSON.parse(readFileSync(new URL('./costs.json', import.meta.url), 'utf8')); } catch { return ''; }
@@ -175,6 +192,12 @@ function layout(title, body, opts = {}) {
   h1 img{height:38px;vertical-align:-8px;margin-right:.4rem}
   h2{font-size:1.15rem}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem;margin:1rem 0}
+  .errpage{text-align:center;padding:4.5rem 1rem 3rem}
+  .errpage .errcode{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:6.5rem;line-height:1;color:var(--honey);letter-spacing:-.04em;text-shadow:0 0 60px rgba(255,179,26,.25)}
+  .errpage h1{margin:.4rem 0 .7rem}
+  .errpage p{color:var(--dim);max-width:46ch;margin:0 auto 1.6rem}
+  .errpage .btn{display:inline-block;background:var(--honey);color:#141414;font-weight:700;padding:.55rem 1.1rem;border-radius:9px}
+  .errpage .btn:hover{text-decoration:none;transform:translateY(-1px)}
   label{display:block;margin:.7rem 0;font-weight:600}
   input[type=text],textarea,select{display:block;width:100%;padding:.5rem;margin-top:.2rem;background:#0f1216;color:var(--ink);border:1px solid var(--line);border-radius:7px;font:inherit}
   input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--honey)}
@@ -792,7 +815,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
       // ---- auth ----
       if (url.pathname === '/login') {
         if (!process.env.CLIENT_SECRET) {
-          return html(layout('MadHoney', `<h1>${t('dash.err.loginTitle', curLocale)}</h1><p>${t('dash.err.loginBody', curLocale, { add: `<a href="${inviteUrl()}">${t('dash.err.addLink', curLocale)}</a>` })}</p>`), 503);
+          return html(errPage(503, curLocale, { title: t('dash.err.loginTitle', curLocale), body: t('dash.err.loginBody', curLocale, { add: `<a href="${inviteUrl()}">${t('dash.err.addLink', curLocale)}</a>` }) }), 503);
         }
         const state = randomBytes(16).toString('hex');
         const auth = new URL('https://discord.com/oauth2/authorize');
@@ -804,7 +827,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
       }
       if (url.pathname === '/callback') {
         if (!url.searchParams.get('code') || url.searchParams.get('state') !== cookies(req).oauth_state) {
-          return html(layout('MadHoney', `<h1>${t('dash.err.loginFailed', curLocale)}</h1><p>${t('dash.err.badState', curLocale, { retry: `<a href="/login">${t('dash.err.retry', curLocale)}</a>` })}</p>`), 400);
+          return html(errPage(400, curLocale, { title: t('dash.err.loginFailed', curLocale), body: t('dash.err.badState', curLocale, { retry: `<a href="/login">${t('dash.err.retry', curLocale)}</a>` }) }), 400);
         }
         const tok = await (await fetch(`${API}/oauth2/token`, {
           method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -813,7 +836,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
             grant_type: 'authorization_code', code: url.searchParams.get('code'), redirect_uri: `${PUBLIC_URL}/callback`,
           }),
         })).json();
-        if (!tok.access_token) return html(layout('MadHoney', `<h1>${t('dash.err.loginFailed', curLocale)}</h1><p>${t('dash.err.tokenFailed', curLocale, { retry: `<a href="/login">${t('dash.err.retry', curLocale)}</a>` })}</p>`), 400);
+        if (!tok.access_token) return html(errPage(400, curLocale, { title: t('dash.err.loginFailed', curLocale), body: t('dash.err.tokenFailed', curLocale, { retry: `<a href="/login">${t('dash.err.retry', curLocale)}</a>` }) }), 400);
         const bearer = { headers: { authorization: `Bearer ${tok.access_token}` } };
         const user = await (await fetch(`${API}/users/@me`, bearer)).json();
         const guilds = await (await fetch(`${API}/users/@me/guilds`, bearer)).json();
@@ -918,12 +941,19 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
       const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/captcha\.png|\/progress|\/gate)?$/);
       if (m) {
         const sess = session(req);
-        if (!sess) return redirect('/login');
+        if (!sess) {
+          // pages redirect to login; endpoint/asset requests (fetch, <img>)
+          // must fail honestly with a 401 instead of bouncing to an HTML form
+          if (['/progress', '/banner.png', '/captcha.png', '/save', '/action'].includes(m[2])) {
+            return html(errPage(401, curLocale, { login: true }), 401);
+          }
+          return redirect('/login');
+        }
         if (!(await canManage(sess, m[1]))) {
-          return html(layout('MadHoney', `<h1>403</h1><p>${t('dash.err.e403Body', curLocale)}</p>`), 403);
+          return html(errPage(403, curLocale), 403);
         }
         const guild = client.guilds.cache.get(m[1]);
-        if (!guild) return html(layout('MadHoney', `<h1>${t('dash.err.notHereTitle', curLocale)}</h1><p>${t('dash.err.notHereBody', curLocale, { invite: `<a href="${inviteUrl()}&guild_id=${m[1]}" target="_blank" rel="noopener">${t('dash.err.inviteLink', curLocale)}</a>` })}</p>`), 404);
+        if (!guild) return html(errPage(404, curLocale, { title: t('dash.err.notHereTitle', curLocale), body: t('dash.err.notHereBody', curLocale, { invite: `<a href="${inviteUrl()}&guild_id=${m[1]}" target="_blank" rel="noopener">${t('dash.err.inviteLink', curLocale)}</a>` }) }), 404);
 
         if (m[2] === '/progress') {
           const p = gfJobs.get(guild.id);
@@ -1042,10 +1072,10 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
         return html(await guildPage(guild, sess));
       }
 
-      html(layout('MadHoney', `<h1>404</h1><p>${t('dash.err.e404Body', curLocale, { home: `<a href="/">${t('dash.err.home', curLocale)}</a>` })}</p>`), 404);
+      html(errPage(404, curLocale), 404);
     } catch (err) {
       console.error('dashboard error:', err);
-      html(layout('MadHoney', `<h1>500</h1><p>${t('dash.err.e500Body', curLocale)}</p>`), 500);
+      html(errPage(500, curLocale), 500);
     }
   });
 

@@ -357,13 +357,19 @@
       "badState": "Špatný stav nebo chybějící kód. {retry}.",
       "tokenFailed": "Výměna tokenu selhala. {retry}.",
       "retry": "Zkusit znovu",
-      "e403Body": "Potřebuješ tam Spravovat server (nebo roli týmu / administrátora dashboardu daného serveru).",
+      "e403Body": "Tenhle server nespravuješ — potřebuješ tam oprávnění Spravovat server (nebo roli týmu / administrátora dashboardu daného serveru).",
       "notHereTitle": "Zatím tady ne",
       "notHereBody": "Nejdřív {invite}.",
       "inviteLink": "Pozvat MadHoney na tento server",
-      "e404Body": "{home}",
+      "e404Body": "Tahle stránka neexistuje — ber to jako malý honeypot. Na rozdíl od botů, které chytáme, ty můžeš klidně odejít.",
       "home": "domů",
-      "e500Body": "Něco se pokazilo - zkontroluj logy bota."
+      "e500Body": "Něco se pokazilo na naší straně. Už je to zalogované — dej tomu chvilku a zkus to znovu.",
+      "e401Title": "Vyžadováno ověření",
+      "e401Body": "Než se s tebou tahle stránka začne bavit, musíš se přihlásit přes Discord.",
+      "e403Title": "Chybí ti ta správná role",
+      "e404Title": "Našel(a) jsi návnadu",
+      "e500Title": "Chytili jsme se do vlastní pasti",
+      "homeBtn": "🍯 Zpátky do bezpečí"
     },
     "act": {
       "gLineGate": "UZAMKNOUT za „{role}“ ({n}): {list}",
