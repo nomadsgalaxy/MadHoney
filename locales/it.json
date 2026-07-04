@@ -481,12 +481,13 @@
     "footSelfhost": "Guida al self-hosting",
     "footLicense": "Licenza (OCL v1.1 + SWAtt)",
     "costTitle": "Quanto costa davvero farlo girare",
-    "costPower": "Elettricità del server domestico (la quota di MadHoney, a tariffe residenziali)",
-    "costFailover": "Failover cloud in standby (subentra se il server domestico resta senza corrente)",
+    "costPower": "Elettricità del server bare-metal (la quota di MadHoney, a tariffe residenziali)",
+    "costFailover": "Failover cloud in standby (subentra se il server bare-metal va offline)",
     "costDomain": "Dominio e infrastruttura web",
     "costTotal": "Totale",
     "costNote": "Calcolato in tempo reale dalla configurazione reale di questa istanza — {watts} W di quota del server a {rate}/kWh. L'hosting è donato dal manutentore; il sostegno su Ko-fi va direttamente a coprire questi costi.",
     "costStory": "Volevo sperimentare con uno stimatore dinamico dei costi per capire quanto mi costano davvero i miei progetti. Mi è sembrato un dato interessante da tracciare e mostrare, per piena trasparenza. Se vuoi aiutarmi a coprire questa spesa, puoi fare una donazione su Ko-fi. MadHoney sarà sempre gratuito.",
-    "costChartTitle": "Costo mensile di gestione nel tempo"
+    "costChartTitle": "Costo mensile di gestione nel tempo",
+    "costFrom": "Dal manutentore"
   }
 }

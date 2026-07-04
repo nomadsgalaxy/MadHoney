@@ -137,6 +137,18 @@ code{font-family:var(--mono);font-size:.88em;background:#0f1216;border:1px solid
 /* donate */
 .donate{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--honey-deep);border-radius:16px;padding:2.6rem 2.4rem;text-align:center}
 .donate .lead{margin:0 auto 1.5rem}
+.donate .costs{display:grid;grid-template-columns:1fr 1fr;gap:2rem;text-align:left;margin:1.9rem 0 1.7rem;padding-top:1.7rem;border-top:1px dashed var(--line)}
+@media(max-width:680px){.donate .costs{grid-template-columns:1fr;gap:1.4rem}}
+.costlabel{font-family:var(--mono);font-weight:700;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--honey);margin:0 0 .7rem}
+.coststory p{color:var(--dim);font-size:.95rem;line-height:1.65;margin:0}
+.costtable{width:100%;border-collapse:collapse;font-size:.9rem}
+.costtable td{padding:.35rem .6rem .35rem 0;color:var(--dim);border-bottom:1px solid var(--line);line-height:1.4}
+.costtable td:last-child{text-align:right;white-space:nowrap;color:var(--ink);padding-right:0;vertical-align:top}
+.costtable tr:last-child td{border-bottom:0;padding-top:.55rem;color:var(--ink);font-weight:700}
+.costnote{display:block;color:var(--dim);opacity:.75;margin-top:.7rem;font-size:.78rem;line-height:1.5}
+.costchart{margin-top:1rem}
+.costchart small{color:var(--dim);font-size:.78rem}
+.costchart svg{width:100%;height:auto;display:block;margin-top:.3rem}
 .donate .kofi{background:#ff5e5b;color:#fff;box-shadow:0 8px 28px -10px rgba(255,94,91,.6)}
 .donate .kofi:hover{transform:translateY(-2px);box-shadow:0 14px 34px -10px rgba(255,94,91,.75)}
 

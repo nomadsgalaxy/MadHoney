@@ -76,8 +76,8 @@ function costChart(hist, dl) {
     path += `H${x(hist[i].date).toFixed(1)}V${y(hist[i].total).toFixed(1)}`;
   }
   const grid = [0.5, 1].map((f) => `<line x1="${PL}" y1="${y(yMax * f).toFixed(1)}" x2="${W - PR}" y2="${y(yMax * f).toFixed(1)}" stroke="#262b34" stroke-width="1"/>`).join('');
-  return `<div style="margin-top:.8rem"><small style="color:var(--dim)">${t('landing.costChartTitle', dl)}</small>
-  <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="${t('landing.costChartTitle', dl)}">
+  return `<div class="costchart"><small>${t('landing.costChartTitle', dl)}</small>
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('landing.costChartTitle', dl)}">
     ${grid}
     <line x1="${PL}" y1="${y(0)}" x2="${W - PR}" y2="${y(0)}" stroke="#262b34" stroke-width="1"/>
     <path d="${path}" fill="none" stroke="#ffb31a" stroke-width="2"/>
@@ -115,15 +115,22 @@ function costsWidget(dl) {
     try { appendFileSync(HIST, JSON.stringify(entry) + '\n'); hist.push(entry); } catch { /* best effort */ }
   }
 
-  return `<div style="background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;margin:1.1rem auto;max-width:460px;text-align:left">
-    <b>${t('landing.costTitle', dl)}</b>
-    <p style="color:var(--dim);font-size:.9rem;margin:.5rem 0 .3rem">${t('landing.costStory', dl)}</p>
-    <table style="width:100%;margin-top:.5rem;border-collapse:collapse;font-size:.92rem">
-      ${rows.map(([l, v]) => `<tr><td style="padding:.2rem .6rem .2rem 0;color:var(--dim)">${l}</td><td style="text-align:right;white-space:nowrap;vertical-align:top">${usd(v)}/mo</td></tr>`).join('')}
-      <tr><td style="padding:.35rem 0;border-top:1px solid var(--line)"><b>${t('landing.costTotal', dl)}</b></td><td style="text-align:right;border-top:1px solid var(--line)"><b>${usd(total)}/mo</b></td></tr>
-    </table>
-    <small style="color:var(--dim);display:block;margin-top:.5rem">${t('landing.costNote', dl, { watts, rate: `$${(c.kwhRate ?? 0).toFixed(2)}` })}</small>
-    ${costChart(hist, dl)}
+  // two columns inside the donate card: the maintainer's note on the left, the
+  // receipts (table + trend chart) on the right; classes styled in landing.html
+  return `<div class="costs">
+    <div class="coststory">
+      <div class="costlabel">${t('landing.costFrom', dl)}</div>
+      <p>${t('landing.costStory', dl)}</p>
+    </div>
+    <div>
+      <div class="costlabel">${t('landing.costTitle', dl)}</div>
+      <table class="costtable">
+        ${rows.map(([l, v]) => `<tr><td>${l}</td><td>${usd(v)}/mo</td></tr>`).join('')}
+        <tr><td>${t('landing.costTotal', dl)}</td><td>${usd(total)}/mo</td></tr>
+      </table>
+      <small class="costnote">${t('landing.costNote', dl, { watts, rate: `$${(c.kwhRate ?? 0).toFixed(2)}` })}</small>
+      ${costChart(hist, dl)}
+    </div>
   </div>`;
 }
 
