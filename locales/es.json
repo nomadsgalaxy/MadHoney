@@ -479,6 +479,12 @@
     "footProject": "Proyecto",
     "footSource": "Código en GitHub",
     "footSelfhost": "Guía de autoalojamiento",
-    "footLicense": "Licencia (OCL v1.1 + SWAtt)"
+    "footLicense": "Licencia (OCL v1.1 + SWAtt)",
+    "costTitle": "Lo que realmente cuesta mantenerlo en marcha",
+    "costPower": "Electricidad del servidor doméstico (la parte de MadHoney, a tarifa residencial)",
+    "costFailover": "Respaldo en la nube en espera (entra en acción si el servidor doméstico se queda sin luz)",
+    "costDomain": "Dominio e infraestructura web",
+    "costTotal": "Total",
+    "costNote": "Calculado en vivo a partir de la configuración real de esta instancia — {watts} W de la parte del servidor a {rate}/kWh. El alojamiento lo dona el mantenedor; el apoyo en Ko-fi va directamente a cubrir estos costes."
   }
 }

@@ -479,6 +479,12 @@
     "footProject": "Projekt",
     "footSource": "Källkod på GitHub",
     "footSelfhost": "Guide för självhosting",
-    "footLicense": "Licens (OCL v1.1 + SWAtt)"
+    "footLicense": "Licens (OCL v1.1 + SWAtt)",
+    "costTitle": "Vad det faktiskt kostar att köra",
+    "costPower": "El för hemmaservern (MadHoneys andel, till hushållspris)",
+    "costFailover": "Molnreserv i standby (tar över om hemmaservern förlorar strömmen)",
+    "costDomain": "Domän & webbinfrastruktur",
+    "costTotal": "Totalt",
+    "costNote": "Beräknas live från den här instansens verkliga konfiguration - {watts} W serverandel till {rate}/kWh. Hostingen doneras av underhållaren; stöd via Ko-fi går direkt till de här kostnaderna."
   }
 }

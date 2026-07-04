@@ -479,6 +479,12 @@
     "footProject": "Progetto",
     "footSource": "Codice su GitHub",
     "footSelfhost": "Guida al self-hosting",
-    "footLicense": "Licenza (OCL v1.1 + SWAtt)"
+    "footLicense": "Licenza (OCL v1.1 + SWAtt)",
+    "costTitle": "Quanto costa davvero farlo girare",
+    "costPower": "Elettricità del server domestico (la quota di MadHoney, a tariffe residenziali)",
+    "costFailover": "Failover cloud in standby (subentra se il server domestico resta senza corrente)",
+    "costDomain": "Dominio e infrastruttura web",
+    "costTotal": "Totale",
+    "costNote": "Calcolato in tempo reale dalla configurazione reale di questa istanza — {watts} W di quota del server a {rate}/kWh. L'hosting è donato dal manutentore; il sostegno su Ko-fi va direttamente a coprire questi costi."
   }
 }

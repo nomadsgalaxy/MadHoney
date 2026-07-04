@@ -56,6 +56,33 @@ function maintenanceNotice() {
   catch { return ''; }
 }
 
+// Live running-cost breakdown for the landing page's donate section, driven by
+// costs.json next to the app (deployment content, like notice.txt; absent =
+// widget hidden). Read per request, so tuning the numbers applies instantly.
+// Shape: { kwhRate, serverWatts, share, monthly: { failover, domain } }
+function costsWidget(dl) {
+  let c;
+  try { c = JSON.parse(readFileSync(new URL('./costs.json', import.meta.url), 'utf8')); } catch { return ''; }
+  const watts = Math.round((c.serverWatts ?? 0) * (c.share ?? 1));
+  const power = (watts / 1000) * 24 * 30.44 * (c.kwhRate ?? 0); // avg hours per month
+  const rows = [
+    [t('landing.costPower', dl), power],
+    [t('landing.costFailover', dl), c.monthly?.failover ?? 0],
+    [t('landing.costDomain', dl), c.monthly?.domain ?? 0],
+  ].filter(([, v]) => v > 0);
+  if (!rows.length) return '';
+  const total = rows.reduce((s, [, v]) => s + v, 0);
+  const usd = (v) => `$${v.toFixed(2)}`;
+  return `<div style="background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;margin:1.1rem auto;max-width:460px;text-align:left">
+    <b>${t('landing.costTitle', dl)}</b>
+    <table style="width:100%;margin-top:.5rem;border-collapse:collapse;font-size:.92rem">
+      ${rows.map(([l, v]) => `<tr><td style="padding:.2rem .6rem .2rem 0;color:var(--dim)">${l}</td><td style="text-align:right;white-space:nowrap;vertical-align:top">${usd(v)}/mo</td></tr>`).join('')}
+      <tr><td style="padding:.35rem 0;border-top:1px solid var(--line)"><b>${t('landing.costTotal', dl)}</b></td><td style="text-align:right;border-top:1px solid var(--line)"><b>${usd(total)}/mo</b></td></tr>
+    </table>
+    <small style="color:var(--dim);display:block;margin-top:.5rem">${t('landing.costNote', dl, { watts, rate: `$${(c.kwhRate ?? 0).toFixed(2)}` })}</small>
+  </div>`;
+}
+
 function layout(title, body, opts = {}) {
   const dl = curLocale;
   const notice = maintenanceNotice();
@@ -795,6 +822,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
             .replace(/%%L_([\w.]+)%%/g, (_, k) => t('landing.' + k, dl)) // values carry intentional HTML — do not esc()
             .replaceAll('%%LANG%%', dl)
             .replaceAll('%%LANGPICKER%%', picker)
+            .replaceAll('%%COSTS%%', costsWidget(dl))
             .replaceAll('%%INVITE%%', inviteUrl())
             .replaceAll('%%GUILDS%%', client.guilds.cache.size.toLocaleString(dl))
             .replaceAll('%%BANS%%', trappedCount().toLocaleString(dl)));

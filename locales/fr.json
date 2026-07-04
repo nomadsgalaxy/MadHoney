@@ -479,6 +479,12 @@
     "footProject": "Projet",
     "footSource": "Source sur GitHub",
     "footSelfhost": "Guide d'auto-hébergement",
-    "footLicense": "Licence (OCL v1.1 + SWAtt)"
+    "footLicense": "Licence (OCL v1.1 + SWAtt)",
+    "costTitle": "Ce que ça coûte vraiment de faire tourner le bot",
+    "costPower": "Électricité du serveur domestique (part de MadHoney, au tarif résidentiel)",
+    "costFailover": "Serveur cloud de secours en veille (prend le relais en cas de coupure de courant du serveur domestique)",
+    "costDomain": "Domaine et infrastructure web",
+    "costTotal": "Total",
+    "costNote": "Calculé en direct à partir de la configuration réelle de cette instance - une part serveur de {watts} W, à {rate}/kWh. L'hébergement est offert par le mainteneur ; les dons sur Ko-fi servent directement à couvrir ces coûts."
   }
 }

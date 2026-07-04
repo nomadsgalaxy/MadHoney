@@ -479,6 +479,12 @@
     "footProject": "Projekt",
     "footSource": "Zdrojový kód na GitHubu",
     "footSelfhost": "Průvodce vlastním hostováním",
-    "footLicense": "Licence (OCL v1.1 + SWAtt)"
+    "footLicense": "Licence (OCL v1.1 + SWAtt)",
+    "costTitle": "Kolik provoz doopravdy stojí",
+    "costPower": "Elektřina domácího serveru (podíl MadHoney, v sazbách pro domácnosti)",
+    "costFailover": "Pohotovostní cloudová záloha (naskočí, když domácí server přijde o proud)",
+    "costDomain": "Doména a webová infrastruktura",
+    "costTotal": "Celkem",
+    "costNote": "Počítáno živě ze skutečné konfigurace této instance — {watts} W serverového podílu při {rate}/kWh. Hosting věnuje správce projektu; podpora přes Ko-fi jde přímo na pokrytí těchto nákladů."
   }
 }
