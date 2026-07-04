@@ -153,7 +153,8 @@
       "armed": "scharf",
       "needsSetup": "Einrichtung nötig",
       "onlyYou": "Nur für dich sichtbar - die Server, die dir gehören, in denen du Server verwalten hast oder eine Team-/Admin-Rolle innehast.",
-      "caught": "gefangen"
+      "caught": "gefangen",
+      "tileMembers": "Geschützte Mitglieder"
     },
     "guild": {
       "allServers": "Alle Server",
@@ -498,6 +499,7 @@
     "costStory": "Ich wollte an einem dynamischen Kosten-Schätzer herumbasteln, um herauszufinden, wie viel mich meine Projekte eigentlich kosten. Ich fand, das wäre ein netter Datenpunkt zum Verfolgen und Zeigen - ganz im Sinne voller Transparenz. Wenn du helfen möchtest, diese Kosten auszugleichen, kannst du gerne über Ko-fi spenden. MadHoney wird immer kostenlos bleiben.",
     "costChartTitle": "Monatliche Betriebskosten im Zeitverlauf",
     "costFrom": "Vom Maintainer",
-    "footDiscord": "Entwickler-Discord"
+    "footDiscord": "Entwickler-Discord",
+    "statMembers": "geschützte Mitglieder"
   }
 }

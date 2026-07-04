@@ -701,6 +701,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">${t('dash.gate.cantAc
     const rows = bans();
     const trapped = trappedCount(rows);
     const servers = client.guilds.cache.size;
+    const members = client.guilds.cache.reduce((s, g) => s + (g.memberCount || 0), 0);
     // UNIQUE spammers, counted once on the day they were first caught (so a
     // user banned in several servers or re-logged by ban-share isn't double
     // counted). Only users still trapped somewhere are included.
@@ -779,6 +780,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">${t('dash.gate.cantAc
 <div class="stat-row">
   <div class="stat-tile"><div class="n">${trapped.toLocaleString('en-US')}</div><div class="l">${t('dash.stats.tileTrapped', dl)}</div></div>
   <div class="stat-tile"><div class="n">${servers.toLocaleString('en-US')}</div><div class="l">${t('dash.stats.tileServers', dl)}</div></div>
+  <div class="stat-tile"><div class="n">${members.toLocaleString('en-US')}</div><div class="l">${t('dash.stats.tileMembers', dl)}</div></div>
   <div class="stat-tile"><div class="n">${last30.toLocaleString('en-US')}</div><div class="l">${t('dash.stats.tile30d', dl)}</div></div>
 </div>
 <div class="card"><h2>${t('dash.stats.chartHeading', dl)}</h2>
@@ -915,6 +917,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
             .replaceAll('%%COSTS%%', costsWidget(dl))
             .replaceAll('%%INVITE%%', inviteUrl())
             .replaceAll('%%GUILDS%%', client.guilds.cache.size.toLocaleString(dl))
+            .replaceAll('%%MEMBERS%%', client.guilds.cache.reduce((s, g) => s + (g.memberCount || 0), 0).toLocaleString(dl))
             .replaceAll('%%BANS%%', trappedCount().toLocaleString(dl)));
         }
         const manageable = [];

@@ -153,7 +153,8 @@
       "armed": "aktiverad",
       "needsSetup": "behöver konfig",
       "onlyYou": "Visas bara för dig - de servrar du äger, har Hantera server på, eller har en personal-/adminroll i.",
-      "caught": "fångade"
+      "caught": "fångade",
+      "tileMembers": "Skyddade medlemmar"
     },
     "guild": {
       "allServers": "Alla servrar",
@@ -498,6 +499,7 @@
     "costStory": "Jag ville mecka ihop en dynamisk kostnadsberäknare för att få koll på hur mycket mina projekt faktiskt kostar mig. Jag tyckte det var en kul datapunkt att följa och visa upp, för full transparens. Om du vill hjälpa till att täcka kostnaden får du gärna donera via Ko-fi. MadHoney kommer alltid att vara gratis.",
     "costChartTitle": "Månatlig driftskostnad över tid",
     "costFrom": "Från underhållaren",
-    "footDiscord": "Utvecklar-Discord"
+    "footDiscord": "Utvecklar-Discord",
+    "statMembers": "skyddade medlemmar"
   }
 }

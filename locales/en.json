@@ -153,7 +153,8 @@
       "armed": "armed",
       "needsSetup": "needs setup",
       "onlyYou": "Only shown to you - the servers you own, have Manage Server in, or hold a staff/admin role in.",
-      "caught": "caught"
+      "caught": "caught",
+      "tileMembers": "Members protected"
     },
     "guild": {
       "allServers": "All servers",
@@ -498,6 +499,7 @@
     "costStory": "I wanted to tinker with a dynamic cost estimator to help me figure out how much my projects cost me. I thought this would be a neat data point to track and show, for full transparency. If you wish to help offset this cost, feel free to donate via Ko-fi. MadHoney will always be free.",
     "costChartTitle": "Monthly running cost over time",
     "costFrom": "From the maintainer",
-    "footDiscord": "Developer Discord"
+    "footDiscord": "Developer Discord",
+    "statMembers": "members protected"
   }
 }

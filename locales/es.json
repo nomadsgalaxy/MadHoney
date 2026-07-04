@@ -153,7 +153,8 @@
       "armed": "armado",
       "needsSetup": "falta configurar",
       "onlyYou": "Solo visible para ti - los servidores que posees, en los que tienes Gestionar servidor, o en los que tienes un rol de equipo/administrador.",
-      "caught": "atrapados"
+      "caught": "atrapados",
+      "tileMembers": "Miembros protegidos"
     },
     "guild": {
       "allServers": "Todos los servidores",
@@ -498,6 +499,7 @@
     "costStory": "Quería trastear con un estimador dinámico de costes que me ayudara a saber cuánto me cuestan mis proyectos. Pensé que sería un dato curioso para registrar y mostrar, por pura transparencia. Si quieres ayudar a compensar este coste, no dudes en donar a través de Ko-fi. MadHoney siempre será gratis.",
     "costChartTitle": "Coste mensual de funcionamiento a lo largo del tiempo",
     "costFrom": "Del mantenedor",
-    "footDiscord": "Discord del desarrollador"
+    "footDiscord": "Discord del desarrollador",
+    "statMembers": "miembros protegidos"
   }
 }
