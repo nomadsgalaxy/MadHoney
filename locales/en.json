@@ -494,6 +494,7 @@
     "costNote": "Computed live from this instance’s real configuration — {watts} W of server share at {rate}/kWh. Hosting is donated by the maintainer; Ko-fi support goes directly toward these costs.",
     "costStory": "I wanted to tinker with a dynamic cost estimator to help me figure out how much my projects cost me. I thought this would be a neat data point to track and show, for full transparency. If you wish to help offset this cost, feel free to donate via Ko-fi. MadHoney will always be free.",
     "costChartTitle": "Monthly running cost over time",
-    "costFrom": "From the maintainer"
+    "costFrom": "From the maintainer",
+    "footDiscord": "Developer Discord"
   }
 }

@@ -494,6 +494,7 @@
     "costNote": "Počítáno živě ze skutečné konfigurace této instance — {watts} W serverového podílu při {rate}/kWh. Hosting věnuje správce projektu; podpora přes Ko-fi jde přímo na pokrytí těchto nákladů.",
     "costStory": "Chtěl jsem si pohrát s dynamickým odhadem nákladů, abych zjistil, kolik mě moje projekty vlastně stojí. Přišlo mi, že to bude zajímavý údaj, který můžu sledovat a ukázat — pro úplnou transparentnost. Pokud chceš pomoct tyto náklady pokrýt, klidně přispěj přes Ko-fi. MadHoney bude vždycky zdarma.",
     "costChartTitle": "Měsíční provozní náklady v čase",
-    "costFrom": "Od správce projektu"
+    "costFrom": "Od správce projektu",
+    "footDiscord": "Discord vývojáře"
   }
 }

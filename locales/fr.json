@@ -494,6 +494,7 @@
     "costNote": "Calculé en direct à partir de la configuration réelle de cette instance - une part serveur de {watts} W, à {rate}/kWh. L'hébergement est offert par le mainteneur ; les dons sur Ko-fi servent directement à couvrir ces coûts.",
     "costStory": "J'avais envie de bricoler un estimateur de coûts dynamique pour savoir combien mes projets me coûtent vraiment. Je me suis dit que ce serait une donnée sympa à suivre et à afficher, en toute transparence. Si tu veux aider à compenser ce coût, n'hésite pas à faire un don via Ko-fi. MadHoney restera toujours gratuit.",
     "costChartTitle": "Évolution du coût mensuel de fonctionnement",
-    "costFrom": "Le mot du mainteneur"
+    "costFrom": "Le mot du mainteneur",
+    "footDiscord": "Discord du développeur"
   }
 }

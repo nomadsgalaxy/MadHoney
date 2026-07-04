@@ -486,6 +486,7 @@
     "footSource": "Código no GitHub",
     "footSelfhost": "Guia de self-hosting",
     "footLicense": "Licença (OCL v1.1 + SWAtt)",
+    "footDiscord": "Discord do desenvolvedor",
     "costTitle": "Quanto custa de verdade para rodar",
     "costPower": "Eletricidade do servidor bare-metal (a parcela do MadHoney, em tarifa residencial)",
     "costFailover": "Reserva de failover na nuvem (entra em ação se o servidor bare-metal cair)",

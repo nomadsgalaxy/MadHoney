@@ -494,6 +494,7 @@
     "costNote": "Calcolato in tempo reale dalla configurazione reale di questa istanza — {watts} W di quota del server a {rate}/kWh. L'hosting è donato dal manutentore; il sostegno su Ko-fi va direttamente a coprire questi costi.",
     "costStory": "Volevo sperimentare con uno stimatore dinamico dei costi per capire quanto mi costano davvero i miei progetti. Mi è sembrato un dato interessante da tracciare e mostrare, per piena trasparenza. Se vuoi aiutarmi a coprire questa spesa, puoi fare una donazione su Ko-fi. MadHoney sarà sempre gratuito.",
     "costChartTitle": "Costo mensile di gestione nel tempo",
-    "costFrom": "Dal manutentore"
+    "costFrom": "Dal manutentore",
+    "footDiscord": "Discord degli sviluppatori"
   }
 }
