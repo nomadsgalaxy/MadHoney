@@ -865,7 +865,7 @@ client.once(Events.ClientReady, async (c) => {
   // Message History. If gating a specific channel fails with Missing Access,
   // the bot can't see it - grant the MadHoney role View there (or temporarily
   // give it Administrator, gate, then remove).
-  console.log(`Invite: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot+applications.commands&permissions=268536852`);
+  console.log(`Invite: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot+applications.commands&permissions=268545044`);
   if (process.env.CLIENT_ID) {
     startDashboard(client);
     if (!process.env.CLIENT_SECRET) console.log('Dashboard up in landing-only mode - set CLIENT_SECRET in .env to enable login.');
