@@ -17,3 +17,4 @@ failover/
 # operator maintenance banner (deployment content)
 notice.txt
 costs.json
+costs-history.jsonl
