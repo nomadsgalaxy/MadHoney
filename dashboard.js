@@ -360,7 +360,7 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
     ${[['easy', t('dash.guild.diffEasy', dl)], ['normal', t('dash.guild.diffNormal', dl)], ['hard', t('dash.guild.diffHard', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'easy') === v ? 'selected' : ''}>${l}</option>`).join('')}
   </select><small>${t('dash.guild.captchaHint', dl)}</small></label>
   <label>${t('dash.guild.captchaStyle', dl)} <select name="captchaStyle" ${verifyOn ? '' : 'disabled'} onchange="cpvNew()">
-    ${[['text', t('dash.guild.styleText', dl)], ['position', t('dash.guild.stylePos', dl)], ['choice', t('dash.guild.styleChoice', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaStyle ?? 'text') === v ? 'selected' : ''}>${l}</option>`).join('')}
+    ${[['text', t('dash.guild.styleText', dl)], ['position', t('dash.guild.stylePos', dl)], ['choice', t('dash.guild.styleChoice', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaStyle ?? 'position') === v ? 'selected' : ''}>${l}</option>`).join('')}
   </select><small>${t('dash.guild.captchaStyleHint', dl)}</small></label>
   ${verifyOn ? `<div style="margin:.4rem 0 .8rem">
     <img id="cpv" src="/g/${guild.id}/captcha.png" alt="captcha preview" style="max-width:100%;border-radius:8px;border:1px solid var(--line)"><br>
@@ -858,7 +858,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           // live preview for the config form: unsaved style/difficulty come in
           // as query params; the answer is random and never leaves the server
           const diff = url.searchParams.get('diff') || getGuild(guild.id)?.captchaDifficulty || 'easy';
-          const style = url.searchParams.get('style') || getGuild(guild.id)?.captchaStyle || 'text';
+          const style = url.searchParams.get('style') || getGuild(guild.id)?.captchaStyle || 'position';
           const png = style === 'position'
             ? renderPositionCaptcha(1 + Math.floor(Math.random() * POSITION_SLOTS), diff)
             : renderCaptcha(makeCode(captchaLength(diff)), diff);

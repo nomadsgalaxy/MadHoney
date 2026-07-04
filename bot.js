@@ -271,7 +271,7 @@ client.on(Events.InteractionCreate, async (i) => {
       const now = Date.now();
       const prev = pending.get(i.user.id);
       if (prev && now < prev.cooldownUntil) return i.reply({ content: t('verify.cooldown', cfg.locale), ...EPH });
-      const style = cfg.captchaStyle ?? 'text';
+      const style = cfg.captchaStyle ?? 'position';
       if (style === 'choice') {
         // the member picks; the record holds the cooldown until they do
         pending.set(i.user.id, { style: 'choice', test, expires: now + VERIFY_TTL, cooldownUntil: now + VERIFY_COOLDOWN });
