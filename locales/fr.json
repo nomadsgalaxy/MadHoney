@@ -292,7 +292,8 @@
       "styleChoice": "Au choix du membre (il choisit à chaque vérification)",
       "captchaStyleHint": "Le code texte est le classique anti-OCR. « Emboîter la pièce » est une association de formes en un clic — plus facile sur téléphone et pour les membres qui ont du mal avec le texte déformé. « Au choix du membre » propose les deux.",
       "captchaPreviewNew": "↻ Nouvel aperçu",
-      "captchaTestHint": "L'aperçu se met à jour avec les sélecteurs ci-dessus (enregistre pour appliquer). Pour un test en conditions réelles : les membres de l'équipe qui ont déjà le rôle vérifié peuvent cliquer sur Vérifier sur ton panneau — le vrai parcours se déroule sans modifier les rôles."
+      "captchaTestHint": "L'aperçu se met à jour avec les sélecteurs ci-dessus (enregistre pour appliquer). Pour un test en conditions réelles : les membres de l'équipe qui ont déjà le rôle vérifié peuvent cliquer sur Vérifier sur ton panneau — le vrai parcours se déroule sans modifier les rôles.",
+      "gfEstimate": "⏱️ ≈ jusqu'à {mins} min pour {members} membres — Discord limite les changements de rôle à environ 1 par seconde par serveur, les gros serveurs prennent donc un moment. Cela s'exécute en arrière-plan et reprend en cas d'interruption."
     },
     "msg": {
       "bannerSaved": "Bannière enregistrée. Publie-la depuis Actions (ou /madhoney deploy dans Discord).",
@@ -332,7 +333,9 @@
       "cancel": "Annuler",
       "reset": "↺ Réinitialiser à la détection automatique",
       "category": "CATÉGORIE",
-      "detectedTitle": "détecté : {kind}"
+      "detectedTitle": "détecté : {kind}",
+      "gfRunningWarn": "⚠️ L'attribution du rôle aux membres existants est en cours en ce moment. Si tu filtres les salons avant qu'elle ne se termine, les membres existants qui n'ont pas encore le rôle vérifié seront bloqués. Attends qu'elle se termine (voir Actions sur la page du serveur).",
+      "gfNotDoneWarn": "⚠️ Tu n'as pas encore attribué le rôle aux membres existants. Filtrer maintenant bloque tous ceux qui n'ont pas le rôle vérifié jusqu'à ce qu'ils réussissent la vérification. Lance d'abord l'attribution aux membres existants (Actions) pour que les membres actuels conservent l'accès."
     },
     "home": {
       "title": "MadHoney - Tes serveurs",

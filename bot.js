@@ -703,13 +703,27 @@ client.on(Events.MessageCreate, async (msg) => {
   };
   if (!shouldTrap(facts, cfg)) return;
 
-  // Capture what we can BEFORE the ban wipes the message. content is only
-  // populated when the privileged Message Content intent is on (MESSAGE_CONTENT=on).
-  const spamText = msg.content || null;
-  const attachments = [...msg.attachments.values()].map((a) => a.name).join(', ');
+  // Capture what we can BEFORE the ban wipes the message. The gateway strips
+  // content + attachments without the Message Content intent - but a REST
+  // re-fetch recovers ATTACHMENTS (and content too, if the intent is on), so we
+  // can show the actual spam images in the log either way.
+  let full = msg;
+  if (!msg.content && msg.attachments.size === 0) full = await msg.fetch().catch(() => msg);
+  const spamText = full.content || null;
+  const atts = [...full.attachments.values()];
+  const attachments = atts.map((a) => a.name).join(', ');
+  // Re-host up to 4 image attachments in the log. Download the bytes NOW, before
+  // the ban's deleteMessageSeconds purge can wipe the CDN copy - so the mod log
+  // keeps the actual spam image even after the original is gone.
+  const spamFiles = [];
+  for (const a of atts.filter((x) => x.contentType?.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp)$/i.test(x.name)).slice(0, 4)) {
+    try { spamFiles.push(new AttachmentBuilder(Buffer.from(await (await fetch(a.url)).arrayBuffer()), { name: a.name })); }
+    catch { /* couldn't fetch the attachment - skip it */ }
+  }
   const quoted = spamText
     ? spamText.slice(0, 1000).split('\n').map((l) => `> ${l}`).join('\n')
-    : '> *(message content unavailable - enable the Message Content intent and set `MESSAGE_CONTENT=on` to capture it)*';
+    : (atts.length ? `> *(${atts.length} attachment(s) - shown below)*`
+      : '> *(message content unavailable - enable the Message Content intent and set `MESSAGE_CONTENT=on` to capture it)*');
 
   // Hold-for-review mode: don't ban. Post the hit to the log channel and let a
   // mod decide with Ban / Dismiss buttons. Not recommended (a real spam run
@@ -723,6 +737,7 @@ client.on(Events.MessageCreate, async (msg) => {
         quoted,
         attachments ? t('log.attach', cfg.locale, { names: attachments }) : null,
       ].filter(Boolean).join('\n'),
+      files: spamFiles.length ? spamFiles : undefined,
       components: [new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`mh_review_ban_${msg.author.id}_${msg.id}`).setLabel(t('log.banBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
         new ButtonBuilder().setCustomId(`mh_review_dismiss_${msg.author.id}`).setLabel(t('log.dismissBtn', cfg.locale)).setStyle(ButtonStyle.Secondary),
@@ -766,6 +781,7 @@ client.on(Events.MessageCreate, async (msg) => {
       quoted,
       attachments ? t('log.attach', cfg.locale, { names: attachments }) : null,
     ].filter(Boolean).join('\n'),
+    files: spamFiles.length ? spamFiles : undefined,
     components: banned ? [new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId(`mh_unban_${msg.author.id}`).setLabel(t('log.undoBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
     )] : [],
@@ -862,6 +878,27 @@ client.once(Events.ClientReady, async (c) => {
     }
     try { writeFileSync(LASTSEEN, String(Date.now())); } catch { /* best effort */ }
   }, 8000);
+
+  // Resume grandfather / ban-sync jobs a restart interrupted. Both are
+  // idempotent (skip members already handled) and self-clear their pending flag
+  // on completion; run sequentially so several servers can't gang up on the
+  // rate limit at once. If one fails on resume (e.g. config changed), clear its
+  // flag so it doesn't retry every boot.
+  setTimeout(async () => {
+    for (const guild of c.guilds.cache.values()) {
+      const gcfg = getGuild(guild.id);
+      if (gcfg?.grandfatherPending) {
+        console.log(`[${guild.name}] resuming interrupted grandfather...`);
+        try { console.log(`[${guild.name}] ${await grandfather(guild, gcfg)}`); }
+        catch (e) { console.error(`[${guild.name}] grandfather resume failed, clearing flag:`, e.message); saveGuild(guild.id, { grandfatherPending: false }); }
+      }
+      if (gcfg?.banSyncPending) {
+        console.log(`[${guild.name}] resuming interrupted ban-sync...`);
+        try { console.log(`[${guild.name}] ${await syncBans(guild, gcfg)}`); }
+        catch (e) { console.error(`[${guild.name}] ban-sync resume failed, clearing flag:`, e.message); saveGuild(guild.id, { banSyncPending: false }); }
+      }
+    }
+  }, 12000);
   // Minimum viable: Manage Roles (verified role + channel overwrites), Manage
   // Channels, Ban Members, View Channels, Send Messages, Attach Files, Read
   // Message History. If gating a specific channel fails with Missing Access,

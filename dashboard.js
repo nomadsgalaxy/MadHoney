@@ -574,7 +574,7 @@ ${gfJobs.has(guild.id) ? `
 <div class="subh first">${t('dash.guild.deployHeader', dl)}</div>
 <form method="post" action="/g/${guild.id}/action#actions" class="steps">
 ${[
-  ['grandfather', 'grey', t('dash.guild.step1Label', dl), t('dash.guild.step1Desc', dl)],
+  ['grandfather', 'grey', t('dash.guild.step1Label', dl), `${t('dash.guild.step1Desc', dl)}<br><span style="color:var(--honey)">${t('dash.guild.gfEstimate', dl, { members: (guild.memberCount || 0).toLocaleString(dl), mins: Math.max(1, Math.ceil((guild.memberCount || 0) / 60)) })}</span>`],
   ['post_verify', '', t('dash.guild.step2Label', dl), t('dash.guild.step2Desc', dl)],
   ['post_banner', '', t('dash.guild.step3Label', dl), t('dash.guild.step3Desc', dl)],
 ].map(([val, cls, label, desc]) =>
@@ -634,6 +634,10 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
 </div>
 <div class="ghead"><div class="gtitle"><h1>${t('dash.gate.title', dl)}</h1></div></div>
 ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
+${cfg.grandfatherPending
+    ? `<div class="warnbox">${t('dash.gate.gfRunningWarn', dl)}</div>`
+    : (cfg.verificationEnabled !== false && cfg.verifiedRoleId && !cfg.grandfatheredAt
+      ? `<div class="warnbox">${t('dash.gate.gfNotDoneWarn', dl)}</div>` : '')}
 <div class="card">
 <p>${t('dash.gate.intro', dl)}</p>
 <div class="legend"><span class="kdot public"></span>${t('dash.gate.legendPublic', dl)} <span class="kdot private"></span>${t('dash.gate.legendPrivate', dl)} <span class="kdot admin"></span>${t('dash.gate.legendAdmin', dl)}</div>

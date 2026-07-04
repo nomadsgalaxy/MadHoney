@@ -292,7 +292,8 @@
       "styleChoice": "A elección del miembro (elige en cada verificación)",
       "captchaStyleHint": "Texto es el clásico código que vence al OCR. Encaja la pieza es una coincidencia de formas con un solo clic — más fácil en móviles y para los miembros a quienes les cuesta el texto distorsionado. A elección del miembro ofrece ambas.",
       "captchaPreviewNew": "↻ Nueva vista previa",
-      "captchaTestHint": "La vista previa se actualiza con los selectores de arriba (guarda para aplicar). Para una prueba real: los miembros del equipo que ya tienen el rol de verificado pueden hacer clic en Verificar en tu panel — ejecuta el flujo real sin cambiar roles."
+      "captchaTestHint": "La vista previa se actualiza con los selectores de arriba (guarda para aplicar). Para una prueba real: los miembros del equipo que ya tienen el rol de verificado pueden hacer clic en Verificar en tu panel — ejecuta el flujo real sin cambiar roles.",
+      "gfEstimate": "⏱️ ≈ hasta {mins} min para {members} miembros — Discord limita los cambios de rol a aproximadamente 1 por segundo por servidor, así que los servidores grandes tardan un rato. Se ejecuta en segundo plano y se reanuda si se interrumpe."
     },
     "msg": {
       "bannerSaved": "Banner guardado. Publícalo desde Acciones (o /madhoney deploy en Discord).",
@@ -332,7 +333,9 @@
       "cancel": "Cancelar",
       "reset": "↺ Restablecer a la detección automática",
       "category": "CATEGORÍA",
-      "detectedTitle": "detectado: {kind}"
+      "detectedTitle": "detectado: {kind}",
+      "gfRunningWarn": "⚠️ El otorgamiento del rol a los miembros actuales se está ejecutando ahora mismo. Si restringes los canales antes de que termine, los miembros actuales que aún no tengan el rol de verificado quedarán bloqueados. Espera a que se complete (mira Acciones en la página del servidor).",
+      "gfNotDoneWarn": "⚠️ Aún no has otorgado el rol de verificado a los miembros actuales. Restringir ahora bloquea a todos los que no tengan el rol de verificado hasta que superen la verificación. Ejecuta primero Otorgar rol a los miembros actuales (Acciones) para que los miembros actuales mantengan el acceso."
     },
     "home": {
       "title": "MadHoney - Tus servidores",

@@ -292,7 +292,8 @@
       "styleChoice": "Volba člena (vybírá si při každém ověření)",
       "captchaStyleHint": "Text je klasický kód znemožňující OCR. Zasazení dílku je přiřazení tvaru jedním kliknutím — snazší na telefonech a pro členy, kteří bojují se zkresleným textem. Volba člena nabízí obojí.",
       "captchaPreviewNew": "↻ Nový náhled",
-      "captchaTestHint": "Náhled se aktualizuje podle výběrů výše (změny se projeví po uložení). Pro živý test: členové týmu, kteří už mají roli ověřeného, mohou na tvém panelu kliknout na Ověřit — proběhne skutečný proces, aniž by se změnily role."
+      "captchaTestHint": "Náhled se aktualizuje podle výběrů výše (změny se projeví po uložení). Pro živý test: členové týmu, kteří už mají roli ověřeného, mohou na tvém panelu kliknout na Ověřit — proběhne skutečný proces, aniž by se změnily role.",
+      "gfEstimate": "⏱️ ≈ až {mins} min pro {members} členů — Discord omezuje změny rolí zhruba na 1 za sekundu na server, takže u velkých serverů to chvíli trvá. Běží to na pozadí a při přerušení naváže tam, kde skončilo."
     },
     "msg": {
       "bannerSaved": "Banner uložen. Vyvěs ho z Akcí (nebo přes /madhoney deploy v Discordu).",
@@ -332,7 +333,9 @@
       "cancel": "Zrušit",
       "reset": "↺ Obnovit na automaticky rozpoznané",
       "category": "KATEGORIE",
-      "detectedTitle": "rozpoznáno: {kind}"
+      "detectedTitle": "rozpoznáno: {kind}",
+      "gfRunningWarn": "⚠️ Přidělování rolí stávajícím členům právě probíhá. Pokud uzamkneš kanály dřív, než skončí, stávající členové, kteří ještě nemají roli ověřeného, zůstanou zamčeni. Počkej, až doběhne (viz Akce na stránce serveru).",
+      "gfNotDoneWarn": "⚠️ Zatím jsi nepřidělil(a) roli stávajícím členům. Uzamčení teď zamkne každého bez role ověřeného, dokud neprojde ověřením. Nejdřív spusť Přidělit stávajícím (Akce), aby si současní členové udrželi přístup."
     },
     "home": {
       "title": "MadHoney - Tvoje servery",

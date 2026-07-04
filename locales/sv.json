@@ -292,7 +292,8 @@
       "styleChoice": "Medlemmens val (de väljer vid varje verifiering)",
       "captchaStyleHint": "Text är den klassiska OCR-motverkande koden. Passa in biten är en formmatchning med ett klick - lättare på mobilen och för medlemmar som kämpar med förvrängd text. Medlemmens val erbjuder båda.",
       "captchaPreviewNew": "↻ Ny förhandsvisning",
-      "captchaTestHint": "Förhandsvisningen uppdateras med väljarna ovan (spara för att tillämpa). För ett livetest: personal som redan har den verifierade rollen kan klicka på Verifiera på din panel - det kör det riktiga flödet utan att ändra några roller."
+      "captchaTestHint": "Förhandsvisningen uppdateras med väljarna ovan (spara för att tillämpa). För ett livetest: personal som redan har den verifierade rollen kan klicka på Verifiera på din panel - det kör det riktiga flödet utan att ändra några roller.",
+      "gfEstimate": "⏱️ ≈ upp till {mins} min för {members} medlemmar — Discord begränsar rolländringar till ungefär 1 per sekund per server, så stora servrar tar en stund. Det körs i bakgrunden och återupptas om det avbryts."
     },
     "msg": {
       "bannerSaved": "Banner sparad. Posta den från Åtgärder (eller /madhoney deploy i Discord).",
@@ -332,7 +333,9 @@
       "cancel": "Avbryt",
       "reset": "↺ Återställ till automatiskt upptäckt",
       "category": "KATEGORI",
-      "detectedTitle": "upptäckt: {kind}"
+      "detectedTitle": "upptäckt: {kind}",
+      "gfRunningWarn": "⚠️ Att ge befintliga medlemmar rollen pågår just nu. Om du spärrar kanaler innan det är klart låses befintliga medlemmar som ännu inte har den verifierade rollen ute. Vänta tills det är klart (se Åtgärder på serversidan).",
+      "gfNotDoneWarn": "⚠️ Du har inte gett befintliga medlemmar rollen än. Att spärra nu låser ute alla utan den verifierade rollen tills de klarar verifieringen. Kör Ge befintliga medlemmar rollen först (Åtgärder) så att nuvarande medlemmar behåller åtkomsten."
     },
     "home": {
       "title": "MadHoney - Dina servrar",

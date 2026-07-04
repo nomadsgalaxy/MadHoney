@@ -292,7 +292,8 @@
       "styleChoice": "A scelta del membro (sceglie a ogni verifica)",
       "captchaStyleHint": "Il codice testuale è il classico codice anti-OCR. Incastra il pezzo è un abbinamento di forme con un solo clic — più comodo sui telefoni e per i membri che fanno fatica con il testo distorto. A scelta del membro li offre entrambi.",
       "captchaPreviewNew": "↻ Nuova anteprima",
-      "captchaTestHint": "L'anteprima si aggiorna con i selettori qui sopra (salva per applicare). Per un test dal vivo: lo staff che ha già il ruolo verificato può cliccare Verifica sul tuo pannello — esegue il flusso reale senza cambiare alcun ruolo."
+      "captchaTestHint": "L'anteprima si aggiorna con i selettori qui sopra (salva per applicare). Per un test dal vivo: lo staff che ha già il ruolo verificato può cliccare Verifica sul tuo pannello — esegue il flusso reale senza cambiare alcun ruolo.",
+      "gfEstimate": "⏱️ ≈ fino a {mins} min per {members} membri — Discord limita i cambi di ruolo a circa 1 al secondo per server, quindi i server grandi richiedono un po' di tempo. Viene eseguito in background e riprende se interrotto."
     },
     "msg": {
       "bannerSaved": "Banner salvato. Pubblicalo da Azioni (o /madhoney deploy in Discord).",
@@ -332,7 +333,9 @@
       "cancel": "Annulla",
       "reset": "↺ Ripristina al rilevamento automatico",
       "category": "CATEGORIA",
-      "detectedTitle": "rilevato: {kind}"
+      "detectedTitle": "rilevato: {kind}",
+      "gfRunningWarn": "⚠️ L'assegnazione del ruolo ai membri esistenti è in corso in questo momento. Se applichi il gating ai canali prima che finisca, i membri esistenti che non hanno ancora il ruolo verificato resteranno bloccati fuori. Aspetta che si completi (vedi Azioni nella pagina del server).",
+      "gfNotDoneWarn": "⚠️ Non hai ancora assegnato il ruolo ai membri esistenti. Applicare il gating ora blocca fuori chiunque non abbia il ruolo verificato finché non supera la verifica. Esegui prima l'assegnazione del ruolo ai membri esistenti (Azioni) così i membri attuali mantengono l'accesso."
     },
     "home": {
       "title": "MadHoney - I tuoi server",

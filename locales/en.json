@@ -292,7 +292,8 @@
       "styleChoice": "Member’s choice (they pick per verify)",
       "captchaStyleHint": "Text is the classic OCR-defeating code. Fit-the-piece is a one-click shape match — easier on phones and for members who struggle with distorted text. Member’s choice offers both.",
       "captchaPreviewNew": "↻ New preview",
-      "captchaTestHint": "Preview updates with the pickers above (save to apply). For a live test: staff who already have the verified role can click Verify on your panel — it runs the real flow without changing roles."
+      "captchaTestHint": "Preview updates with the pickers above (save to apply). For a live test: staff who already have the verified role can click Verify on your panel — it runs the real flow without changing roles.",
+      "gfEstimate": "⏱️ ≈ up to {mins} min for {members} members — Discord limits role changes to about 1 per second per server, so large servers take a while. It runs in the background and resumes if interrupted."
     },
     "msg": {
       "bannerSaved": "Banner saved. Post it from Actions (or /madhoney deploy in Discord).",
@@ -332,7 +333,9 @@
       "cancel": "Cancel",
       "reset": "↺ Reset to auto-detected",
       "category": "CATEGORY",
-      "detectedTitle": "detected: {kind}"
+      "detectedTitle": "detected: {kind}",
+      "gfRunningWarn": "⚠️ Grandfathering is running right now. If you gate channels before it finishes, existing members who don't have the verified role yet will be locked out. Wait for it to complete (see Actions on the server page).",
+      "gfNotDoneWarn": "⚠️ You haven't grandfathered existing members yet. Gating now locks out everyone without the verified role until they pass verification. Run Grandfather first (Actions) so current members keep access."
     },
     "home": {
       "title": "MadHoney - Your servers",

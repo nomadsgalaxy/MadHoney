@@ -292,7 +292,8 @@
       "styleChoice": "Wahl des Mitglieds (wählt bei jeder Verifizierung selbst)",
       "captchaStyleHint": "Text ist der klassische OCR-abweisende Code. Teil einpassen ist ein Formabgleich mit einem Klick — einfacher auf dem Handy und für Mitglieder, die sich mit verzerrtem Text schwertun. Wahl des Mitglieds bietet beides an.",
       "captchaPreviewNew": "↻ Neue Vorschau",
-      "captchaTestHint": "Die Vorschau aktualisiert sich mit den Auswahlfeldern oben (zum Übernehmen speichern). Für einen Live-Test: Team-Mitglieder, die die Verifiziert-Rolle bereits haben, können auf deinem Panel auf Verifizieren klicken — der echte Ablauf läuft durch, ohne Rollen zu ändern."
+      "captchaTestHint": "Die Vorschau aktualisiert sich mit den Auswahlfeldern oben (zum Übernehmen speichern). Für einen Live-Test: Team-Mitglieder, die die Verifiziert-Rolle bereits haben, können auf deinem Panel auf Verifizieren klicken — der echte Ablauf läuft durch, ohne Rollen zu ändern.",
+      "gfEstimate": "⏱️ ≈ bis zu {mins} Min für {members} Mitglieder — Discord begrenzt Rollenänderungen auf etwa 1 pro Sekunde und Server, daher dauern große Server eine Weile. Es läuft im Hintergrund und wird nach einer Unterbrechung fortgesetzt."
     },
     "msg": {
       "bannerSaved": "Banner gespeichert. Poste es über Aktionen (oder `/madhoney deploy` in Discord).",
@@ -332,7 +333,9 @@
       "cancel": "Abbrechen",
       "reset": "↺ Auf automatisch erkannt zurücksetzen",
       "category": "KATEGORIE",
-      "detectedTitle": "erkannt: {kind}"
+      "detectedTitle": "erkannt: {kind}",
+      "gfRunningWarn": "⚠️ Die Freischaltung läuft gerade. Wenn du Kanäle sperrst, bevor sie abgeschlossen ist, werden bestehende Mitglieder, die noch keine Verifiziert-Rolle haben, ausgesperrt. Warte, bis sie fertig ist (siehe Aktionen auf der Serverseite).",
+      "gfNotDoneWarn": "⚠️ Du hast bestehende Mitglieder noch nicht freigeschaltet. Wenn du jetzt sperrst, werden alle ohne Verifiziert-Rolle ausgesperrt, bis sie die Verifizierung bestehen. Führe zuerst die Freischaltung der Bestandsmitglieder aus (Aktionen), damit aktuelle Mitglieder den Zugang behalten."
     },
     "home": {
       "title": "MadHoney - Deine Server",

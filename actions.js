@@ -378,6 +378,9 @@ export async function preflight(guild, cfg, loc = cfg?.locale) {
 export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) {
   const problem = await preflight(guild, cfg, loc);
   if (problem) throw new Error(problem);
+  // resumable: mark in-progress so a bot restart mid-run re-runs it on the next
+  // boot (see ClientReady). Idempotent - already-verified members are skipped.
+  saveGuild(guild.id, { grandfatherPending: true });
   const role = await guild.roles.fetch(cfg.verifiedRoleId);
   const members = await guild.members.fetch();
   Object.assign(progress, { label: 'Grandfathering', total: members.size, done: 0, added: 0, skipped: 0, failed: 0 });
@@ -405,6 +408,7 @@ export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) 
     }
   };
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length || 1) }, worker));
+  saveGuild(guild.id, { grandfatherPending: false, grandfatheredAt: new Date().toISOString() });
   return t('dash.act.gfDone', loc, { role: role.name, added: progress.added, skipped: progress.skipped, failedPart: failures.length ? t('dash.act.gfFailed', loc, { n: failures.length, role: role.name, list: failures.slice(0, 5).join(', ') }) : '' });
 }
 
@@ -415,6 +419,7 @@ export async function syncBans(guild, cfg, progress = {}, loc = cfg?.locale) {
   if (!cfg.banShare) throw new Error(t('dash.act.sbOff', loc));
   const me = await guild.members.fetchMe();
   if (!me.permissions.has(PermissionFlagsBits.BanMembers)) throw new Error(t('dash.act.sbNoBan', loc));
+  saveGuild(guild.id, { banSyncPending: true }); // resumable across restarts (see ClientReady)
 
   // universal list: latest state per (user, guild); an unban reverses the entry
   const perGuild = new Map();
@@ -451,5 +456,6 @@ export async function syncBans(guild, cfg, progress = {}, loc = cfg?.locale) {
     }
   };
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length || 1) }, worker));
+  saveGuild(guild.id, { banSyncPending: false });
   return t('dash.act.sbDone', loc, { added: progress.added, skipped: progress.skipped, failedPart: progress.failed ? t('dash.act.sbFailed', loc, { n: progress.failed }) : '', pool: pool.size });
 }

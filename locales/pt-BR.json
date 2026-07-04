@@ -292,7 +292,8 @@
       "styleChoice": "Escolha do membro (ele escolhe a cada verificação)",
       "captchaStyleHint": "Texto é o clássico código feito para enganar OCR. Encaixar a peça é uma combinação de formas em um clique - mais fácil no celular e para membros que têm dificuldade com texto distorcido. Escolha do membro oferece os dois.",
       "captchaPreviewNew": "↻ Nova prévia",
-      "captchaTestHint": "A prévia é atualizada com os seletores acima (salve para aplicar). Para um teste real: membros da equipe que já têm o cargo de verificado podem clicar em Verificar no seu painel - isso executa o fluxo real sem alterar cargos."
+      "captchaTestHint": "A prévia é atualizada com os seletores acima (salve para aplicar). Para um teste real: membros da equipe que já têm o cargo de verificado podem clicar em Verificar no seu painel - isso executa o fluxo real sem alterar cargos.",
+      "gfEstimate": "⏱️ ≈ até {mins} min para {members} membros — o Discord limita as alterações de cargo a cerca de 1 por segundo por servidor, então servidores grandes demoram um pouco. Roda em segundo plano e retoma se for interrompido."
     },
     "msg": {
       "bannerSaved": "Banner salvo. Publique em Ações (ou /madhoney deploy no Discord).",
@@ -332,7 +333,9 @@
       "cancel": "Cancelar",
       "reset": "↺ Redefinir para o detectado automaticamente",
       "category": "CATEGORIA",
-      "detectedTitle": "detectado: {kind}"
+      "detectedTitle": "detectado: {kind}",
+      "gfRunningWarn": "⚠️ A concessão de cargo aos membros atuais está em execução agora. Se você restringir os canais antes de terminar, os membros atuais que ainda não têm o cargo de verificado ficarão bloqueados. Espere ela terminar (veja Ações na página do servidor).",
+      "gfNotDoneWarn": "⚠️ Você ainda não concedeu o cargo aos membros atuais. Restringir agora bloqueia todos que não têm o cargo de verificado até passarem na verificação. Execute Conceder cargo aos membros atuais primeiro (Ações) para que os membros atuais mantenham o acesso."
     },
     "home": {
       "title": "MadHoney - Seus servidores",
