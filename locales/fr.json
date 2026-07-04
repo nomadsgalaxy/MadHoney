@@ -12,7 +12,15 @@
     "success": "Vérifié ✅ Bienvenue sur {guild}.",
     "tooMany": "Trop d'essais incorrects - appuie sur **Vérifier** pour une nouvelle image.",
     "wrong": "Ce n'est pas ça - appuie sur **Vérifier** pour une nouvelle image et réessaie. ({left} restants)",
-    "panelText": "**Vérifie-toi et accepte le règlement**\nClique sur **Vérifier** et saisis le code de l'image. La vérification confirme que tu as lu et accepté le règlement ci-dessus, et débloque le serveur."
+    "panelText": "**Vérifie-toi et accepte le règlement**\nClique sur **Vérifier** et saisis le code de l'image. La vérification confirme que tu as lu et accepté le règlement ci-dessus, et débloque le serveur.",
+    "pickStyle": "Comment veux-tu te vérifier ? Choisis une option :",
+    "styleText": "🔤 Saisir un code",
+    "stylePos": "🧩 Emboîter la pièce",
+    "posInstructions": "🧩 **Trouve où la pièce s'emboîte.** Clique sur le numéro de l'emplacement dont le trou correspond à la pièce. Réussis {total} manches d'affilée pour être vérifié.",
+    "posAgain": "✅ Correct ! Encore une pour être sûr — manche {n} sur {total}.",
+    "posWrong": "❌ Ce n'est pas cet emplacement. Voici un nouveau puzzle — {left} essais restants.",
+    "testMode": "🧪 **Mode test** — tu fais partie de l'équipe et tu es déjà vérifié, cet essai ne modifiera donc aucun rôle.",
+    "testPassed": "🧪 Test réussi ! Un membre recevrait maintenant le rôle vérifié."
   },
   "appeal": {
     "button": "Faire appel auprès de {guild}",
@@ -277,7 +285,14 @@
       "trappedCount": "{n} piégés ici",
       "badgeBan": "bannissement",
       "badgeUnban": "débannissement",
-      "noBans": "Aucun bannissement enregistré sur ce serveur pour l'instant."
+      "noBans": "Aucun bannissement enregistré sur ce serveur pour l'instant.",
+      "captchaStyle": "Style du captcha",
+      "styleText": "Code texte (saisis ce que tu vois)",
+      "stylePos": "Emboîter la pièce (association de formes en un clic)",
+      "styleChoice": "Au choix du membre (il choisit à chaque vérification)",
+      "captchaStyleHint": "Le code texte est le classique anti-OCR. « Emboîter la pièce » est une association de formes en un clic — plus facile sur téléphone et pour les membres qui ont du mal avec le texte déformé. « Au choix du membre » propose les deux.",
+      "captchaPreviewNew": "↻ Nouvel aperçu",
+      "captchaTestHint": "L'aperçu se met à jour avec les sélecteurs ci-dessus (enregistre pour appliquer). Pour un test en conditions réelles : les membres de l'équipe qui ont déjà le rôle vérifié peuvent cliquer sur Vérifier sur ton panneau — le vrai parcours se déroule sans modifier les rôles."
     },
     "msg": {
       "bannerSaved": "Bannière enregistrée. Publie-la depuis Actions (ou /madhoney deploy dans Discord).",

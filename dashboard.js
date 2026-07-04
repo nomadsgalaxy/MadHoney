@@ -7,9 +7,11 @@ import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
-import { getGuild, saveGuild, bans, trappedCount } from './store.js';
+const { getGuild, saveGuild, bans, trappedCount } = await import(process.env.MADHONEY_STORE ?? './store.js'); // pluggable store backend
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { honeypotMode } from './trap.js';
+import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } from './captcha.js';
+import { makeCode } from './verify.js';
 import { renderBanner, DEFAULT_BANNER, FONTS, SELF_HOSTED } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
 import { SUPPORTED, LOCALE_NAMES, t, resolveLocale } from './i18n.js';
@@ -354,9 +356,18 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <label class="toggle"><input type="checkbox" name="verificationEnabled" ${verifyOn ? 'checked' : ''}>
     <span>${t('dash.guild.requireVerify', dl)} <b style="color:var(--honey)">${t('dash.guild.recommended', dl)}</b><small>${t('dash.guild.requireVerifyHint', dl)}</small></span></label>
   ${!verifyOn ? `<div class="warnbox">${t('dash.guild.verifOffWarn', dl)}</div>` : ''}
-  <label>${t('dash.guild.captchaDifficulty', dl)} <select name="captchaDifficulty" ${verifyOn ? '' : 'disabled'}>
-    ${[['easy', t('dash.guild.diffEasy', dl)], ['normal', t('dash.guild.diffNormal', dl)], ['hard', t('dash.guild.diffHard', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'normal') === v ? 'selected' : ''}>${l}</option>`).join('')}
+  <label>${t('dash.guild.captchaDifficulty', dl)} <select name="captchaDifficulty" ${verifyOn ? '' : 'disabled'} onchange="cpvNew()">
+    ${[['easy', t('dash.guild.diffEasy', dl)], ['normal', t('dash.guild.diffNormal', dl)], ['hard', t('dash.guild.diffHard', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'easy') === v ? 'selected' : ''}>${l}</option>`).join('')}
   </select><small>${t('dash.guild.captchaHint', dl)}</small></label>
+  <label>${t('dash.guild.captchaStyle', dl)} <select name="captchaStyle" ${verifyOn ? '' : 'disabled'} onchange="cpvNew()">
+    ${[['text', t('dash.guild.styleText', dl)], ['position', t('dash.guild.stylePos', dl)], ['choice', t('dash.guild.styleChoice', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaStyle ?? 'text') === v ? 'selected' : ''}>${l}</option>`).join('')}
+  </select><small>${t('dash.guild.captchaStyleHint', dl)}</small></label>
+  ${verifyOn ? `<div style="margin:.4rem 0 .8rem">
+    <img id="cpv" src="/g/${guild.id}/captcha.png" alt="captcha preview" style="max-width:100%;border-radius:8px;border:1px solid var(--line)"><br>
+    <button type="button" class="btn ghost sm" onclick="cpvNew()">${t('dash.guild.captchaPreviewNew', dl)}</button>
+    <small style="display:block;color:var(--dim);margin-top:.3rem">${t('dash.guild.captchaTestHint', dl)}</small>
+    <script>function cpvNew(){const s=document.querySelector('[name=captchaStyle]'),d=document.querySelector('[name=captchaDifficulty]');document.getElementById('cpv').src='/g/${guild.id}/captcha.png?style='+encodeURIComponent(s?s.value:'text')+'&diff='+encodeURIComponent(d?d.value:'easy')+'&r='+Math.random()}</script>
+  </div>` : ''}
   <label>${t('dash.guild.botLanguage', dl)} <select name="locale">
     ${SUPPORTED.map((c) => `<option value="${c}" ${(cfg.locale || 'en') === c ? 'selected' : ''}>${LOCALE_NAMES[c]}</option>`).join('')}
   </select><small>${t('dash.guild.botLanguageHint', dl)}</small></label>
@@ -843,6 +854,17 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
           return res.end(png);
         }
+        if (m[2] === '/captcha.png') {
+          // live preview for the config form: unsaved style/difficulty come in
+          // as query params; the answer is random and never leaves the server
+          const diff = url.searchParams.get('diff') || getGuild(guild.id)?.captchaDifficulty || 'easy';
+          const style = url.searchParams.get('style') || getGuild(guild.id)?.captchaStyle || 'text';
+          const png = style === 'position'
+            ? renderPositionCaptcha(1 + Math.floor(Math.random() * POSITION_SLOTS), diff)
+            : renderCaptcha(makeCode(captchaLength(diff)), diff);
+          res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
+          return res.end(png);
+        }
         if (m[2] === '/save' && req.method === 'POST') {
           const form = await body(req);
           if (form.has('banner_title') || form.has('banner_text')) {
@@ -856,7 +878,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             return html(await guildPage(guild, sess, t('dash.msg.bannerSaved', curLocale), 'banner'));
           }
           const patch = {};
-          for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText', 'captchaDifficulty', 'locale']) {
+          for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText', 'captchaDifficulty', 'captchaStyle', 'locale']) {
             if (form.has(k)) patch[k] = form.get(k).trim();
           }
           patch.banShare = form.get('banShare') === 'on';

@@ -12,7 +12,15 @@
     "success": "Verifierad ✅ Välkommen till {guild}.",
     "tooMany": "För många felaktiga försök - tryck på **Verifiera** för en ny bild.",
     "wrong": "Det stämmer inte - tryck på **Verifiera** för en ny bild och försök igen. ({left} kvar)",
-    "panelText": "**Verifiera dig och godkänn reglerna**\nKlicka på **Verifiera** och skriv koden från bilden. Att verifiera bekräftar att du har läst och godkänner reglerna ovan, och låser upp servern."
+    "panelText": "**Verifiera dig och godkänn reglerna**\nKlicka på **Verifiera** och skriv koden från bilden. Att verifiera bekräftar att du har läst och godkänner reglerna ovan, och låser upp servern.",
+    "pickStyle": "Hur vill du verifiera dig? Välj ett alternativ:",
+    "styleText": "🔤 Skriv en kod",
+    "stylePos": "🧩 Passa in biten",
+    "posInstructions": "🧩 **Hitta var biten passar.** Klicka på numret för den lucka vars hål matchar biten. Klara {total} i rad för att verifiera dig.",
+    "posAgain": "✅ Rätt! En till för säkerhets skull - omgång {n} av {total}.",
+    "posWrong": "❌ Inte den luckan. Här är ett nytt pussel - {left} försök kvar.",
+    "testMode": "🧪 **Testläge** - du är personal och redan verifierad, så den här körningen ändrar inga roller.",
+    "testPassed": "🧪 Testet godkänt! En medlem skulle få den verifierade rollen nu."
   },
   "appeal": {
     "button": "Överklaga till {guild}",
@@ -277,7 +285,14 @@
       "trappedCount": "{n} fångade här",
       "badgeBan": "banning",
       "badgeUnban": "avbanning",
-      "noBans": "Inga banningar loggade på den här servern än."
+      "noBans": "Inga banningar loggade på den här servern än.",
+      "captchaStyle": "Captcha-stil",
+      "styleText": "Textkod (skriv det du ser)",
+      "stylePos": "Passa in biten (formmatchning med ett klick)",
+      "styleChoice": "Medlemmens val (de väljer vid varje verifiering)",
+      "captchaStyleHint": "Text är den klassiska OCR-motverkande koden. Passa in biten är en formmatchning med ett klick - lättare på mobilen och för medlemmar som kämpar med förvrängd text. Medlemmens val erbjuder båda.",
+      "captchaPreviewNew": "↻ Ny förhandsvisning",
+      "captchaTestHint": "Förhandsvisningen uppdateras med väljarna ovan (spara för att tillämpa). För ett livetest: personal som redan har den verifierade rollen kan klicka på Verifiera på din panel - det kör det riktiga flödet utan att ändra några roller."
     },
     "msg": {
       "bannerSaved": "Banner sparad. Posta den från Åtgärder (eller /madhoney deploy i Discord).",

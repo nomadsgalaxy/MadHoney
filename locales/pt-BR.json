@@ -12,7 +12,15 @@
     "success": "Verificado ✅ Bem-vindo(a) ao {guild}.",
     "tooMany": "Tentativas erradas demais - toque em **Verificar** para uma nova imagem.",
     "wrong": "Não é isso - toque em **Verificar** para uma nova imagem e tente de novo. (faltam {left})",
-    "panelText": "**Verifique-se e aceite as regras**\nClique em **Verificar** e digite o código da imagem. Verificar confirma que você leu e concorda com as regras acima, e libera o servidor."
+    "panelText": "**Verifique-se e aceite as regras**\nClique em **Verificar** e digite o código da imagem. Verificar confirma que você leu e concorda com as regras acima, e libera o servidor.",
+    "pickStyle": "Como você prefere se verificar? Escolha uma opção:",
+    "styleText": "🔤 Digitar um código",
+    "stylePos": "🧩 Encaixar a peça",
+    "posInstructions": "🧩 **Encontre onde a peça se encaixa.** Clique no número do encaixe cujo furo corresponde à peça. Acerte {total} vezes seguidas para se verificar.",
+    "posAgain": "✅ Correto! Mais uma para confirmar - rodada {n} de {total}.",
+    "posWrong": "❌ Não é esse encaixe. Aqui vai um quebra-cabeça novo - faltam {left} tentativas.",
+    "testMode": "🧪 **Modo de teste** - você é da equipe e já está verificado, então esta execução não vai alterar nenhum cargo.",
+    "testPassed": "🧪 Teste aprovado! Um membro receberia o cargo de verificado agora."
   },
   "appeal": {
     "button": "Recorrer a {guild}",
@@ -277,7 +285,14 @@
       "trappedCount": "{n} capturados aqui",
       "badgeBan": "banir",
       "badgeUnban": "desbanir",
-      "noBans": "Nenhum banimento registrado neste servidor ainda."
+      "noBans": "Nenhum banimento registrado neste servidor ainda.",
+      "captchaStyle": "Estilo do captcha",
+      "styleText": "Código de texto (digite o que você vê)",
+      "stylePos": "Encaixar a peça (combinação de formas em um clique)",
+      "styleChoice": "Escolha do membro (ele escolhe a cada verificação)",
+      "captchaStyleHint": "Texto é o clássico código feito para enganar OCR. Encaixar a peça é uma combinação de formas em um clique - mais fácil no celular e para membros que têm dificuldade com texto distorcido. Escolha do membro oferece os dois.",
+      "captchaPreviewNew": "↻ Nova prévia",
+      "captchaTestHint": "A prévia é atualizada com os seletores acima (salve para aplicar). Para um teste real: membros da equipe que já têm o cargo de verificado podem clicar em Verificar no seu painel - isso executa o fluxo real sem alterar cargos."
     },
     "msg": {
       "bannerSaved": "Banner salvo. Publique em Ações (ou /madhoney deploy no Discord).",

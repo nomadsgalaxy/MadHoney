@@ -12,7 +12,15 @@
     "success": "Verifiziert ✅ Willkommen auf {guild}.",
     "tooMany": "Zu viele Fehlversuche - tippe auf **Verifizieren** für ein neues Bild.",
     "wrong": "Das stimmt nicht - tippe auf **Verifizieren** für ein neues Bild und versuch es erneut. (noch {left})",
-    "panelText": "**Verifiziere dich und akzeptiere die Regeln**\nKlicke auf **Verifizieren** und gib den Code aus dem Bild ein. Mit der Verifizierung bestätigst du, dass du die obigen Regeln gelesen hast und akzeptierst, und schaltest den Server frei."
+    "panelText": "**Verifiziere dich und akzeptiere die Regeln**\nKlicke auf **Verifizieren** und gib den Code aus dem Bild ein. Mit der Verifizierung bestätigst du, dass du die obigen Regeln gelesen hast und akzeptierst, und schaltest den Server frei.",
+    "pickStyle": "Wie möchtest du dich verifizieren? Wähle eine Option:",
+    "styleText": "🔤 Code eintippen",
+    "stylePos": "🧩 Teil einpassen",
+    "posInstructions": "🧩 **Finde heraus, wo das Teil hineinpasst.** Klicke auf die Nummer des Feldes, dessen Aussparung zum Teil passt. Schaffe {total} in Folge, um dich zu verifizieren.",
+    "posAgain": "✅ Richtig! Noch eins zur Sicherheit — Runde {n} von {total}.",
+    "posWrong": "❌ Nicht dieses Feld. Hier ist ein neues Puzzle — noch {left} Versuche.",
+    "testMode": "🧪 **Testmodus** — du gehörst zum Team und bist bereits verifiziert, daher ändert dieser Durchlauf keine Rollen.",
+    "testPassed": "🧪 Test bestanden! Ein Mitglied würde jetzt die Verifiziert-Rolle erhalten."
   },
   "appeal": {
     "button": "Einspruch bei {guild}",
@@ -277,7 +285,14 @@
       "trappedCount": "{n} hier gefangen",
       "badgeBan": "Bann",
       "badgeUnban": "Entbannen",
-      "noBans": "Auf diesem Server wurden noch keine Banns protokolliert."
+      "noBans": "Auf diesem Server wurden noch keine Banns protokolliert.",
+      "captchaStyle": "Captcha-Stil",
+      "styleText": "Text-Code (tippe, was du siehst)",
+      "stylePos": "Teil einpassen (Formabgleich mit einem Klick)",
+      "styleChoice": "Wahl des Mitglieds (wählt bei jeder Verifizierung selbst)",
+      "captchaStyleHint": "Text ist der klassische OCR-abweisende Code. Teil einpassen ist ein Formabgleich mit einem Klick — einfacher auf dem Handy und für Mitglieder, die sich mit verzerrtem Text schwertun. Wahl des Mitglieds bietet beides an.",
+      "captchaPreviewNew": "↻ Neue Vorschau",
+      "captchaTestHint": "Die Vorschau aktualisiert sich mit den Auswahlfeldern oben (zum Übernehmen speichern). Für einen Live-Test: Team-Mitglieder, die die Verifiziert-Rolle bereits haben, können auf deinem Panel auf Verifizieren klicken — der echte Ablauf läuft durch, ohne Rollen zu ändern."
     },
     "msg": {
       "bannerSaved": "Banner gespeichert. Poste es über Aktionen (oder `/madhoney deploy` in Discord).",

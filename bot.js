@@ -3,6 +3,7 @@
 // dashboard. Per-guild config lives in guilds.json; bans in bans.jsonl.
 import 'dotenv/config';
 import { createHmac } from 'node:crypto';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import {
   Client, GatewayIntentBits, Events, PermissionFlagsBits, PermissionsBitField, MessageFlags,
   SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
@@ -11,9 +12,12 @@ import {
 } from 'discord.js';
 import { shouldTrap, honeypotMode } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
-import { renderCaptcha, captchaLength } from './captcha.js';
+import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
-import { getGuild, saveGuild, logBan, bans, bannedElsewhere, appealableGuildIds, banEpoch, hasAppealed, recordAppeal } from './store.js';
+// Pluggable store backend: MADHONEY_STORE selects an alternative module with
+// the same exports (defaults to the plain file store).
+const store = await import(process.env.MADHONEY_STORE ?? './store.js');
+const { getGuild, saveGuild, logBan, bans, bannedElsewhere, appealableGuildIds, banEpoch, hasAppealed, recordAppeal } = store;
 import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, gateNewChannel, ungateChannels, grandfather, syncBans, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { startDashboard } from './dashboard.js';
 import { t } from './i18n.js';
@@ -26,6 +30,12 @@ const VERIFY_MAX_ATTEMPTS = 5;     // wrong guesses against one code before it's
 const VERIFY_COOLDOWN = 2000;      // min ms between "Verify" clicks (each mints a fresh image)
 // sweep expired codes so `pending` can't grow without bound
 setInterval(() => { const now = Date.now(); for (const [k, v] of pending) if (now > v.expires) pending.delete(k); }, 60_000).unref?.();
+
+// Liveness marker for the honeypot catch-up sweep (see ClientReady): stamped
+// only while actually connected, so any window where the bot couldn't see
+// messages - restart, crash, outage - is swept on the next boot.
+const LASTSEEN = new URL('./.lastseen', import.meta.url);
+setInterval(() => { if (client.isReady()) { try { writeFileSync(LASTSEEN, String(Date.now())); } catch { /* best effort */ } } }, 60_000).unref?.();
 
 // Sign appeal buttons so a forged `mh_appeal_<gid>` can't be used to probe
 // "am I banned here?" - the signature binds the button to this user + ban
@@ -205,24 +215,113 @@ function deployPanel(guild) {
 
 const isManager = (i) => i.inGuild() && i.member.permissions.has(PermissionFlagsBits.ManageGuild);
 
+// ---- captcha minting (shared by verify_start, the style picker, and the
+// position flow's re-rolls) ----
+const posRow = () => new ActionRowBuilder().addComponents(
+  Array.from({ length: POSITION_SLOTS }, (_, n) =>
+    new ButtonBuilder().setCustomId(`mh_pos_${n + 1}`).setLabel(String(n + 1)).setStyle(ButtonStyle.Secondary)),
+);
+// Creates the pending record + returns the reply payload for one fresh captcha.
+// The answer only ever lives server-side (never in a customId).
+function mintCaptcha(userId, cfg, style, test = false) {
+  const now = Date.now();
+  const difficulty = cfg.captchaDifficulty ?? 'easy';
+  if (style === 'position') {
+    const slot = 1 + Math.floor(Math.random() * POSITION_SLOTS);
+    const rounds = difficulty === 'hard' ? 3 : 2; // 1/25 by pure luck, 1/125 on hard
+    pending.set(userId, { style, slot, round: 0, rounds, test, attempts: 0, expires: now + VERIFY_TTL, cooldownUntil: now + VERIFY_COOLDOWN });
+    return {
+      content: (test ? t('verify.testMode', cfg.locale) + '\n' : '') + t('verify.posInstructions', cfg.locale, { total: rounds }),
+      files: [new AttachmentBuilder(renderPositionCaptcha(slot, difficulty), { name: 'captcha.png' })],
+      components: [posRow()],
+    };
+  }
+  const code = makeCode(captchaLength(difficulty));
+  pending.set(userId, { style: 'text', code, test, attempts: 0, expires: now + VERIFY_TTL, cooldownUntil: now + VERIFY_COOLDOWN });
+  return {
+    content: (test ? t('verify.testMode', cfg.locale) + '\n' : '') + t('verify.instructions', cfg.locale),
+    files: [new AttachmentBuilder(renderCaptcha(code, difficulty), { name: 'captcha.png' })],
+    components: [new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('verify_open').setLabel(t('verify.enterCode', cfg.locale)).setStyle(ButtonStyle.Success),
+    )],
+  };
+}
+// Passing verification: grant the role - unless this was a staff test run,
+// which must never touch roles.
+async function verifyPassed(i, cfg, rec, edit = false) {
+  pending.delete(i.user.id);
+  const done = (content) => edit ? i.update({ content, files: [], attachments: [], components: [] }) : i.reply({ content, ...EPH });
+  if (rec.test) return done(t('verify.testPassed', cfg.locale));
+  const role = cfg.verifiedRoleId && (await i.guild.roles.fetch(cfg.verifiedRoleId).catch(() => null));
+  if (!role) return done(t('verify.roleMissing', cfg.locale));
+  await i.member.roles.add(role, 'MadHoney: passed verification');
+  return done(t('verify.success', cfg.locale, { guild: i.guild.name }));
+}
+
 client.on(Events.InteractionCreate, async (i) => {
   try {
     // --- member-facing verify flow (no permissions needed) ---
     if (i.isButton() && i.customId === 'verify_start') {
       const cfg = getGuild(i.guildId) ?? {};
       const role = cfg.verifiedRoleId && (await i.guild.roles.fetch(cfg.verifiedRoleId).catch(() => null));
-      if (role && i.member.roles.cache.has(role.id)) return i.reply({ content: t('verify.alreadyVerified', cfg.locale), ...EPH });
+      // already-verified STAFF get a test run (real flow, no role changes) so
+      // admins can try their captcha settings exactly as members see them
+      const test = Boolean(role && i.member.roles.cache.has(role.id) && isManager(i));
+      if (role && i.member.roles.cache.has(role.id) && !test) return i.reply({ content: t('verify.alreadyVerified', cfg.locale), ...EPH });
       const now = Date.now();
       const prev = pending.get(i.user.id);
       if (prev && now < prev.cooldownUntil) return i.reply({ content: t('verify.cooldown', cfg.locale), ...EPH });
-      const difficulty = cfg.captchaDifficulty ?? 'normal';
-      const code = makeCode(captchaLength(difficulty));
-      pending.set(i.user.id, { code, attempts: 0, expires: now + VERIFY_TTL, cooldownUntil: now + VERIFY_COOLDOWN });
-      const img = new AttachmentBuilder(renderCaptcha(code, difficulty), { name: 'captcha.png' });
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('verify_open').setLabel(t('verify.enterCode', cfg.locale)).setStyle(ButtonStyle.Success),
-      );
-      return i.reply({ content: t('verify.instructions', cfg.locale), files: [img], components: [row], ...EPH });
+      const style = cfg.captchaStyle ?? 'text';
+      if (style === 'choice') {
+        // the member picks; the record holds the cooldown until they do
+        pending.set(i.user.id, { style: 'choice', test, expires: now + VERIFY_TTL, cooldownUntil: now + VERIFY_COOLDOWN });
+        return i.reply({
+          content: (test ? t('verify.testMode', cfg.locale) + '\n' : '') + t('verify.pickStyle', cfg.locale),
+          components: [new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('mh_style_text').setLabel(t('verify.styleText', cfg.locale)).setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('mh_style_pos').setLabel(t('verify.stylePos', cfg.locale)).setStyle(ButtonStyle.Primary),
+          )],
+          ...EPH,
+        });
+      }
+      return i.reply({ ...mintCaptcha(i.user.id, cfg, style, test), ...EPH });
+    }
+    if (i.isButton() && (i.customId === 'mh_style_text' || i.customId === 'mh_style_pos')) {
+      const cfg = getGuild(i.guildId) ?? {};
+      const test = pending.get(i.user.id)?.test ?? false;
+      return i.update({ ...mintCaptcha(i.user.id, cfg, i.customId === 'mh_style_pos' ? 'position' : 'text', test), attachments: [] });
+    }
+    if (i.isButton() && i.customId.startsWith('mh_pos_')) {
+      const cfg = getGuild(i.guildId) ?? {};
+      const rec = pending.get(i.user.id);
+      if (!rec || rec.style !== 'position' || Date.now() > rec.expires) {
+        pending.delete(i.user.id);
+        return i.update({ content: t('verify.expired', cfg.locale), files: [], attachments: [], components: [] });
+      }
+      const difficulty = cfg.captchaDifficulty ?? 'easy';
+      if (Number(i.customId.slice('mh_pos_'.length)) === rec.slot) {
+        rec.round++;
+        if (rec.round >= rec.rounds) return verifyPassed(i, cfg, rec, true);
+        rec.slot = 1 + Math.floor(Math.random() * POSITION_SLOTS); // fresh puzzle each round
+        return i.update({
+          content: t('verify.posAgain', cfg.locale, { n: rec.round + 1, total: rec.rounds }),
+          files: [new AttachmentBuilder(renderPositionCaptcha(rec.slot, difficulty), { name: 'captcha.png' })],
+          attachments: [], components: [posRow()],
+        });
+      }
+      // wrong slot: burn the streak, fresh puzzle, bounded attempts overall
+      rec.attempts++;
+      rec.round = 0;
+      if (rec.attempts >= VERIFY_MAX_ATTEMPTS) {
+        pending.delete(i.user.id);
+        return i.update({ content: t('verify.tooMany', cfg.locale), files: [], attachments: [], components: [] });
+      }
+      rec.slot = 1 + Math.floor(Math.random() * POSITION_SLOTS);
+      return i.update({
+        content: t('verify.posWrong', cfg.locale, { left: VERIFY_MAX_ATTEMPTS - rec.attempts }),
+        files: [new AttachmentBuilder(renderPositionCaptcha(rec.slot, difficulty), { name: 'captcha.png' })],
+        attachments: [], components: [posRow()],
+      });
     }
     if (i.isButton() && i.customId === 'verify_open') {
       const loc = getGuild(i.guildId)?.locale;
@@ -235,16 +334,12 @@ client.on(Events.InteractionCreate, async (i) => {
     if (i.isModalSubmit() && i.customId === 'verify_answer') {
       const cfg = getGuild(i.guildId) ?? {};
       const rec = pending.get(i.user.id);
-      if (!rec || Date.now() > rec.expires) {
+      if (!rec || !rec.code || Date.now() > rec.expires) {
         pending.delete(i.user.id);
         return i.reply({ content: t('verify.expired', cfg.locale), ...EPH });
       }
       if (answerOk(i.fields.getTextInputValue('ans'), rec.code)) {
-        pending.delete(i.user.id);
-        const role = cfg.verifiedRoleId && (await i.guild.roles.fetch(cfg.verifiedRoleId).catch(() => null));
-        if (!role) return i.reply({ content: t('verify.roleMissing', cfg.locale), ...EPH });
-        await i.member.roles.add(role, 'MadHoney: passed verification');
-        return i.reply({ content: t('verify.success', cfg.locale, { guild: i.guild.name }), ...EPH });
+        return verifyPassed(i, cfg, rec);
       }
       // wrong answer: count it against this code; burn the code after too many so
       // re-opening the modal (verify_open) can't brute-force one image forever.
@@ -626,6 +721,9 @@ client.on(Events.MessageCreate, async (msg) => {
         new ButtonBuilder().setCustomId(`mh_review_dismiss_${msg.author.id}`).setLabel(t('log.dismissBtn', cfg.locale)).setStyle(ButtonStyle.Secondary),
       )],
     }, 'critical');
+    // mark the held message as handled so a restart's catch-up sweep never
+    // re-posts a hold a mod may have already decided on
+    await msg.react('⏳').catch(() => {});
     console.log(`[${msg.guild.name}] held ${msg.author.tag} (${msg.author.id}) for review`);
     return;
   }
@@ -716,6 +814,41 @@ client.once(Events.ClientReady, async (c) => {
       }
     }
   }, 5000); // let the guild/channel caches settle first
+
+  // Honeypot catch-up: replay trap-channel messages posted while the bot
+  // couldn't see them (restart, crash, outage) through the normal handler, so a
+  // downtime window doesn't let a spammer slip through. `.lastseen` is stamped
+  // every minute while connected; anything newer than it was never handled.
+  setTimeout(async () => {
+    let since = Date.now();
+    try { if (existsSync(LASTSEEN)) since = Number(readFileSync(LASTSEEN, 'utf8')) || since; } catch { /* first boot */ }
+    since = Math.max(since, Date.now() - 24 * 3600 * 1000); // a stale marker must never replay days of handled history
+    for (const guild of c.guilds.cache.values()) {
+      const cfg = getGuild(guild.id);
+      if (!cfg?.honeypotChannelId || honeypotMode(cfg) === 'disarmed') continue;
+      try {
+        const ch = await guild.channels.fetch(cfg.honeypotChannelId);
+        const missed = [...(await ch.messages.fetch({ limit: 50 })).values()]
+          .filter((m) => m.author.id !== c.user.id && m.createdTimestamp > since - 5000)
+          .reverse(); // oldest first, like live delivery
+        for (const m of missed) {
+          // skip anything a mod (or a previous instance) already adjudicated:
+          // our own reaction marks a handled review-hold, and any ban-log row
+          // newer than the message means the episode was decided after it -
+          // replaying would reverse a deliberate unban/dismiss
+          if (m.reactions.cache.some((r) => r.me)) continue;
+          if (bans(guild.id).some((b) => b.id === m.author.id && Date.parse(b.at) >= m.createdTimestamp)) continue;
+          // REST-fetched messages carry no member; resolve it so the staff/owner
+          // exemptions in the live handler still hold (a mod tidying the decoy
+          // must never be banned by the replay)
+          if (!m.member) await guild.members.fetch(m.author.id).catch(() => null);
+          client.emit(Events.MessageCreate, m);
+        }
+        if (missed.length) console.log(`[${guild.name}] honeypot catch-up: replayed ${missed.length} missed message(s)`);
+      } catch { /* trap channel unreadable/gone - preflight reports that */ }
+    }
+    try { writeFileSync(LASTSEEN, String(Date.now())); } catch { /* best effort */ }
+  }, 8000);
   // Minimum viable: Manage Roles (verified role + channel overwrites), Manage
   // Channels, Ban Members, View Channels, Send Messages, Attach Files, Read
   // Message History. If gating a specific channel fails with Missing Access,
@@ -728,4 +861,12 @@ client.once(Events.ClientReady, async (c) => {
   } else console.log('Dashboard disabled (set CLIENT_ID in .env to enable).');
 });
 
-client.login(process.env.DISCORD_TOKEN);
+// Pluggable stores may need async init (hydrating caches) and may hold or drop
+// the gateway connection (e.g. replicated deployments). No-op for the file store.
+await store.init?.({
+  fence: () => client.destroy(),
+  unfence: () => client.login(process.env.DISCORD_TOKEN),
+});
+// a store that fenced during init is telling us NOT to connect (another
+// instance owns the token right now) - it exits/recovers on its own schedule
+if (!store.isFenced?.()) client.login(process.env.DISCORD_TOKEN);

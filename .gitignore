@@ -6,3 +6,10 @@ appeals.jsonl
 bot.log
 sessions.json
 *.traineddata
+
+# Deployment-only files (not part of the open-source distribution)
+worker/
+store.d1.js
+d1-pending.jsonl
+failover/
+*.failover.*

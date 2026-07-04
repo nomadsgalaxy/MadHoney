@@ -21,7 +21,7 @@ function bannerFileName() {
   ];
   return kinds[r[5] % kinds.length]();
 }
-import { saveGuild, bans, logBan } from './store.js';
+const { saveGuild, bans, logBan } = await import(process.env.MADHONEY_STORE ?? './store.js'); // pluggable store backend
 
 // Bump these ONLY when a code change alters how the posted Verify panel or
 // banner looks. Combined with the per-guild content, they form a fingerprint;

@@ -12,7 +12,15 @@
     "success": "Ověřeno ✅ Vítej na {guild}.",
     "tooMany": "Příliš mnoho špatných pokusů - klepni na **Ověřit** pro nový obrázek.",
     "wrong": "To není správně - klepni na **Ověřit** pro nový obrázek a zkus to znovu. (zbývá {left})",
-    "panelText": "**Ověř se a přijmi pravidla**\nKlikni na **Ověřit** a napiš kód z obrázku. Ověřením potvrzuješ, že sis přečetl(a) pravidla výše a souhlasíš s nimi, a odemkneš server."
+    "panelText": "**Ověř se a přijmi pravidla**\nKlikni na **Ověřit** a napiš kód z obrázku. Ověřením potvrzuješ, že sis přečetl(a) pravidla výše a souhlasíš s nimi, a odemkneš server.",
+    "pickStyle": "Jak se chceš ověřit? Vyber si:",
+    "styleText": "🔤 Napsat kód",
+    "stylePos": "🧩 Zasadit dílek",
+    "posInstructions": "🧩 **Najdi, kam dílek zapadne.** Klikni na číslo pozice, jejíž otvor pasuje k dílku. Pro ověření zvládni {total} v řadě.",
+    "posAgain": "✅ Správně! Ještě jednou pro jistotu — kolo {n} z {total}.",
+    "posWrong": "❌ To není ta správná pozice. Tady je nová skládačka — zbývající pokusy: {left}.",
+    "testMode": "🧪 **Testovací režim** — patříš do týmu a už jsi ověřen(a), takže tento průchod nezmění žádné role.",
+    "testPassed": "🧪 Test prošel! Člen by teď dostal roli ověřeného."
   },
   "appeal": {
     "button": "Odvolat se u {guild}",
@@ -277,7 +285,14 @@
       "trappedCount": "{n} chyceno zde",
       "badgeBan": "ban",
       "badgeUnban": "zrušení banu",
-      "noBans": "Na tomto serveru zatím nejsou zalogovány žádné bany."
+      "noBans": "Na tomto serveru zatím nejsou zalogovány žádné bany.",
+      "captchaStyle": "Styl captcha",
+      "styleText": "Textový kód (napiš, co vidíš)",
+      "stylePos": "Zasadit dílek (přiřazení tvaru jedním kliknutím)",
+      "styleChoice": "Volba člena (vybírá si při každém ověření)",
+      "captchaStyleHint": "Text je klasický kód znemožňující OCR. Zasazení dílku je přiřazení tvaru jedním kliknutím — snazší na telefonech a pro členy, kteří bojují se zkresleným textem. Volba člena nabízí obojí.",
+      "captchaPreviewNew": "↻ Nový náhled",
+      "captchaTestHint": "Náhled se aktualizuje podle výběrů výše (změny se projeví po uložení). Pro živý test: členové týmu, kteří už mají roli ověřeného, mohou na tvém panelu kliknout na Ověřit — proběhne skutečný proces, aniž by se změnily role."
     },
     "msg": {
       "bannerSaved": "Banner uložen. Vyvěs ho z Akcí (nebo přes /madhoney deploy v Discordu).",

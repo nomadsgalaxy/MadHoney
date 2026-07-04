@@ -12,7 +12,15 @@
     "success": "Verificado ✅ Bienvenido a {guild}.",
     "tooMany": "Demasiados intentos fallidos - toca **Verificar** para una imagen nueva.",
     "wrong": "No es correcto - toca **Verificar** para una imagen nueva e inténtalo de nuevo. ({left} restantes)",
-    "panelText": "**Verifícate y acepta las normas**\nHaz clic en **Verificar** y escribe el código de la imagen. Verificarte confirma que has leído y aceptas las normas de arriba, y desbloquea el servidor."
+    "panelText": "**Verifícate y acepta las normas**\nHaz clic en **Verificar** y escribe el código de la imagen. Verificarte confirma que has leído y aceptas las normas de arriba, y desbloquea el servidor.",
+    "pickStyle": "¿Cómo quieres verificarte? Elige una opción:",
+    "styleText": "🔤 Escribir un código",
+    "stylePos": "🧩 Encaja la pieza",
+    "posInstructions": "🧩 **Encuentra dónde encaja la pieza.** Haz clic en el número de la ranura cuyo hueco coincide con la pieza. Acierta {total} seguidas para verificarte.",
+    "posAgain": "✅ ¡Correcto! Una más para estar seguros — ronda {n} de {total}.",
+    "posWrong": "❌ Esa ranura no es. Aquí tienes un puzle nuevo — {left} intentos restantes.",
+    "testMode": "🧪 **Modo de prueba** — eres del equipo y ya estás verificado, así que esta ejecución no cambiará ningún rol.",
+    "testPassed": "🧪 ¡Prueba superada! Un miembro recibiría ahora el rol de verificado."
   },
   "appeal": {
     "button": "Apelar a {guild}",
@@ -277,7 +285,14 @@
       "trappedCount": "{n} atrapados aquí",
       "badgeBan": "baneo",
       "badgeUnban": "desbaneo",
-      "noBans": "Aún no hay baneos registrados en este servidor."
+      "noBans": "Aún no hay baneos registrados en este servidor.",
+      "captchaStyle": "Estilo del captcha",
+      "styleText": "Código de texto (escribe lo que ves)",
+      "stylePos": "Encaja la pieza (coincidencia de formas con un clic)",
+      "styleChoice": "A elección del miembro (elige en cada verificación)",
+      "captchaStyleHint": "Texto es el clásico código que vence al OCR. Encaja la pieza es una coincidencia de formas con un solo clic — más fácil en móviles y para los miembros a quienes les cuesta el texto distorsionado. A elección del miembro ofrece ambas.",
+      "captchaPreviewNew": "↻ Nueva vista previa",
+      "captchaTestHint": "La vista previa se actualiza con los selectores de arriba (guarda para aplicar). Para una prueba real: los miembros del equipo que ya tienen el rol de verificado pueden hacer clic en Verificar en tu panel — ejecuta el flujo real sin cambiar roles."
     },
     "msg": {
       "bannerSaved": "Banner guardado. Publícalo desde Acciones (o /madhoney deploy en Discord).",

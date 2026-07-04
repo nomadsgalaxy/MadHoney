@@ -12,7 +12,15 @@
     "success": "Verified ✅ Welcome to {guild}.",
     "tooMany": "Too many wrong tries - tap **Verify** for a new image.",
     "wrong": "That's not right - tap **Verify** for a new image and try again. ({left} left)",
-    "panelText": "**Verify & Agree to the Rules**\nClick **Verify** and type the code from the image. Verifying confirms you’ve read and agree to the rules above, and unlocks the server."
+    "panelText": "**Verify & Agree to the Rules**\nClick **Verify** and type the code from the image. Verifying confirms you’ve read and agree to the rules above, and unlocks the server.",
+    "pickStyle": "How would you like to verify? Pick one:",
+    "styleText": "🔤 Type a code",
+    "stylePos": "🧩 Fit the piece",
+    "posInstructions": "🧩 **Find where the piece fits.** Click the number of the slot whose hole matches the piece. Get {total} in a row to verify.",
+    "posAgain": "✅ Correct! One more to be sure — round {n} of {total}.",
+    "posWrong": "❌ Not that slot. Here is a fresh puzzle — {left} tries left.",
+    "testMode": "🧪 **Test mode** — you are staff and already verified, so this run will not change any roles.",
+    "testPassed": "🧪 Test passed! A member would receive the verified role now."
   },
   "appeal": {
     "button": "Appeal to {guild}",
@@ -277,7 +285,14 @@
       "trappedCount": "{n} trapped here",
       "badgeBan": "ban",
       "badgeUnban": "unban",
-      "noBans": "No bans logged in this server yet."
+      "noBans": "No bans logged in this server yet.",
+      "captchaStyle": "Captcha style",
+      "styleText": "Text code (type what you see)",
+      "stylePos": "Fit the piece (one-click shape match)",
+      "styleChoice": "Member’s choice (they pick per verify)",
+      "captchaStyleHint": "Text is the classic OCR-defeating code. Fit-the-piece is a one-click shape match — easier on phones and for members who struggle with distorted text. Member’s choice offers both.",
+      "captchaPreviewNew": "↻ New preview",
+      "captchaTestHint": "Preview updates with the pickers above (save to apply). For a live test: staff who already have the verified role can click Verify on your panel — it runs the real flow without changing roles."
     },
     "msg": {
       "bannerSaved": "Banner saved. Post it from Actions (or /madhoney deploy in Discord).",
