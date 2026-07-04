@@ -375,6 +375,21 @@ export async function preflight(guild, cfg, loc = cfg?.locale) {
 // Pass a `progress` object to watch it live: {total, done, added, skipped,
 // failed} are updated as the loop runs (one Discord API call per member, so
 // large servers take a while).
+// guild.members.fetch() sends a gateway REQUEST_GUILD_MEMBERS (opcode 8), which
+// has its own rate limit - on a busy boot (a server resuming, live verifies) it
+// can reject with "retry after Ns". Wait it out and retry instead of failing the
+// whole job.
+async function fetchAllMembers(guild, tries = 5) {
+  for (let a = 0; ; a++) {
+    try { return await guild.members.fetch(); }
+    catch (e) {
+      const m = /retry after ([\d.]+)/i.exec(e.message || '');
+      if (m && a < tries) { await new Promise((r) => setTimeout(r, (parseFloat(m[1]) + 1) * 1000)); continue; }
+      throw e;
+    }
+  }
+}
+
 export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) {
   const problem = await preflight(guild, cfg, loc);
   if (problem) throw new Error(problem);
@@ -382,7 +397,7 @@ export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) 
   // boot (see ClientReady). Idempotent - already-verified members are skipped.
   saveGuild(guild.id, { grandfatherPending: true });
   const role = await guild.roles.fetch(cfg.verifiedRoleId);
-  const members = await guild.members.fetch();
+  const members = await fetchAllMembers(guild);
   Object.assign(progress, { label: 'Grandfathering', total: members.size, done: 0, added: 0, skipped: 0, failed: 0 });
   const failures = [];
   // bots + members who already have the role need no API call

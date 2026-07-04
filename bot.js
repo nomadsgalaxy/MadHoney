@@ -887,15 +887,25 @@ client.once(Events.ClientReady, async (c) => {
   setTimeout(async () => {
     for (const guild of c.guilds.cache.values()) {
       const gcfg = getGuild(guild.id);
+      // Only clear the flag on a PERMANENT failure (e.g. verified role deleted);
+      // a transient error (rate limit, network) keeps the flag so it retries on
+      // the next boot instead of abandoning the job.
+      const transient = (e) => /rate.?limit|opcode 8|ECONN|ETIMEDOUT|timed out|socket|50[23]|network|fetch failed/i.test(e?.message || '');
       if (gcfg?.grandfatherPending) {
         console.log(`[${guild.name}] resuming interrupted grandfather...`);
         try { console.log(`[${guild.name}] ${await grandfather(guild, gcfg)}`); }
-        catch (e) { console.error(`[${guild.name}] grandfather resume failed, clearing flag:`, e.message); saveGuild(guild.id, { grandfatherPending: false }); }
+        catch (e) {
+          console.error(`[${guild.name}] grandfather resume ${transient(e) ? 'hit a transient error - keeping flag to retry next boot' : 'failed - clearing flag'}:`, e.message);
+          if (!transient(e)) saveGuild(guild.id, { grandfatherPending: false });
+        }
       }
       if (gcfg?.banSyncPending) {
         console.log(`[${guild.name}] resuming interrupted ban-sync...`);
         try { console.log(`[${guild.name}] ${await syncBans(guild, gcfg)}`); }
-        catch (e) { console.error(`[${guild.name}] ban-sync resume failed, clearing flag:`, e.message); saveGuild(guild.id, { banSyncPending: false }); }
+        catch (e) {
+          console.error(`[${guild.name}] ban-sync resume ${transient(e) ? 'hit a transient error - keeping flag to retry next boot' : 'failed - clearing flag'}:`, e.message);
+          if (!transient(e)) saveGuild(guild.id, { banSyncPending: false });
+        }
       }
     }
   }, 12000);
