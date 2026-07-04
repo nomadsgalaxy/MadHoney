@@ -178,5 +178,11 @@ removes the user from the list's effect everywhere.
 
 ## License
 
-OCL v1.1 + SWAtt v1, see [LICENSE.md](LICENSE.md). Built by [Nomads Galaxy](https://nomadsgalaxy.com).
+OCL v1.1 + SWAtt v1, plus the MadHoney Commercial License (MCL v1) —
+see [LICENSE.md](LICENSE.md). Built by [Nomads Galaxy](https://nomadsgalaxy.com).
 Derivatives must keep the attribution ("built on MadHoney by Nomads Galaxy").
+
+Commercial use is welcome under the MCL: use it however you like, including in a
+business, **as long as it stays free to use for everyone** — no fees,
+subscriptions, or paywalls on the software or any of its features — and you
+don't resell it without permission.

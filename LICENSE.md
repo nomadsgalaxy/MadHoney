@@ -1,7 +1,15 @@
 # MadHoney License
 
 MadHoney is distributed under **OCL v1.1 + SWAtt v1**
-(Open Community License v1.1 + Software Attribution v1).
+(Open Community License v1.1 + Software Attribution v1),
+accompanied by the **MadHoney Commercial License (MCL v1)** below.
+
+OCL v1.1 is the root license. SWAtt v1 is the attribution add-on. The MCL is a
+free, open commercial-use grant from the licensor: it lets you use MadHoney
+commercially and do as you wish — on the single condition that the software
+stays free to use for everyone (no fees, subscriptions, or paywalls), and that
+you don't resell it without permission. See "MadHoney Commercial License"
+at the bottom of this file.
 
 Creator identification for SWAtt purposes: **Nomads Galaxy**
 (https://github.com/nomadsgalaxy - https://nomadsgalaxy.com).
@@ -98,3 +106,84 @@ In respect to practical representation limitations YOU MUST retain and
 represent AT LEAST the identification of the creator/s of the product and/or
 its components, and if applicable the identification of the creator/s of the
 last derivative, on which your derivative is based.
+
+---
+
+# MadHoney Commercial License (MCL v1)
+
+This Commercial License accompanies and supplements MadHoney's root license
+(OCL v1.1 + SWAtt v1). It does not replace, weaken, or override the OCL or
+SWAtt: every one of their conditions continues to apply in full, including the
+requirement to distribute derivatives under OCL and to retain creator
+attribution. Where OCL v1.1 requires "a separate business license" before you
+may replicate the product for a commercial purpose, THIS is that license. The
+licensor (Nomads Galaxy) grants it here to everyone, at no cost, on the single
+condition set out below.
+
+## 1. Grant of commercial use
+
+Notwithstanding the commercial restrictions in OCL v1.1, you MAY use, run,
+deploy, host, offer, modify, and build upon MadHoney and its components for any
+purpose, INCLUDING commercial purposes and including use by or within a
+for-profit business — provided you continue to comply with the OCL, with SWAtt,
+and with the one condition in Section 2. Within those bounds, you may do as you
+wish commercially.
+
+## 2. The one condition — it must stay free to use
+
+The software, and any service, bot, product, hosted instance, or feature you
+build on it or derive from it, MUST be provided free of charge to everyone who
+uses it. Commercial use is permitted ONLY while the software remains free to
+use for anyone. Specifically, you MUST NOT:
+
+(a) charge any fee, price, subscription, membership, licensing fee, per-seat
+    charge, usage/metered charge, or any other recurring or one-time payment
+    for access to the software or to any of its features;
+
+(b) place the software, or any of its features, behind a paywall, "premium" or
+    "pro" tier, trial-then-pay gate, or any other payment or access barrier;
+
+(c) make access to, or the use of, any feature conditional on a payment,
+    purchase, or mandatory donation; or
+
+(d) resell, rent, relicense, sublicense, or otherwise sell the software or any
+    derivative of it — whether on its own, as a hosted/managed service, or
+    bundled with other offerings — without prior written permission from
+    Nomads Galaxy.
+
+In short: if anyone can use it, everyone must be able to use all of it, for
+free.
+
+## 3. What you MAY still do
+
+For clarity, Section 2 restricts charging for the software itself and for
+access to it. It does not restrict your unrelated business activity. You MAY,
+for example:
+
+- run MadHoney or a derivative commercially, as part of or in support of a
+  for-profit organization;
+- host it as a free service for your community, your customers, or the public;
+- accept voluntary donations, sponsorships, tips, or advertising that do NOT
+  gate, meter, or condition access to the software or any of its features;
+- earn revenue from separate products or services that do not charge for
+  access to this software or its features.
+
+## 4. Reselling and paid offerings
+
+Selling the software or a derivative as a product or as a paid/managed service
+— including offering a paid or subscription-based hosted version of it —
+requires prior written permission from Nomads Galaxy
+(https://nomadsgalaxy.com). Such permission may be granted case by case and on
+separate terms.
+
+## 5. Effect of breach
+
+If you charge for access in violation of Section 2, or resell without the
+permission required by Section 4, the grant in Section 1 does not apply to that
+use, and you fall back to the plain commercial restrictions of OCL v1.1 for it.
+
+## 6. Versioning
+
+This grant is published as MCL v1. The licensor may publish later versions;
+you may rely on any version under which you received the software. Nothing here
+revokes rights already granted for copies distributed under this version.

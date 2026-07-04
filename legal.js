@@ -46,8 +46,11 @@ to harass people.</p>
 <h2>Self-hosting</h2>
 <p>The source is available at
 <a href="https://github.com/nomadsgalaxy/MadHoney" target="_blank" rel="noopener">github.com/nomadsgalaxy/MadHoney</a>
-under OCL v1.1 + SWAtt v1. Self-hosted instances are your own; these terms
-cover only the hosted service.</p>
+under OCL v1.1 + SWAtt v1, plus the MadHoney Commercial License (MCL v1).
+Commercial use is allowed as long as the software stays free to use for
+everyone &mdash; no fees, subscriptions, or paywalls on it or any of its
+features &mdash; and you don't resell it without permission. Self-hosted
+instances are your own; these terms cover only the hosted service.</p>
 
 <h2>Liability</h2>
 <p>To the maximum extent permitted by law, we are not liable for any damages
