@@ -10,7 +10,7 @@ import {
   RoleSelectMenuBuilder, ChannelSelectMenuBuilder, ChannelType,
   ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder,
 } from 'discord.js';
-import { shouldTrap, honeypotMode } from './trap.js';
+import { shouldTrap, honeypotMode, staffRoles } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
@@ -130,6 +130,7 @@ function setupContent(guild) {
   const ns = t('common.notSet', loc);
   const v = (id) => (id ? `<#${id}>` : ns);
   const role = (id) => (id ? `<@&${id}>` : ns);
+  const roleList = (ids) => (ids.length ? ids.map((id) => `<@&${id}>`).join(' ') : ns);
   const hp = { armed: t('setup.hpArmed', loc), review: t('setup.hpReview', loc), disarmed: t('setup.hpDisarmed', loc) }[honeypotMode(cfg)];
   return [
     t('setup.title', loc),
@@ -138,7 +139,7 @@ function setupContent(guild) {
     t('setup.verifiedRole', loc, { role: role(cfg.verifiedRoleId) }),
     t('setup.verifyChannel', loc, { channel: v(cfg.verifyChannelId) }),
     t('setup.honeypotChannel', loc, { channel: v(cfg.honeypotChannelId) }),
-    t('setup.staffRole', loc, { role: role(cfg.staffRoleId) }),
+    t('setup.staffRole', loc, { role: roleList(staffRoles(cfg)) }),
     t('setup.logChannel', loc, { channel: v(cfg.logChannelId) }),
     t('setup.banSharing', loc, { mode: cfg.banShare ? t('setup.banShared', loc) : t('setup.banIsolated', loc) }),
     t('setup.honeypotLine', loc, { mode: hp }),
@@ -175,14 +176,15 @@ function morePanel(guild) {
   const cfg = getGuild(guild.id) ?? {};
   const loc = cfg.locale;
   const ns = t('common.notSet', loc);
-  const staff = new RoleSelectMenuBuilder().setCustomId('mh_staffrole').setPlaceholder(t('more.phStaff', loc));
-  if (cfg.staffRoleId) staff.setDefaultRoles(cfg.staffRoleId);
+  const sr = staffRoles(cfg);
+  const staff = new RoleSelectMenuBuilder().setCustomId('mh_staffrole').setPlaceholder(t('more.phStaff', loc)).setMinValues(0).setMaxValues(25);
+  if (sr.length) staff.setDefaultRoles(...sr);
   const logCh = new ChannelSelectMenuBuilder().setCustomId('mh_logch').setPlaceholder(t('more.phLog', loc)).setChannelTypes(ChannelType.GuildText);
   if (cfg.logChannelId) logCh.setDefaultChannels(cfg.logChannelId);
   return {
     content: [
       t('more.title', loc),
-      t('more.staffRole', loc, { role: cfg.staffRoleId ? `<@&${cfg.staffRoleId}>` : ns }),
+      t('more.staffRole', loc, { role: sr.length ? sr.map((id) => `<@&${id}>`).join(' ') : ns }),
       t('more.logChannel', loc, { channel: cfg.logChannelId ? `<#${cfg.logChannelId}>` : ns }),
     ].join('\n'),
     components: [new ActionRowBuilder().addComponents(staff), new ActionRowBuilder().addComponents(logCh)],
@@ -474,7 +476,7 @@ client.on(Events.InteractionCreate, async (i) => {
       return i.update({ content: setupContent(i.guild), components: setupComponents(getGuild(i.guildId)) });
     }
     if (i.isRoleSelectMenu() && i.customId === 'mh_staffrole') {
-      saveGuild(i.guildId, { staffRoleId: i.values[0] });
+      saveGuild(i.guildId, { staffRoleIds: i.values, staffRoleId: '' });
       return i.update(morePanel(i.guild));
     }
     if (i.isButton() && i.customId === 'mh_more') return i.reply(morePanel(i.guild));
@@ -697,7 +699,7 @@ client.on(Events.MessageCreate, async (msg) => {
     isOwner: msg.guild.ownerId === msg.author.id,
     // staff = Manage Server permission OR the configured staff role
     isStaff: (msg.member?.permissions.has(PermissionsBitField.Flags.ManageGuild) ?? false) ||
-      (!!cfg?.staffRoleId && (msg.member?.roles.cache.has(cfg.staffRoleId) ?? false)),
+      staffRoles(cfg).some((r) => msg.member?.roles.cache.has(r) ?? false),
   };
   if (!shouldTrap(facts, cfg)) return;
 

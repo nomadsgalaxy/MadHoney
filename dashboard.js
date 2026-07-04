@@ -9,7 +9,7 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs
 import { PermissionsBitField, ChannelType } from 'discord.js';
 const { getGuild, saveGuild, bans, trappedCount } = await import(process.env.MADHONEY_STORE ?? './store.js'); // pluggable store backend
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
-import { honeypotMode } from './trap.js';
+import { honeypotMode, staffRoles, adminRoles } from './trap.js';
 import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } from './captcha.js';
 import { makeCode } from './verify.js';
 import { renderBanner, DEFAULT_BANNER, FONTS, SELF_HOSTED } from './banner.js';
@@ -200,6 +200,9 @@ function layout(title, body, opts = {}) {
   .errpage .btn:hover{text-decoration:none;transform:translateY(-1px)}
   label{display:block;margin:.7rem 0;font-weight:600}
   input[type=text],textarea,select{display:block;width:100%;padding:.5rem;margin-top:.2rem;background:#0f1216;color:var(--ink);border:1px solid var(--line);border-radius:7px;font:inherit}
+  .rolechecks{max-height:140px;overflow-y:auto;background:#0f1216;border:1px solid var(--line);border-radius:7px;padding:.35rem .55rem;margin-top:.2rem}
+  .rolechecks label{display:flex;align-items:center;gap:.5rem;margin:.1rem 0;font-weight:400;cursor:pointer}
+  .rolechecks input[type=checkbox]{width:auto;margin:0;flex:none}
   input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--honey)}
   input[type=color]{appearance:none;-webkit-appearance:none;width:100%;height:38px;padding:3px;margin-top:.2rem;background:#0f1216;border:1px solid var(--line);border-radius:7px;cursor:pointer}
   input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
@@ -357,7 +360,7 @@ export function startDashboard(client) {
   async function canManage(sess, guildId) {
     if (isAdmin(sess, guildId)) return true;
     const cfg = getGuild(guildId);
-    const roleIds = [cfg?.staffRoleId, cfg?.adminRoleId].filter(Boolean);
+    const roleIds = [...staffRoles(cfg), ...adminRoles(cfg)];
     if (!roleIds.length) return false;
     const member = await client.guilds.cache.get(guildId)?.members.fetch(sess.user.id).catch(() => null);
     return !!member && roleIds.some((r) => member.roles.cache.has(r));
@@ -380,6 +383,13 @@ export function startDashboard(client) {
       `<option value="${r.id}" ${r.id === sel ? 'selected' : ''}>${esc(r.name)}</option>`)].join('');
     const chanOpts = (sel) => ['<option value="">(none)</option>', ...chans.map((c) =>
       `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>#${esc(c.name)}</option>`)].join('');
+    // multi-select as a scrollable checkbox list (native <select multiple> is
+    // ctrl-click hostile, especially on mobile)
+    const roleChecks = (name, selected) => {
+      const sel = new Set(selected ?? []);
+      return `<div class="rolechecks">${roles.map((r) =>
+        `<label><input type="checkbox" name="${name}" value="${r.id}" ${sel.has(r.id) ? 'checked' : ''}>${esc(r.name)}</label>`).join('') || '<span style="color:var(--dim)">(no roles)</span>'}</div>`;
+    };
     const banRows = bans(guild.id);
     const trappedHere = trappedCount(banRows);
     const icon = guild.iconURL?.({ size: 128 });
@@ -458,9 +468,11 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   </div>
   <div class="subh">${t('dash.guild.staffAccess', dl)}</div>
   <div class="grid2f">
-  <label>${t('dash.guild.staffRole', dl)} <select name="staffRoleId">${roleOpts(cfg.staffRoleId)}</select>
+  <label>${t('dash.guild.staffRole', dl)}
+    ${roleChecks('staffRoleIds', staffRoles(cfg))}
     <small>${t('dash.guild.staffRoleHint', dl)}</small></label>
-  <label>${t('dash.guild.adminRole', dl)} <select name="adminRoleId">${roleOpts(cfg.adminRoleId)}</select>
+  <label>${t('dash.guild.adminRole', dl)}
+    ${roleChecks('adminRoleIds', adminRoles(cfg))}
     <small>${t('dash.guild.adminRoleHint', dl)}</small></label>
   </div>
   <div class="subh">${t('dash.guild.verification', dl)}</div>
@@ -997,9 +1009,15 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             return html(await guildPage(guild, sess, t('dash.msg.bannerSaved', curLocale), 'banner'));
           }
           const patch = {};
-          for (const k of ['verifiedRoleId', 'staffRoleId', 'adminRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText', 'captchaDifficulty', 'captchaStyle', 'locale']) {
+          for (const k of ['verifiedRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText', 'captchaDifficulty', 'captchaStyle', 'locale']) {
             if (form.has(k)) patch[k] = form.get(k).trim();
           }
+          // staff / dashboard-admin roles are multi-select checkboxes; the array
+          // is authoritative, so clear the legacy single fields on save
+          patch.staffRoleIds = form.getAll('staffRoleIds').filter(Boolean);
+          patch.adminRoleIds = form.getAll('adminRoleIds').filter(Boolean);
+          patch.staffRoleId = '';
+          patch.adminRoleId = '';
           patch.banShare = form.get('banShare') === 'on';
           patch.appealEnabled = form.get('appealEnabled') === 'on';
           patch.verificationEnabled = form.get('verificationEnabled') === 'on';

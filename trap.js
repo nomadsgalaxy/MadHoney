@@ -1,3 +1,9 @@
+// Staff / dashboard-admin roles: multiple allowed via staffRoleIds[] /
+// adminRoleIds[], with back-compat for the legacy single staffRoleId /
+// adminRoleId. Deduped; empties dropped.
+export const staffRoles = (cfg) => [...new Set([...(cfg?.staffRoleIds ?? []), cfg?.staffRoleId].filter(Boolean))];
+export const adminRoles = (cfg) => [...new Set([...(cfg?.adminRoleIds ?? []), cfg?.adminRoleId].filter(Boolean))];
+
 // The honeypot's mode: 'armed' (auto-ban, default), 'review' (hold each hit for
 // a mod to approve), or 'disarmed' (off). Falls back to the legacy
 // honeypotEnabled flag for configs saved before modes existed.

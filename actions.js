@@ -382,13 +382,29 @@ export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) 
   const members = await guild.members.fetch();
   Object.assign(progress, { label: 'Grandfathering', total: members.size, done: 0, added: 0, skipped: 0, failed: 0 });
   const failures = [];
+  // bots + members who already have the role need no API call
+  const targets = [];
   for (const m of members.values()) {
-    progress.done++;
-    if (m.user.bot || m.roles.cache.has(role.id)) { progress.skipped++; continue; }
-    await m.roles.add(role, 'MadHoney: grandfathered existing member')
-      .then(() => progress.added++)
-      .catch((e) => { progress.failed++; failures.push(`${m.user.tag}: ${e.message}`); });
+    if (m.user.bot || m.roles.cache.has(role.id)) { progress.skipped++; progress.done++; }
+    else targets.push(m);
   }
+  // Role-add is one request per member (no bulk API), so on a several-thousand
+  // member server the old serial `await` was bottlenecked on round-trip latency.
+  // Run a bounded pool instead - discord.js's rate limiter packs the concurrent
+  // requests and backs off on 429s, so this is ~10x faster without risking a
+  // global rate-limit that would starve bans/verifications on other guilds.
+  const CONCURRENCY = 10;
+  let i = 0;
+  const worker = async () => {
+    while (i < targets.length) {
+      const m = targets[i++];
+      await m.roles.add(role, 'MadHoney: grandfathered existing member')
+        .then(() => progress.added++)
+        .catch((e) => { progress.failed++; failures.push(`${m.user.tag}: ${e.message}`); });
+      progress.done++;
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length || 1) }, worker));
   return t('dash.act.gfDone', loc, { role: role.name, added: progress.added, skipped: progress.skipped, failedPart: failures.length ? t('dash.act.gfFailed', loc, { n: failures.length, role: role.name, list: failures.slice(0, 5).join(', ') }) : '' });
 }
 
