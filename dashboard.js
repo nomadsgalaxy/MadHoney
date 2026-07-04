@@ -826,7 +826,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
       }
 
       // ---- per-guild ----
-      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/progress|\/gate)?$/);
+      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/captcha\.png|\/progress|\/gate)?$/);
       if (m) {
         const sess = session(req);
         if (!sess) return redirect('/login');
