@@ -1,11 +1,18 @@
 // Per-guild config + shared ban log. Plain files, synchronous.
 // ponytail: JSON file + JSONL append is plenty for this scale; move to SQLite
 // only if MadHoney ever serves hundreds of guilds with heavy dashboard traffic.
-import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
-const GUILDS = new URL('./guilds.json', import.meta.url);
-const BANS = new URL('./bans.jsonl', import.meta.url);
-const APPEALS = new URL('./appeals.jsonl', import.meta.url);
+// Data lives beside the code by default. Set MADHONEY_DATA_DIR to keep state on
+// a separate volume (e.g. a Docker mount) so it survives image rebuilds.
+const DATA_DIR = process.env.MADHONEY_DATA_DIR
+  ? pathToFileURL(process.env.MADHONEY_DATA_DIR.replace(/\/?$/, '/'))
+  : new URL('./', import.meta.url);
+if (process.env.MADHONEY_DATA_DIR) mkdirSync(process.env.MADHONEY_DATA_DIR, { recursive: true });
+const GUILDS = new URL('guilds.json', DATA_DIR);
+const BANS = new URL('bans.jsonl', DATA_DIR);
+const APPEALS = new URL('appeals.jsonl', DATA_DIR);
 
 export function allGuilds() {
   return existsSync(GUILDS) ? JSON.parse(readFileSync(GUILDS, 'utf8')) : {};

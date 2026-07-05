@@ -1,0 +1,29 @@
+Bundled fonts — attribution and license
+========================================
+
+This directory bundles the DejaVu font family so MadHoney renders banners and
+captchas on hosts with no system fonts installed (see ../fonts.js). The fonts
+are redistributed here under their original permissive, free license.
+
+Fonts included:
+  DejaVuSans.ttf, DejaVuSans-Bold.ttf
+  DejaVuSerif.ttf, DejaVuSerif-Bold.ttf
+  DejaVuSansMono.ttf, DejaVuSansMono-Bold.ttf
+
+License: the DejaVu Fonts License, which extends the Bitstream Vera Fonts
+License. Both are permissive free-software font licenses that explicitly allow
+bundling, redistribution, and use (including with other software), provided the
+copyright and permission notices are retained and the fonts are not sold on
+their own. The DejaVu fonts are NOT licensed under MadHoney's OCL/MCL; they keep
+their own upstream license, which is unaffected by MadHoney's terms.
+
+Copyright:
+  Bitstream Vera Fonts: Copyright (c) 2003 by Bitstream, Inc.
+  DejaVu changes: Copyright (c) contributors to the DejaVu Fonts project.
+  "Bitstream Vera" and "DejaVu" are trademarks of their respective holders.
+
+Full license text (canonical source):
+  https://dejavu-fonts.github.io/License.html
+
+Upstream project:
+  https://dejavu-fonts.github.io/

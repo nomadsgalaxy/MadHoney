@@ -1,0 +1,22 @@
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+# runtime state (belongs in the /data volume, never baked into the image)
+guilds.json
+bans.jsonl
+appeals.jsonl
+bot.log
+sessions.json
+# deployment-only / non-distributed files
+worker
+store.d1.js
+d1-pending.jsonl
+failover
+*.failover.*
+notice.txt
+costs.json
+costs-history.jsonl
+# dev-only OCR data
+*.traineddata

@@ -3,6 +3,7 @@
 // Returns a PNG Buffer. Pure rendering - no Discord I/O.
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { fileURLToPath } from 'node:url';
+import './fonts.js'; // register bundled fonts so text renders without system fonts
 
 // Generic families always resolve; the named ones fall back via fontconfig.
 export const FONTS = ['sans-serif', 'serif', 'monospace', 'DejaVu Sans', 'Liberation Sans', 'Liberation Serif'];

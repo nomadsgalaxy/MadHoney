@@ -1,6 +1,7 @@
 // Render a code as a noisy PNG so bots can't read it as plain text.
 // Returns a PNG Buffer.
 import { createCanvas } from '@napi-rs/canvas';
+import './fonts.js'; // register bundled fonts so captcha text renders without system fonts
 
 const BG = '#0c0e11';
 const INK = ['#ff9d12', '#de9400', '#e9ecf1', '#ffb347']; // honey + light text

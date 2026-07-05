@@ -1,0 +1,29 @@
+# MadHoney via Docker Compose.
+#   1. cp .env.example .env   and fill in DISCORD_TOKEN (+ dashboard vars if used)
+#   2. docker compose up -d
+#   3. docker compose logs -f
+#
+# State (guilds.json, bans.jsonl, appeals.jsonl) is kept in the named volume
+# below, so it survives `docker compose up --build` and image upgrades.
+services:
+  madhoney:
+    build: .
+    # Or use a prebuilt image instead of build: .
+    # image: ghcr.io/nomadsgalaxy/madhoney:latest
+    container_name: madhoney
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MADHONEY_DATA_DIR: /data
+      # Bind inside the container so the published port below can reach it.
+      HOST: 0.0.0.0
+    volumes:
+      - madhoney-data:/data
+    # Only needed if you run the dashboard and want to reach it from the host.
+    # Host side stays on 127.0.0.1 (localhost only) — put a reverse proxy/TLS in
+    # front before exposing it publicly.
+    ports:
+      - "127.0.0.1:8300:8300"
+
+volumes:
+  madhoney-data:

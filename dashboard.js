@@ -17,6 +17,10 @@ import { TERMS, PRIVACY } from './legal.js';
 import { SUPPORTED, LOCALE_NAMES, t, resolveLocale } from './i18n.js';
 
 const PORT = Number(process.env.PORT || 8300);
+// Bind 127.0.0.1 by default (behind a reverse proxy/tunnel). In a container set
+// HOST=0.0.0.0 so a published port can reach it; keep the host-side mapping
+// bound to 127.0.0.1 unless you intend to expose it publicly.
+const HOST = process.env.HOST || '127.0.0.1';
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://127.0.0.1:${PORT}`).replace(/\/$/, '');
 const API = 'https://discord.com/api/v10';
 const WEEK = 7 * 24 * 3600 * 1000;
@@ -1104,8 +1108,8 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
     }
   });
 
-  server.listen(PORT, '127.0.0.1', () =>
-    console.log(`Dashboard: http://127.0.0.1:${PORT} → public at ${PUBLIC_URL} (put a reverse proxy/tunnel in front).`),
+  server.listen(PORT, HOST, () =>
+    console.log(`Dashboard: http://${HOST}:${PORT} → public at ${PUBLIC_URL} (put a reverse proxy/tunnel in front).`),
   );
   return server;
 }

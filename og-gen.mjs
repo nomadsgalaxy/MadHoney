@@ -2,6 +2,7 @@
 // branding changes. node og-gen.mjs
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { writeFileSync } from 'node:fs';
+import './fonts.js'; // register bundled fonts so text renders without system fonts
 
 const W = 1200, H = 630;
 const canvas = createCanvas(W, H);

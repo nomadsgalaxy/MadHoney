@@ -149,6 +149,22 @@ sudo systemctl daemon-reload && sudo systemctl enable --now madhoney
 journalctl -u madhoney -f
 ```
 
+### Run it in Docker
+
+```bash
+cp .env.example .env && nano .env    # token (+ CLIENT_ID/SECRET for the dashboard)
+docker compose up -d
+docker compose logs -f
+```
+
+The image bundles its own fonts, so banners and captchas render correctly even
+on a bare host with no system fonts installed (a common cause of blank banners
+when self-hosting). State (`guilds.json`, `bans.jsonl`, `appeals.jsonl`) lives
+in the `madhoney-data` volume via `MADHONEY_DATA_DIR=/data`, so it survives
+`docker compose up --build` and image upgrades. The dashboard is published on
+`127.0.0.1:8300` by default — put a reverse proxy/TLS in front before exposing
+it. Or `docker build -t madhoney . && docker run` if you'd rather not use Compose.
+
 ### Updating
 
 Deploying new code updates every server at once - it's a single process.
