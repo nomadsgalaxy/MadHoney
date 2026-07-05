@@ -24,3 +24,6 @@ verify-worker/
 # deployment-only delegation runner (bot side of the edge worker; bot.js loads
 # it only if present, so the base build stays server-only)
 jobrunner.js
+# deployment-only origin-guard worker (branded "we'll be back" page when the
+# tunnel origin is down)
+status-worker/
