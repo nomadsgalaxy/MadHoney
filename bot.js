@@ -22,6 +22,14 @@ import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateCha
 import { startDashboard } from './dashboard.js';
 import { t } from './i18n.js';
 
+// Optional Cloudflare delegation runner. MadHoney runs entirely on your own
+// server by default — this file is NOT part of the base build. It's a
+// deployment-only add-on for an HA setup where an edge worker offloads bulk
+// jobs to the bot via a shared database. If the module isn't present (the
+// normal self-host case), the bot simply skips it and runs standalone.
+let startJobRunner = () => {};
+try { ({ startJobRunner } = await import('./jobrunner.js')); } catch { /* server-only: no external delegation */ }
+
 const EPH = { flags: MessageFlags.Ephemeral };
 const pending = new Map(); // userId -> { code, attempts, expires, cooldownUntil } (in-memory; users re-click after a restart)
 const appealInFlight = new Set(); // `${uid}:${gid}:${epoch}` mid-send; the async half of the one-appeal-per-ban guard (durable half is appeals.jsonl)
@@ -915,6 +923,10 @@ client.once(Events.ClientReady, async (c) => {
   // the bot can't see it - grant the MadHoney role View there (or temporarily
   // give it Administrator, gate, then remove).
   console.log(`Invite: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot+applications.commands&permissions=268545044`);
+  // Run bulk/canvas jobs the edge verify-worker delegates via the D1 `jobs`
+  // table (grandfather, bansync, gating, banner render) — no-op without CF_D1
+  // creds, so a plain self-host is unaffected.
+  startJobRunner(client, getGuild);
   if (process.env.CLIENT_ID) {
     startDashboard(client);
     if (!process.env.CLIENT_SECRET) console.log('Dashboard up in landing-only mode - set CLIENT_SECRET in .env to enable login.');

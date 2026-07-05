@@ -187,6 +187,12 @@ State is two files: `guilds.json` (per-server config) and `bans.jsonl`
 read message content unless you opt in with `MESSAGE_CONTENT=on`; the trap
 fires on *where* a message was posted, not what it says.
 
+MadHoney runs entirely on your own server by default — the file store above is
+all it needs, no external services. The store is pluggable, though: point
+`MADHONEY_STORE` at your own module (same exports as `store.js`) to back it with
+a database of your choice if you want to run redundant instances or add your own
+failover. That's optional and unnecessary for a normal single-server deploy.
+
 Every honeypot ban is recorded on a universal ban list. Whether that list
 applies to your server is opt-in (`/madhoney banshare`); opting out keeps
 your own catches and stops nothing else. An Undo from the log channel

@@ -18,3 +18,9 @@ failover/
 notice.txt
 costs.json
 costs-history.jsonl
+
+# deployment-only verification worker (edge-served Discord interactions)
+verify-worker/
+# deployment-only delegation runner (bot side of the edge worker; bot.js loads
+# it only if present, so the base build stays server-only)
+jobrunner.js
