@@ -494,6 +494,7 @@
     "costTitle": "Quanto custa de verdade para rodar",
     "costPower": "Eletricidade do servidor bare-metal (a parcela do MadHoney, em tarifa residencial)",
     "costFailover": "Reserva de failover na nuvem (entra em ação se o servidor bare-metal cair)",
+    "costCloudflare": "Borda da Cloudflare — Workers e banco de dados D1 (grátis nesta escala; o custo cresce junto com o banco de dados)",
     "costDomain": "Domínio e infraestrutura web",
     "costTotal": "Total",
     "costNote": "Calculado ao vivo a partir da configuração real desta instância - {watts} W de parcela do servidor a {rate}/kWh. A hospedagem é doada pelo mantenedor; o apoio via Ko-fi vai direto para esses custos.",

@@ -114,13 +114,19 @@ function costsWidget(dl) {
   try { c = JSON.parse(readFileSync(new URL('./costs.json', import.meta.url), 'utf8')); } catch { return ''; }
   const watts = Math.round((c.serverWatts ?? 0) * (c.share ?? 1));
   const power = (watts / 1000) * 24 * 30.44 * (c.kwhRate ?? 0); // avg hours per month
-  const rows = [
-    [t('landing.costPower', dl), power],
-    [t('landing.costFailover', dl), c.monthly?.failover ?? 0],
-    [t('landing.costDomain', dl), c.monthly?.domain ?? 0],
-  ].filter(([, v]) => v > 0);
+  // The Cloudflare edge (Workers + D1) is free at this scale but D1 grows with
+  // the database, so it's a real line item (driven by costs.json like the rest)
+  // shown even at $0 — bump monthly.cloudflare when it crosses into paid and the
+  // total + chart follow. `always` keeps it visible where the others hide at $0.
+  const items = [
+    { l: t('landing.costPower', dl), v: power },
+    { l: t('landing.costFailover', dl), v: c.monthly?.failover ?? 0 },
+    { l: t('landing.costCloudflare', dl), v: c.monthly?.cloudflare ?? 0, always: true },
+    { l: t('landing.costDomain', dl), v: c.monthly?.domain ?? 0 },
+  ];
+  const rows = items.filter((i) => i.v > 0 || i.always).map((i) => [i.l, i.v]);
   if (!rows.length) return '';
-  const total = rows.reduce((s, [, v]) => s + v, 0);
+  const total = items.reduce((s, i) => s + i.v, 0);
   const usd = (v) => `$${v.toFixed(2)}`;
 
   // daily sample of the computed total -> costs-history.jsonl (drives the chart)

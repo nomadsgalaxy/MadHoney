@@ -493,6 +493,7 @@
     "costTitle": "Lo que realmente cuesta mantenerlo en marcha",
     "costPower": "Electricidad del servidor bare-metal (la parte de MadHoney, a tarifa residencial)",
     "costFailover": "Respaldo en la nube en espera (entra en acción si el servidor bare-metal se cae)",
+    "costCloudflare": "Borde de Cloudflare — Workers y base de datos D1 (gratis a esta escala; el coste crece a medida que crece la base de datos)",
     "costDomain": "Dominio e infraestructura web",
     "costTotal": "Total",
     "costNote": "Calculado en vivo a partir de la configuración real de esta instancia — {watts} W de la parte del servidor a {rate}/kWh. El alojamiento lo dona el mantenedor; el apoyo en Ko-fi va directamente a cubrir estos costes.",

@@ -27,3 +27,5 @@ jobrunner.js
 # deployment-only origin-guard worker (branded "we'll be back" page when the
 # tunnel origin is down)
 status-worker/
+# deployment-only self-measuring D1 cost estimator
+d1cost.js

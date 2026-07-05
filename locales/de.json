@@ -493,6 +493,7 @@
     "costTitle": "Was der Betrieb wirklich kostet",
     "costPower": "Strom für den Bare-Metal-Server (MadHoneys Anteil, zu Haushaltsstrompreisen)",
     "costFailover": "Cloud-Failover in Bereitschaft (springt ein, wenn der Bare-Metal-Server ausfällt)",
+    "costCloudflare": "Cloudflare-Edge — Workers & D1-Datenbank (bei dieser Größenordnung kostenlos; die Kosten wachsen mit der Datenbank)",
     "costDomain": "Domain & Web-Infrastruktur",
     "costTotal": "Gesamt",
     "costNote": "Live aus der tatsächlichen Konfiguration dieser Instanz berechnet — {watts} W Server-Anteil zu {rate}/kWh. Das Hosting spendet der Maintainer; Ko-fi-Unterstützung fließt direkt in diese Kosten.",
