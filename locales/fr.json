@@ -70,7 +70,8 @@
     "dismissedBy": "☑️ **Ignoré** par {mod} - aucune action prise.",
     "approvedReinvited": "✅ **Approuvé** par {mod} - débanni et réinvité.",
     "approvedNoInvite": "✅ **Approuvé** par {mod} - débanni (impossible de créer automatiquement une invitation).",
-    "deniedBy": "❌ **Refusé** par {mod}."
+    "deniedBy": "❌ **Refusé** par {mod}.",
+    "permReminder": "🍯 Petit rappel de **MadHoney** concernant **{guild}** : je n'ai pas pu publier dans le salon de journal que tu as configuré. Il me faut **Voir le salon** et **Envoyer des messages** sur ce salon - c'est là que sont publiés les rapports de bannissement et les appels des membres (avec les boutons Approuver/Refuser), donc le processus d'appel ne fonctionnera pas tant que je ne pourrai pas y publier. Corrige mes permissions sur ce salon, ou choisis un autre salon de journal : {dash}"
   },
   "setup": {
     "title": "## Configuration de MadHoney",

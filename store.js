@@ -3,6 +3,7 @@
 // only if MadHoney ever serves hundreds of guilds with heavy dashboard traffic.
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import * as incident from './incident.js';
 
 // Data lives beside the code by default. Set MADHONEY_DATA_DIR to keep state on
 // a separate volume (e.g. a Docker mount) so it survives image rebuilds.
@@ -118,4 +119,22 @@ export function hasAppealed(userId, guildId, epoch) {
 
 export function recordAppeal(userId, guildId, epoch) {
   appendFileSync(APPEALS, JSON.stringify({ id: userId, guildId, epoch, at: new Date().toISOString() }) + '\n');
+}
+
+// ---- incident model (see incident.js) ----
+// The guild currently blocking a (re)ban of `userId` in `guildId` — i.e. another
+// guild still holds an UNRESOLVED ban. null = clear to let them in (either not
+// banned elsewhere, or every blocking incident was appeal-resolved network-wide).
+// Ban-share + bansync call this instead of bannedElsewhere so an approved appeal
+// stops re-banning the user everywhere.
+export const reBanSource = (userId, guildId) => incident.reBanSource(userId, guildId, bans());
+// The incident tag a user's current ban in a guild belongs to (for copying onto
+// a propagated row, or resolving).
+export const incidentOf = (userId, guildId) => incident.incidentOf(userId, guildId, bans());
+export const isIncidentResolved = (incidentId) => incident.isIncidentResolved(incidentId, bans());
+// Resolve an incident network-wide: append one resolution row so no guild
+// re-applies it. Idempotent-ish (a duplicate resolution row is harmless).
+export function resolveIncident(incidentId, by) {
+  if (!incidentId) return;
+  appendFileSync(BANS, JSON.stringify(incident.resolutionRow(incidentId, by, new Date().toISOString())) + '\n');
 }

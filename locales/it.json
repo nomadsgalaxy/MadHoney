@@ -70,7 +70,8 @@
     "dismissedBy": "☑️ **Ignorato** da {mod} - nessuna azione intrapresa.",
     "approvedReinvited": "✅ **Approvato** da {mod} - sbannato e reinvitato.",
     "approvedNoInvite": "✅ **Approvato** da {mod} - sbannato (impossibile creare automaticamente un invito).",
-    "deniedBy": "❌ **Rifiutato** da {mod}."
+    "deniedBy": "❌ **Rifiutato** da {mod}.",
+    "permReminder": "🍯 Avviso da **MadHoney** riguardo a **{guild}**: non sono riuscito a pubblicare nel canale di log che hai configurato. Lì mi servono **Visualizza canale** e **Invia messaggi** - è dove vengono segnalati i ban e i ricorsi dei membri (con i pulsanti Approva/Rifiuta), quindi il processo di ricorso non funzionerà finché non potrò pubblicarci. Sistema i miei permessi su quel canale, oppure scegli un altro canale di log: {dash}"
   },
   "setup": {
     "title": "## Configurazione di MadHoney",

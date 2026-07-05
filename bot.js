@@ -17,7 +17,8 @@ import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 // Pluggable store backend: MADHONEY_STORE selects an alternative module with
 // the same exports (defaults to the plain file store).
 const store = await import(process.env.MADHONEY_STORE ?? './store.js');
-const { getGuild, saveGuild, logBan, bans, bannedElsewhere, appealableGuildIds, banEpoch, hasAppealed, recordAppeal } = store;
+const { getGuild, saveGuild, logBan, bans, bannedElsewhere, appealableGuildIds, banEpoch, hasAppealed, recordAppeal, reBanSource, incidentOf, resolveIncident } = store;
+import { makeIncidentId } from './incident.js';
 import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, gateNewChannel, ungateChannels, grandfather, syncBans, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { startDashboard } from './dashboard.js';
 import { t } from './i18n.js';
@@ -74,13 +75,33 @@ function logAllow(guildId, priority) {
 }
 // Fire-and-forget send to a guild's log channel, throttled by priority. Use
 // logAllow directly where the caller needs to know whether it went through.
+// Guilds we've already nudged this session about a broken log channel, so a
+// stream of failed ban reports doesn't spam the owner. ponytail: in-memory Set;
+// resets on restart (re-warns next session if still broken), which is fine.
+const logWarned = new Set();
+// When a log-channel post fails (missing/deleted channel, or MadHoney lacks
+// View/Send there), the mods never see ban reports OR appeal forwards. DM the
+// owner once so they can fix permissions — the appeal pipeline depends on it.
+async function warnOwnerLogBroken(guild, cfg) {
+  if (logWarned.has(guild.id)) return;
+  logWarned.add(guild.id);
+  try {
+    const owner = await guild.fetchOwner();
+    await owner.send(t('log.permReminder', cfg?.locale, { guild: guild.name, dash: dashLink(guild.id) }));
+  } catch { /* owner DMs closed - nothing more we can do */ }
+}
+
 async function logSend(guild, cfg, payload, priority = 'normal') {
   if (!cfg?.logChannelId) return;
   if (!logAllow(guild.id, priority)) { console.log(`[${guild.name}] log ${priority} message throttled`); return; }
   try {
     const log = await guild.channels.fetch(cfg.logChannelId);
     await log.send(payload);
-  } catch (err) { console.error(`[${guild.name}] log send failed:`, err.message); }
+    logWarned.delete(guild.id); // recovered - allow a fresh warning if it breaks again
+  } catch (err) {
+    console.error(`[${guild.name}] log send failed:`, err.message);
+    warnOwnerLogBroken(guild, cfg); // deduped owner nudge to fix permissions
+  }
 }
 const DASH = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
 const dashLink = (guildId) => (DASH ? `**[${DASH.replace(/^https?:\/\//, '')}](${DASH}${guildId ? `/g/${guildId}` : ''})**` : 'the web dashboard');
@@ -545,12 +566,17 @@ client.on(Events.InteractionCreate, async (i) => {
     // Appeal approve / deny (clicked by a mod in the log channel)
     if (i.isButton() && i.customId.startsWith('mh_appok_')) {
       const [, , , uid] = i.customId.split('_'); // mh_appok_{gid}_{uid}
+      // Capture the incident before the reversal flips the user's latest state.
+      const inc = incidentOf(uid, i.guildId);
       try {
         await i.guild.bans.remove(uid, `MadHoney: appeal approved by ${i.user.tag}`);
       } catch (e) {
-        return i.reply({ content: t('reply.unbanFailed', getGuild(i.guildId)?.locale, { error: e.message }), ...EPH });
+        // Unknown Ban (10026) = already unbanned manually; still write the
+        // reversal + resolve so they leave the universal list (audit fix).
+        if (e.code !== 10026) return i.reply({ content: t('reply.unbanFailed', getGuild(i.guildId)?.locale, { error: e.message }), ...EPH });
       }
       logBan({ id: uid, guildId: i.guildId, channel: '(appeal-approved)', at: new Date().toISOString(), unbanned: true });
+      if (inc) resolveIncident(inc, i.user.tag); // clear the incident network-wide
       let invite = null;
       try {
         const cfg = getGuild(i.guildId) ?? {};
@@ -636,6 +662,7 @@ client.on(Events.GuildCreate, async (guild) => {
         '🍯 Thanks for adding **MadHoney**!',
         `The easiest way to set up is the **web dashboard**: ${dashLink(guild.id)} - drag-and-drop channel gating, a live banner designer, and guided setup. It's much friendlier than doing it by hand.`,
         'Prefer Discord? Run `/madhoney setup`. Either way, make sure my role sits **above** your verified role in Server Settings → Roles.',
+        '📋 When you pick a **mod-log channel**, make sure I have **View Channel** and **Send Messages** there - ban reports and member appeals are posted to it, and the appeal Approve/Deny buttons live there too.',
       ].join('\n\n'),
     });
   } catch { /* no postable channel - fine */ }
@@ -759,8 +786,12 @@ client.on(Events.MessageCreate, async (msg) => {
   }
 
   // --- armed mode: ban now ---
-  // log first, so we keep the ID even if the ban call fails
-  logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date().toISOString() });
+  // log first, so we keep the ID even if the ban call fails. Stamp a stable
+  // incidentId: this is the ORIGIN of the incident; ban-share/bansync copy it so
+  // one appeal approval clears the whole thing network-wide (see incident.js).
+  const now = Date.now();
+  const incidentId = makeIncidentId(msg.guildId, msg.author.id, now);
+  logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date(now).toISOString(), incidentId });
 
   // Appeal DM (opt-in): a real human who tripped the trap can ask for review.
   // Sent BEFORE the ban so they're still reachable, and only lists servers they
@@ -807,11 +838,18 @@ client.on(Events.MessageCreate, async (msg) => {
 client.on(Events.GuildMemberAdd, async (member) => {
   const cfg = getGuild(member.guild.id);
   if (!cfg?.banShare) return; // universal list only applies to opted-in servers
-  if (!bannedElsewhere(member.id, member.guild.id)) return;
+  // Incident-aware: the blocking guild whose ban is still UNRESOLVED. null means
+  // either they aren't banned elsewhere OR an approved appeal already cleared the
+  // incident network-wide — in which case we must NOT re-ban (the confirmed
+  // lockout loop). Carry the origin incidentId onto this propagated row so the
+  // same appeal keeps covering it.
+  const source = reBanSource(member.id, member.guild.id);
+  if (!source) return;
+  const incidentId = incidentOf(member.id, source);
   let banned = false;
   try {
     await member.ban({ reason: 'MadHoney: on the universal ban list (caught by another server\'s honeypot)' });
-    logBan({ id: member.id, tag: member.user.tag, guildId: member.guild.id, channel: '(ban-share)', at: new Date().toISOString() });
+    logBan({ id: member.id, tag: member.user.tag, guildId: member.guild.id, channel: '(ban-share)', at: new Date().toISOString(), incidentId });
     banned = true;
     console.log(`[${member.guild.name}] ban-share banned ${member.user.tag} (${member.id})`);
   } catch (err) {
@@ -917,6 +955,32 @@ client.once(Events.ClientReady, async (c) => {
       }
     }
   }, 12000);
+
+  // Periodic auto ban-sync: the shared list is otherwise only applied on JOIN
+  // (ban-share) or a manual /madhoney bansync, so a member already IN a server
+  // when they're caught elsewhere never gets synced. Every SYNC_EVERY_MS, each
+  // opted-in server re-applies the current list. syncBans is idempotent (skips
+  // already-banned) and incident-aware (skips appeal-resolved incidents), so a
+  // recovered user is never re-swept. Serialized across guilds so the shared
+  // list can't gang up on the per-guild ban rate limit.
+  const SYNC_EVERY_MS = 6 * 60 * 60 * 1000;
+  const autoSync = async () => {
+    for (const guild of c.guilds.cache.values()) {
+      const gcfg = getGuild(guild.id);
+      if (!gcfg?.banShare) continue;
+      const me = guild.members.me ?? await guild.members.fetchMe().catch(() => null);
+      if (!me?.permissions.has(PermissionFlagsBits.BanMembers)) continue; // can't ban here; skip quietly
+      try {
+        const progress = {};
+        const result = await syncBans(guild, gcfg, progress);
+        if (progress.added) console.log(`[${guild.name}] auto ban-sync: ${result}`);
+      } catch (e) {
+        console.error(`[${guild.name}] auto ban-sync failed:`, e.message);
+      }
+    }
+  };
+  // First pass 5 min after boot (let caches + boot jobs settle), then on the interval.
+  setTimeout(() => { autoSync(); setInterval(autoSync, SYNC_EVERY_MS).unref?.(); }, 5 * 60 * 1000).unref?.();
   // Minimum viable: Manage Roles (verified role + channel overwrites), Manage
   // Channels, Ban Members, View Channels, Send Messages, Attach Files, Read
   // Message History. If gating a specific channel fails with Missing Access,

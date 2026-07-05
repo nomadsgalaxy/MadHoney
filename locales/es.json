@@ -70,7 +70,8 @@
     "dismissedBy": "☑️ **Descartado** por {mod} - no se tomó ninguna acción.",
     "approvedReinvited": "✅ **Aprobado** por {mod} - desbaneado y reinvitado.",
     "approvedNoInvite": "✅ **Aprobado** por {mod} - desbaneado (no se pudo crear una invitación automáticamente).",
-    "deniedBy": "❌ **Denegado** por {mod}."
+    "deniedBy": "❌ **Denegado** por {mod}.",
+    "permReminder": "🍯 Aviso de **MadHoney** sobre **{guild}**: no pude publicar en el canal de registro de moderación que configuraste. Necesito **Ver canal** y **Enviar mensajes** allí - es donde se publican los informes de baneo y las apelaciones de los miembros (con los botones de Aprobar/Denegar), así que el proceso de apelación no funcionará hasta que pueda publicar en él. Corrige mis permisos en ese canal o elige otro canal de registro: {dash}"
   },
   "setup": {
     "title": "## Configuración de MadHoney",

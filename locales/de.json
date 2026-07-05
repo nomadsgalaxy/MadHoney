@@ -70,7 +70,8 @@
     "dismissedBy": "☑️ **Verworfen** von {mod} - keine Aktion durchgeführt.",
     "approvedReinvited": "✅ **Angenommen** von {mod} - entbannt und erneut eingeladen.",
     "approvedNoInvite": "✅ **Angenommen** von {mod} - entbannt (Einladung konnte nicht automatisch erstellt werden).",
-    "deniedBy": "❌ **Abgelehnt** von {mod}."
+    "deniedBy": "❌ **Abgelehnt** von {mod}.",
+    "permReminder": "🍯 Kurzer Hinweis von **MadHoney** zu **{guild}**: Ich konnte nicht in deinen konfigurierten Mod-Log-Kanal posten. Ich brauche dort **Kanal ansehen** und **Nachrichten senden** - dort werden Bann-Meldungen und Einsprüche von Mitgliedern (mit den Annehmen-/Ablehnen-Buttons) gepostet, der Einspruchsprozess funktioniert also erst, wenn ich dort posten kann. Korrigiere meine Berechtigungen für diesen Kanal oder wähle einen anderen Log-Kanal: {dash}"
   },
   "setup": {
     "title": "## MadHoney-Einrichtung",

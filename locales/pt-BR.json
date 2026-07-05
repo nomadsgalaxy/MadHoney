@@ -70,7 +70,8 @@
     "dismissedBy": "☑️ **Descartado** por {mod} - nenhuma ação tomada.",
     "approvedReinvited": "✅ **Aprovado** por {mod} - desbanido e reconvidado.",
     "approvedNoInvite": "✅ **Aprovado** por {mod} - desbanido (não foi possível criar um convite automaticamente).",
-    "deniedBy": "❌ **Negado** por {mod}."
+    "deniedBy": "❌ **Negado** por {mod}.",
+    "permReminder": "🍯 Aviso do **MadHoney** sobre **{guild}**: não consegui postar no canal de log de moderação que você configurou. Preciso de **Ver canal** e **Enviar mensagens** lá - é onde os relatórios de banimento e os recursos dos membros (com os botões Aprovar/Negar) são postados, então o processo de recurso não vai funcionar até eu conseguir postar nele. Corrija minhas permissões nesse canal ou escolha outro canal de log: {dash}"
   },
   "setup": {
     "title": "## Configuração do MadHoney",

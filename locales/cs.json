@@ -124,7 +124,8 @@
     "dismissedBy": "☑️ **Zamítnuto** uživatelem {mod} - žádná akce nebyla provedena.",
     "approvedReinvited": "✅ **Schváleno** uživatelem {mod} - ban zrušen a znovu pozván.",
     "approvedNoInvite": "✅ **Schváleno** uživatelem {mod} - ban zrušen (nepodařilo se automaticky vytvořit pozvánku).",
-    "deniedBy": "❌ **Zamítnuto** uživatelem {mod}."
+    "deniedBy": "❌ **Zamítnuto** uživatelem {mod}.",
+    "permReminder": "🍯 Upozornění od **MadHoney** ohledně serveru **{guild}**: nepodařilo se mi odeslat zprávu do tvého nastaveného log kanálu. Potřebuji tam oprávnění **Zobrazit kanál** a **Posílat zprávy** - právě tam se posílají hlášení o banech a odvolání členů (s tlačítky Schválit/Zamítnout), takže dokud tam nebudu moct psát, odvolání nebudou fungovat. Oprav mi oprávnění v tom kanálu, nebo vyber jiný log kanál: {dash}"
   },
   "dash": {
     "lang": "Jazyk",

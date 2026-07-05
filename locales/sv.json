@@ -70,7 +70,8 @@
     "dismissedBy": "☑️ **Avfärdad** av {mod} - ingen åtgärd vidtogs.",
     "approvedReinvited": "✅ **Godkänd** av {mod} - avbannad och inbjuden igen.",
     "approvedNoInvite": "✅ **Godkänd** av {mod} - avbannad (kunde inte skapa en inbjudan automatiskt).",
-    "deniedBy": "❌ **Nekad** av {mod}."
+    "deniedBy": "❌ **Nekad** av {mod}.",
+    "permReminder": "🍯 En snabb notis från **MadHoney** om **{guild}**: Jag kunde inte posta i din konfigurerade loggkanal. Jag behöver **Visa kanal** och **Skicka meddelanden** där - det är där banrapporter och medlemmars överklaganden (med Godkänn/Neka-knapparna) postas, så överklagandeprocessen fungerar inte förrän jag kan posta i den. Åtgärda mina behörigheter i den kanalen, eller välj en annan loggkanal: {dash}"
   },
   "setup": {
     "title": "## MadHoney-inställningar",

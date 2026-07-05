@@ -4,6 +4,7 @@
 import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { renderBanner, DEFAULT_BANNER, creditSuffix } from './banner.js';
+import { resolvedIncidents } from './incident.js';
 import { t } from './i18n.js';
 
 // Randomize the banner's attachment filename on every post. A fixed name like
@@ -437,12 +438,18 @@ export async function syncBans(guild, cfg, progress = {}, loc = cfg?.locale) {
   saveGuild(guild.id, { banSyncPending: true }); // resumable across restarts (see ClientReady)
 
   // universal list: latest state per (user, guild); an unban reverses the entry
+  const allRows = bans();
+  const resolved = resolvedIncidents(allRows); // incidents cleared by an approved appeal
   const perGuild = new Map();
-  for (const b of bans()) {
+  for (const b of allRows) {
     if (b.guildId !== guild.id) perGuild.set(`${b.id}:${b.guildId}`, b);
   }
-  const pool = new Map(); // userId -> tag
-  for (const b of perGuild.values()) if (!b.unbanned) pool.set(b.id, b.tag);
+  const pool = new Map(); // userId -> { tag, incidentId }
+  for (const b of perGuild.values()) {
+    if (b.unbanned) continue;
+    if (b.incidentId && resolved.has(b.incidentId)) continue; // appeal cleared it network-wide
+    pool.set(b.id, { tag: b.tag, incidentId: b.incidentId }); // last writer wins; fine for the tag
+  }
 
   // ponytail: bans.fetch caps at 1000 entries; paginate if a server ever exceeds it
   const existing = await guild.bans.fetch();
@@ -453,18 +460,18 @@ export async function syncBans(guild, cfg, progress = {}, loc = cfg?.locale) {
   // (same rationale as grandfather() above - ~10x faster on big shared lists,
   // and logBan is synchronous so concurrent workers can't race the ban log)
   const targets = [];
-  for (const [id, tag] of pool) {
+  for (const [id, info] of pool) {
     if (already.has(id)) { progress.skipped++; progress.done++; }
-    else targets.push([id, tag]);
+    else targets.push([id, info]);
   }
   const CONCURRENCY = 10;
   let i = 0;
   const worker = async () => {
     while (i < targets.length) {
-      const [id, tag] = targets[i++];
+      const [id, info] = targets[i++];
       try {
         await guild.bans.create(id, { reason: 'MadHoney: synced from the shared ban list' });
-        logBan({ id, tag, guildId: guild.id, channel: '(ban-sync)', at: new Date().toISOString() });
+        logBan({ id, tag: info.tag, guildId: guild.id, channel: '(ban-sync)', at: new Date().toISOString(), incidentId: info.incidentId });
         progress.added++;
       } catch { progress.failed++; }
       progress.done++;

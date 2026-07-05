@@ -70,7 +70,8 @@
     "dismissedBy": "☑️ **Dismissed** by {mod} - no action taken.",
     "approvedReinvited": "✅ **Approved** by {mod} - unbanned and re-invited.",
     "approvedNoInvite": "✅ **Approved** by {mod} - unbanned (couldn't auto-create an invite).",
-    "deniedBy": "❌ **Denied** by {mod}."
+    "deniedBy": "❌ **Denied** by {mod}.",
+    "permReminder": "🍯 Heads up from **MadHoney** about **{guild}**: I couldn't post to your configured mod-log channel. I need **View Channel** and **Send Messages** there - it's where ban reports and member appeals (with the Approve/Deny buttons) are posted, so the appeal process won't work until I can post to it. Fix my permissions on that channel, or pick a different log channel: {dash}"
   },
   "setup": {
     "title": "## MadHoney setup",
