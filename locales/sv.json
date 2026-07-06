@@ -39,6 +39,7 @@
     "notSet": "*ej inställd*"
   },
   "reply": {
+    "support": "🍯 **MadHoney-support**\nFrågor, buggrapporter och funktionsönskemål är alla välkomna - gå med i supportservern: {invite}",
     "needManageServer": "Du behöver **Hantera server** för att använda MadHoney-kontrollerna.",
     "noHoneypotYet": "Ingen honeypot-kanal är inställd än - kör `/madhoney setup` först.",
     "banshareOn": "🌐 **Bandelning PÅ** - användare på den universella MadHoney-banlistan (fångade av någon servers honeypot) bannas automatiskt när de går med här. Kör `/madhoney bansync` för att även banna alla som redan finns på listan.",

@@ -39,6 +39,7 @@
     "notSet": "*sin definir*"
   },
   "reply": {
+    "support": "🍯 **Soporte de MadHoney**\nLas preguntas, los informes de errores y las peticiones de funciones son siempre bienvenidos — únete al servidor de soporte: {invite}",
     "needManageServer": "Necesitas **Gestionar servidor** para usar los controles de MadHoney.",
     "noHoneypotYet": "Aún no hay ningún canal honeypot configurado - ejecuta primero `/madhoney setup`.",
     "banshareOn": "🌐 **Uso compartido de baneos ACTIVADO** - los usuarios de la lista universal de baneos de MadHoney (atrapados por el honeypot de cualquier servidor) se banean automáticamente al entrar aquí. Ejecuta `/madhoney bansync` para banear también a todos los que ya están en la lista.",

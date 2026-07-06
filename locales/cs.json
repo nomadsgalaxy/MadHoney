@@ -93,6 +93,7 @@
     "btnPost": "Vyvěsit do honeypot kanálu"
   },
   "reply": {
+    "support": "🍯 **Podpora MadHoney**\nDotazy, hlášení chyb i návrhy funkcí jsou vítány — připoj se na server podpory: {invite}",
     "needManageServer": "Pro ovládání MadHoney potřebuješ oprávnění **Spravovat server**.",
     "noHoneypotYet": "Zatím není nastavený žádný honeypot kanál - nejdřív spusť `/madhoney setup`.",
     "banshareOn": "🌐 **Sdílení banů ZAPNUTO** - uživatelé na univerzálním seznamu banů MadHoney (chycení honeypotem kteréhokoli serveru) jsou při připojení sem automaticky zabanováni. Spusť `/madhoney bansync`, abys zabanoval(a) i všechny, kdo už na seznamu jsou.",

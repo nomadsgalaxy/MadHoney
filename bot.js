@@ -157,7 +157,8 @@ const command = new SlashCommandBuilder()
         { name: 'disarmed (off)', value: 'disarmed' },
       )))
   .addSubcommand((s) => s.setName('arm').setDescription('Arm the honeypot - start banning accounts that post in it'))
-  .addSubcommand((s) => s.setName('disarm').setDescription('Disarm the honeypot - stop banning (use while setting up)'));
+  .addSubcommand((s) => s.setName('disarm').setDescription('Disarm the honeypot - stop banning (use while setting up)'))
+  .addSubcommand((s) => s.setName('support').setDescription('Get an invite to the MadHoney support server'));
 
 // ---------- setup panel ----------
 
@@ -299,6 +300,13 @@ async function verifyPassed(i, cfg, rec, edit = false) {
 
 client.on(Events.InteractionCreate, async (i) => {
   try {
+    // --- public: /madhoney support (no permissions needed) — invite to the
+    // support server. (Interactions are edge-served; this is a gateway fallback.)
+    if (i.isChatInputCommand() && i.commandName === 'madhoney' && i.options.getSubcommand() === 'support') {
+      const invite = process.env.SUPPORT_INVITE || 'https://discord.gg/wVKHJbZrZ3';
+      return i.reply({ content: t('reply.support', getGuild(i.guildId)?.locale, { invite }), ...EPH });
+    }
+
     // --- member-facing verify flow (no permissions needed) ---
     if (i.isButton() && i.customId === 'verify_start') {
       const cfg = getGuild(i.guildId) ?? {};
@@ -870,7 +878,40 @@ client.on(Events.MessageCreate, async (msg) => {
   // The ban's deleteMessageSeconds can miss a message this recent, so delete it
   // explicitly. Best-effort: needs Manage Messages in the honeypot channel.
   await msg.delete().catch(() => {});
+  // ...then sweep any stragglers the ban's purge raced past in other channels.
+  if (banned) sweepStragglers(msg.guild, msg.author.id).catch(() => {});
 });
+
+// Discord's ban `deleteMessageSeconds` purge is best-effort and races the message
+// indexer: a message posted in the ~second before the ban can survive as a
+// "straggler" (seen on busy servers like Prusa). After a ban, sweep the user's
+// recent messages across channels we can moderate and delete anything the purge
+// missed. Bounded + best-effort so it can't become a full history scan:
+// ponytail: last ~30 msgs per channel, only messages from the last 15 min, only
+// channels with Manage Messages, pool of 5. A short delay lets Discord settle first.
+async function sweepStragglers(guild, userId) {
+  const me = guild.members.me;
+  if (!me) return;
+  await new Promise((r) => setTimeout(r, 3000)); // let the ban's own purge + indexer settle
+  const cutoff = Date.now() - 15 * 60 * 1000;
+  const chans = [...guild.channels.cache.values()].filter((c) => c.isTextBased?.() && !c.isVoiceBased?.()
+    && c.permissionsFor(me)?.has(PermissionsBitField.Flags.ManageMessages)
+    && c.permissionsFor(me)?.has(PermissionsBitField.Flags.ReadMessageHistory));
+  let idx = 0, deleted = 0;
+  const worker = async () => {
+    while (idx < chans.length) {
+      const ch = chans[idx++];
+      try {
+        const msgs = await ch.messages.fetch({ limit: 30 });
+        const mine = msgs.filter((m) => m.author.id === userId && m.createdTimestamp >= cutoff);
+        if (mine.size === 1) { await mine.first().delete().catch(() => {}); deleted += 1; }
+        else if (mine.size > 1) { const d = await ch.bulkDelete(mine, true).catch(() => null); deleted += d ? d.size : 0; }
+      } catch { /* best effort - missing perms / rate limit */ }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(5, chans.length || 1) }, worker));
+  if (deleted) console.log(`[${guild.name}] straggler sweep removed ${deleted} leftover message(s) from ${userId}`);
+}
 
 // ---------- cross-server ban sharing (opt-in) ----------
 
@@ -885,14 +926,22 @@ async function enforceBanList(guild, user, cfg) {
   const source = reBanSource(user.id, guild.id);
   if (!source) return false;
   const incidentId = incidentOf(user.id, source);
+  // Purge their recent history with the ban (same window as the honeypot path) -
+  // previously this passed no deleteMessageSeconds, so a ban-share/message-path
+  // ban left every spam message in place.
+  const deleteDays = Math.min(7, Math.max(0, cfg.banDeleteDays ?? 7));
   try {
-    await guild.bans.create(user.id, { reason: 'MadHoney: on the universal ban list (caught by another server\'s honeypot)' });
+    await guild.bans.create(user.id, {
+      reason: 'MadHoney: on the universal ban list (caught by another server\'s honeypot)',
+      deleteMessageSeconds: deleteDays * 24 * 60 * 60,
+    });
     logBan({ id: user.id, tag: user.tag, guildId: guild.id, channel: '(ban-share)', at: new Date().toISOString(), incidentId });
     console.log(`[${guild.name}] ban-share banned ${user.tag} (${user.id})`);
   } catch (err) {
     console.error(`[${guild.name}] ban-share FAILED for ${user.id}:`, err.message);
     return false;
   }
+  sweepStragglers(guild, user.id).catch(() => {}); // catch anything the purge raced past
   await logSend(guild, cfg, {
     content: [
       t('log.banshareReport', cfg.locale),

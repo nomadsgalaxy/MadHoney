@@ -39,6 +39,7 @@
     "notSet": "*non défini*"
   },
   "reply": {
+    "support": "🍯 **Assistance MadHoney**\nLes questions, les rapports de bugs et les demandes de fonctionnalités sont les bienvenus — rejoins le serveur d'assistance : {invite}",
     "needManageServer": "Tu as besoin de la permission **Gérer le serveur** pour utiliser les commandes de MadHoney.",
     "noHoneypotYet": "Aucun salon honeypot n'est encore défini - lance d'abord `/madhoney setup`.",
     "banshareOn": "🌐 **Partage des bannissements ACTIVÉ** - les utilisateurs figurant sur la liste de bannissement universelle MadHoney (piégés par le honeypot de n'importe quel serveur) sont automatiquement bannis lorsqu'ils rejoignent ce serveur. Lance `/madhoney bansync` pour bannir aussi tous ceux qui sont déjà sur la liste.",

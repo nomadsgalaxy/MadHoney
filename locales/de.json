@@ -39,6 +39,7 @@
     "notSet": "*nicht festgelegt*"
   },
   "reply": {
+    "support": "🍯 **MadHoney-Support**\nFragen, Fehlerberichte und Funktionswünsche sind alle willkommen — tritt dem Support-Server bei: {invite}",
     "needManageServer": "Du benötigst **Server verwalten**, um die MadHoney-Steuerung zu nutzen.",
     "noHoneypotYet": "Noch kein Honeypot-Kanal festgelegt - führe zuerst `/madhoney setup` aus.",
     "banshareOn": "🌐 **Bann-Teilung EIN** - Nutzer auf der universellen MadHoney-Bannliste (vom Honeypot irgendeines Servers gefangen) werden automatisch gebannt, wenn sie hier beitreten. Führe `/madhoney bansync` aus, um auch alle bereits auf der Liste stehenden Nutzer zu bannen.",

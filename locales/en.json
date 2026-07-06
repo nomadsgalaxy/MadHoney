@@ -39,6 +39,7 @@
     "notSet": "*not set*"
   },
   "reply": {
+    "support": "🍯 **MadHoney support**\nQuestions, bug reports, and feature requests are all welcome — join the support server: {invite}",
     "needManageServer": "You need **Manage Server** to use MadHoney controls.",
     "noHoneypotYet": "No honeypot channel set yet - run `/madhoney setup` first.",
     "banshareOn": "🌐 **Ban sharing ON** - users on the universal MadHoney ban list (caught by any server's honeypot) are auto-banned when they join here. Run `/madhoney bansync` to also ban everyone already on the list.",
