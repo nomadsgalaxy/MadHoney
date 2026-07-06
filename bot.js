@@ -109,7 +109,15 @@ const dashLink = (guildId) => (DASH ? `**[${DASH.replace(/^https?:\/\//, '')}]($
 // The trap itself never needs message content. It's only used to COPY the
 // spam text into the log channel - opt-in, because it's a privileged intent:
 // enable it in the Dev Portal AND set MESSAGE_CONTENT=on, or login fails.
-const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers];
+const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
+// Server Members is a PRIVILEGED intent (needed for grandfathering, ban-share on
+// join, and member fetches). If its Dev Portal toggle is off - e.g. while the
+// privileged-intent review is pending after crossing 10k users - the gateway
+// rejects login with "Used disallowed intents" and the bot can't start at all.
+// SERVER_MEMBERS=off drops it so the bot runs DEGRADED (honeypot + edge
+// verification keep working; grandfather/ban-share/auto-sync are paused) instead
+// of crash-looping. Default on. Flip back to on once the portal toggle is re-enabled.
+if (process.env.SERVER_MEMBERS !== 'off') intents.push(GatewayIntentBits.GuildMembers);
 if (process.env.MESSAGE_CONTENT === 'on') intents.push(GatewayIntentBits.MessageContent);
 const client = new Client({ intents });
 
@@ -728,6 +736,37 @@ client.on(Events.MessageCreate, async (msg) => {
     return;
   }
 
+  // Ban-list enforcement on first activity: GuildMemberAdd is the primary path,
+  // but it needs the Server Members intent — while that's unavailable a known
+  // spammer who joins fires no join event, so we also check on message. A user on
+  // the universal list (unresolved elsewhere) is banned and their message deleted
+  // the instant they post, in any channel. Skips bots/owner/staff — reBanSource
+  // only flags accounts banned for spam elsewhere, but a listed account that's
+  // somehow staff/owner here is a false positive to handle manually, not auto-ban.
+  if (cfg?.banShare && !msg.author.bot && msg.guild.ownerId !== msg.author.id
+    && !((msg.member?.permissions.has(PermissionsBitField.Flags.ManageGuild) ?? false)
+      || staffRoles(cfg).some((r) => msg.member?.roles.cache.has(r) ?? false))
+    && reBanSource(msg.author.id, msg.guildId)) {
+    await msg.delete().catch(() => {});
+    if (await enforceBanList(msg.guild, msg.author, cfg)) return; // banned - nothing more to do
+  }
+
+  // Lazy grandfathering: an existing member who joined BEFORE this server's
+  // grandfather cutoff but lacks the verified role gets it the instant they post,
+  // so channel gating never locks out a legitimate existing member. It reads only
+  // the member data MESSAGE_CREATE already carries (no member-list fetch), so it
+  // keeps working while the Server Members privileged intent is unavailable - and
+  // it self-heals anyone a bulk grandfather pass skipped. Security-critical: the
+  // cutoff means anyone who joined AFTER grandfathering must still verify, so a
+  // fresh account can never post once and bypass verification.
+  if (cfg?.verifiedRoleId && cfg?.grandfatheredAt && !msg.author.bot && msg.member
+    && msg.member.joinedTimestamp && msg.member.joinedTimestamp < Date.parse(cfg.grandfatheredAt)
+    && !msg.member.roles.cache.has(cfg.verifiedRoleId)) {
+    msg.member.roles.add(cfg.verifiedRoleId, 'MadHoney: grandfathered existing member on activity')
+      .then(() => console.log(`[${msg.guild.name}] lazy-grandfathered ${msg.author.tag} (${msg.author.id})`))
+      .catch(() => {});
+  }
+
   const facts = {
     channelId: msg.channelId,
     authorIsBot: msg.author.bot,
@@ -835,36 +874,41 @@ client.on(Events.MessageCreate, async (msg) => {
 
 // ---------- cross-server ban sharing (opt-in) ----------
 
-client.on(Events.GuildMemberAdd, async (member) => {
-  const cfg = getGuild(member.guild.id);
-  if (!cfg?.banShare) return; // universal list only applies to opted-in servers
-  // Incident-aware: the blocking guild whose ban is still UNRESOLVED. null means
-  // either they aren't banned elsewhere OR an approved appeal already cleared the
-  // incident network-wide — in which case we must NOT re-ban (the confirmed
-  // lockout loop). Carry the origin incidentId onto this propagated row so the
-  // same appeal keeps covering it.
-  const source = reBanSource(member.id, member.guild.id);
-  if (!source) return;
-  const incidentId = incidentOf(member.id, source);
-  let banned = false;
+// Universal ban-list enforcement, shared by the join event and the message path.
+// Incident-aware: reBanSource returns the guild whose ban is still UNRESOLVED, or
+// null when they aren't banned elsewhere OR an approved appeal already cleared the
+// incident network-wide (so we must NOT re-ban — the confirmed lockout loop). The
+// origin incidentId is carried onto the propagated row so one appeal keeps
+// covering it. Returns true if a ban was issued.
+async function enforceBanList(guild, user, cfg) {
+  if (!cfg?.banShare) return false; // universal list only applies to opted-in servers
+  const source = reBanSource(user.id, guild.id);
+  if (!source) return false;
+  const incidentId = incidentOf(user.id, source);
   try {
-    await member.ban({ reason: 'MadHoney: on the universal ban list (caught by another server\'s honeypot)' });
-    logBan({ id: member.id, tag: member.user.tag, guildId: member.guild.id, channel: '(ban-share)', at: new Date().toISOString(), incidentId });
-    banned = true;
-    console.log(`[${member.guild.name}] ban-share banned ${member.user.tag} (${member.id})`);
+    await guild.bans.create(user.id, { reason: 'MadHoney: on the universal ban list (caught by another server\'s honeypot)' });
+    logBan({ id: user.id, tag: user.tag, guildId: guild.id, channel: '(ban-share)', at: new Date().toISOString(), incidentId });
+    console.log(`[${guild.name}] ban-share banned ${user.tag} (${user.id})`);
   } catch (err) {
-    console.error(`[${member.guild.name}] ban-share FAILED for ${member.id}:`, err.message);
+    console.error(`[${guild.name}] ban-share FAILED for ${user.id}:`, err.message);
+    return false;
   }
-  if (!banned) return;
-  await logSend(member.guild, cfg, {
+  await logSend(guild, cfg, {
     content: [
       t('log.banshareReport', cfg.locale),
-      t('log.user', cfg.locale, { tag: member.user.tag, id: member.id }),
+      t('log.user', cfg.locale, { tag: user.tag, id: user.id }),
     ].join('\n'),
     components: [new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`mh_unban_${member.id}`).setLabel(t('log.undoBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId(`mh_unban_${user.id}`).setLabel(t('log.undoBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
     )],
   }, 'critical');
+  return true;
+}
+
+// On join: primary ban-list enforcement (needs the Server Members intent). While
+// that intent is unavailable, the message-path check below is the fallback.
+client.on(Events.GuildMemberAdd, async (member) => {
+  await enforceBanList(member.guild, member.user, getGuild(member.guild.id));
 });
 
 // ---------- boot ----------
@@ -924,6 +968,28 @@ client.once(Events.ClientReady, async (c) => {
     }
     try { writeFileSync(LASTSEEN, String(Date.now())); } catch { /* best effort */ }
   }, 8000);
+
+  // Gate catch-up: GuildChannelCreate only fires for LIVE events, so a channel
+  // created while the bot was offline (restart, deploy, a failover window) is an
+  // ungated hole that never gets closed. On boot, re-run the auto-gate check over
+  // every channel of each gating guild. gateNewChannel is idempotent and cheap -
+  // it early-returns for channels already gated, private, read-only, or the
+  // admin left public - so only genuine new holes trigger an edit.
+  setTimeout(async () => {
+    for (const guild of c.guilds.cache.values()) {
+      const cfg = getGuild(guild.id);
+      if (!cfg?.gatedChannels?.length) continue; // only servers that use gating
+      let closed = 0;
+      try {
+        for (const channel of (await guild.channels.fetch()).values()) {
+          if (!channel) continue;
+          const msg = await gateNewChannel(guild, cfg, channel).catch(() => null);
+          if (msg) { closed++; console.log(`[${guild.name}] ${msg}`); }
+        }
+        if (closed) await logSend(guild, getGuild(guild.id), { content: t('log.gateCatchup', cfg.locale, { n: closed }) }, 'normal');
+      } catch (e) { console.error(`[${guild.name}] gate catch-up failed:`, e.message); }
+    }
+  }, 15000); // after honeypot catch-up; caches settled
 
   // Resume grandfather / ban-sync jobs a restart interrupted. Both are
   // idempotent (skip members already handled) and self-clear their pending flag

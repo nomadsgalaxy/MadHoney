@@ -71,7 +71,8 @@
     "approvedReinvited": "✅ **Godkänd** av {mod} - avbannad och inbjuden igen.",
     "approvedNoInvite": "✅ **Godkänd** av {mod} - avbannad (kunde inte skapa en inbjudan automatiskt).",
     "deniedBy": "❌ **Nekad** av {mod}.",
-    "permReminder": "🍯 En snabb notis från **MadHoney** om **{guild}**: Jag kunde inte posta i din konfigurerade loggkanal. Jag behöver **Visa kanal** och **Skicka meddelanden** där - det är där banrapporter och medlemmars överklaganden (med Godkänn/Neka-knapparna) postas, så överklagandeprocessen fungerar inte förrän jag kan posta i den. Åtgärda mina behörigheter i den kanalen, eller välj en annan loggkanal: {dash}"
+    "permReminder": "🍯 En snabb notis från **MadHoney** om **{guild}**: Jag kunde inte posta i din konfigurerade loggkanal. Jag behöver **Visa kanal** och **Skicka meddelanden** där - det är där banrapporter och medlemmars överklaganden (med Godkänn/Neka-knapparna) postas, så överklagandeprocessen fungerar inte förrän jag kan posta i den. Åtgärda mina behörigheter i den kanalen, eller välj en annan loggkanal: {dash}",
+    "gateCatchup": "🔒 Spärrade {n} kanal(er) som skapades medan jag var offline, för att hålla verifieringsspärren stängd."
   },
   "setup": {
     "title": "## MadHoney-inställningar",
@@ -219,6 +220,9 @@
       "recommended": "(rekommenderas)",
       "requireVerifyHint": "Detta är hela poängen med MadHoney. Det spärrar dina kanaler bakom den verifierade rollen så att honeypotten är det <b>enda</b> stället ett overifierat konto kan posta, och det döljer honeypotten för riktiga medlemmar så att ingen människa någonsin fastnar. Stäng av detta och honeypotten bannar fortfarande, men den är synlig för alla, så en medlem kan vandra in och bli bannad - då förlitar du dig bara på varningsbannern.",
       "verifOffWarn": "⚠️ <b>Verifiering är AV.</b> Honeypotten är inte dold för dina medlemmar, så en människa kan posta i den och bli bannad. Bara varningsbannern skyddar dem. Vi rekommenderar starkt att du slår på verifiering igen.",
+      "gfIntentWarn": "⏳ <b>Att ge befintliga medlemmar rollen sköts av vår hjälpbot</b> medan MadHoney väntar på Discords godkännande av Server Members-intenten. <a href=\"{invite}\" target=\"_blank\" rel=\"noopener\">Bjud in WorkerBee</a>, dra dess roll ovanför din verifierade roll i Serverinställningar › Roller, och kör sedan <b>Ge befintliga rollen</b> nedan — den går med, ger befintliga medlemmar åtkomst och lämnar sedan. (Aktiva medlemmar får också åtkomst automatiskt så snart de postar.)",
+      "gfInviteBtn": "Bjud in WorkerBee",
+      "gfRunNow": "Kör Ge befintliga rollen nu",
       "captchaDifficulty": "Captcha-svårighetsgrad",
       "diffEasy": "Lätt (4 tecken, lättare)",
       "diffNormal": "Normal (5 tecken)",
@@ -232,6 +236,7 @@
       "universalBanList": "Universell banlista",
       "applyList": "Tillämpa den universella banlistan på den här servern",
       "applyListHint": "Varje honeypot-fångst över alla MadHoney-servrar matar en lista. PÅ: användare på den bannas när de går med här (använd \"Banna från lista\" nedan för att tillämpa den retroaktivt). AV: den här servern agerar bara på sina egna fångster - som den behåller oavsett.",
+      "applyListSelfHost": "<b>Obs:</b> det här är en self-hostad instans, så \"listan\" avser bara de servrar som <i>den här</i> botten kör - den är inte kopplad till det hostade MadHoney-nätverkets banlista, avsiktligt. En tom pool betyder bara att dina egna honeypots inte har fångat någon över dina servrar än.",
       "appeals": "Överklaganden",
       "letAppeal": "Låt bannade användare överklaga via DM",
       "letAppealHint": "När en honeypot-banning sker skickar MadHoney ett DM till användaren med erbjudande om att överklaga. Om de gör det landar begäran i din <b>loggkanal</b> med knapparna Godkänn (avbanna + ny inbjudan) / Neka. En användare ser bara servrar de faktiskt bannats från som slog på detta - aldrig något annat.",
@@ -379,6 +384,7 @@
     "act": {
       "gLineGate": "SPÄRRA bakom \"{role}\" ({n}): {list}",
       "gLineKeep": "FÖRBLIR OFFENTLIG (verifieringsingång): {list}",
+      "gLineReadonly": "FÖRBLIR OFFENTLIG ({n} skrivskyddade för alla - tillkännagivanden osv., ingen spamrisk): {list}",
       "gLineHoney": "HONEYPOT (öppen för alla, dold för verifierade): {list}",
       "gLineProtect": "HÅLL ADMINKANALER DOLDA ({n}): {list}",
       "gLineSkip": "HOPPA ÖVER redan privata ({n})",

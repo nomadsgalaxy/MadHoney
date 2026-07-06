@@ -71,7 +71,8 @@
     "approvedReinvited": "✅ **Angenommen** von {mod} - entbannt und erneut eingeladen.",
     "approvedNoInvite": "✅ **Angenommen** von {mod} - entbannt (Einladung konnte nicht automatisch erstellt werden).",
     "deniedBy": "❌ **Abgelehnt** von {mod}.",
-    "permReminder": "🍯 Kurzer Hinweis von **MadHoney** zu **{guild}**: Ich konnte nicht in deinen konfigurierten Mod-Log-Kanal posten. Ich brauche dort **Kanal ansehen** und **Nachrichten senden** - dort werden Bann-Meldungen und Einsprüche von Mitgliedern (mit den Annehmen-/Ablehnen-Buttons) gepostet, der Einspruchsprozess funktioniert also erst, wenn ich dort posten kann. Korrigiere meine Berechtigungen für diesen Kanal oder wähle einen anderen Log-Kanal: {dash}"
+    "permReminder": "🍯 Kurzer Hinweis von **MadHoney** zu **{guild}**: Ich konnte nicht in deinen konfigurierten Mod-Log-Kanal posten. Ich brauche dort **Kanal ansehen** und **Nachrichten senden** - dort werden Bann-Meldungen und Einsprüche von Mitgliedern (mit den Annehmen-/Ablehnen-Buttons) gepostet, der Einspruchsprozess funktioniert also erst, wenn ich dort posten kann. Korrigiere meine Berechtigungen für diesen Kanal oder wähle einen anderen Log-Kanal: {dash}",
+    "gateCatchup": "🔒 {n} Kanal/Kanäle gesperrt, die erstellt wurden, während ich offline war, damit die Verifizierungs-Sperre geschlossen bleibt."
   },
   "setup": {
     "title": "## MadHoney-Einrichtung",
@@ -219,6 +220,9 @@
       "recommended": "(empfohlen)",
       "requireVerifyHint": "Das ist der ganze Sinn von MadHoney. Es sperrt deine Kanäle hinter der Verifiziert-Rolle, sodass der Honeypot der <b>einzige</b> Ort ist, an dem ein unverifizierter Account posten kann, und es verbirgt den Honeypot vor echten Mitgliedern, sodass nie ein Mensch gefangen wird. Schalte das aus, und der Honeypot bannt weiterhin, ist aber für alle sichtbar, sodass ein Mitglied hineingeraten und gebannt werden könnte - du würdest dich dann nur auf das Warn-Banner verlassen.",
       "verifOffWarn": "⚠️ <b>Die Verifizierung ist AUS.</b> Der Honeypot ist vor deinen Mitgliedern nicht verborgen, sodass ein Mensch darin posten und gebannt werden könnte. Nur das Warn-Banner schützt sie. Wir empfehlen dringend, die Verifizierung wieder einzuschalten.",
+      "gfIntentWarn": "⏳ <b>Die Freischaltung der Bestandsmitglieder erfolgt über unseren Hilfs-Bot</b>, während MadHoney auf Discords Freigabe für den Server Members Intent wartet. <a href=\"{invite}\" target=\"_blank\" rel=\"noopener\">WorkerBee einladen</a>, ziehe seine Rolle in den Servereinstellungen › Rollen über deine verifizierte Rolle und führe dann unten <b>Bestand freischalten</b> aus - er tritt bei, gewährt bestehenden Mitgliedern Zugang und verlässt den Server wieder. (Aktive Mitglieder erhalten außerdem automatisch Zugang, sobald sie posten.)",
+      "gfInviteBtn": "WorkerBee einladen",
+      "gfRunNow": "Bestandsmitglieder jetzt freischalten",
       "captchaDifficulty": "Captcha-Schwierigkeit",
       "diffEasy": "Einfach (4 Zeichen, leichter)",
       "diffNormal": "Normal (5 Zeichen)",
@@ -232,6 +236,7 @@
       "universalBanList": "Universelle Bannliste",
       "applyList": "Die universelle Bannliste auf diesen Server anwenden",
       "applyListHint": "Jeder Honeypot-Fang über alle MadHoney-Server hinweg speist eine gemeinsame Liste. ON: Nutzer darauf werden gebannt, wenn sie hier beitreten (nutze \"Aus geteilter Liste bannen\" unten, um sie rückwirkend anzuwenden). OFF: Dieser Server reagiert nur auf seine eigenen Fänge - die er ohnehin behält.",
+      "applyListSelfHost": "<b>Hinweis:</b> Dies ist eine selbst gehostete Instanz, daher meint \"die Liste\" nur die Server, auf denen <i>dieser</i> Bot läuft - sie ist absichtlich nicht mit der Bannliste des gehosteten MadHoney-Netzwerks verbunden. Ein leerer Pool bedeutet einfach, dass deine eigenen Honeypots über deine Server hinweg noch niemanden gefangen haben.",
       "appeals": "Einsprüche",
       "letAppeal": "Gebannten Nutzern Einspruch per DM erlauben",
       "letAppealHint": "Wenn ein Honeypot-Bann passiert, schreibt MadHoney dem Nutzer eine DM und bietet einen Einspruch an. Wenn er das tut, landet die Anfrage in deinem <b>Log-Kanal</b> mit Annehmen- (entbannen + neue Einladung) / Ablehnen-Buttons. Ein Nutzer sieht immer nur Server, von denen er tatsächlich gebannt wurde und die das aktiviert haben - sonst nichts.",
@@ -379,6 +384,7 @@
     "act": {
       "gLineGate": "SPERREN hinter \"{role}\" ({n}): {list}",
       "gLineKeep": "BLEIBT ÖFFENTLICH (Verifizierungs-Zugang): {list}",
+      "gLineReadonly": "BLEIBT ÖFFENTLICH ({n} schreibgeschützt für alle - Ankündigungen usw., kein Spam-Risiko): {list}",
       "gLineHoney": "HONEYPOT (offen für alle, vor Verifizierten verborgen): {list}",
       "gLineProtect": "ADMIN-KANÄLE VERBORGEN HALTEN ({n}): {list}",
       "gLineSkip": "BEREITS PRIVATE ÜBERSPRINGEN ({n})",

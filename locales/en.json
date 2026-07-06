@@ -71,7 +71,8 @@
     "approvedReinvited": "✅ **Approved** by {mod} - unbanned and re-invited.",
     "approvedNoInvite": "✅ **Approved** by {mod} - unbanned (couldn't auto-create an invite).",
     "deniedBy": "❌ **Denied** by {mod}.",
-    "permReminder": "🍯 Heads up from **MadHoney** about **{guild}**: I couldn't post to your configured mod-log channel. I need **View Channel** and **Send Messages** there - it's where ban reports and member appeals (with the Approve/Deny buttons) are posted, so the appeal process won't work until I can post to it. Fix my permissions on that channel, or pick a different log channel: {dash}"
+    "permReminder": "🍯 Heads up from **MadHoney** about **{guild}**: I couldn't post to your configured mod-log channel. I need **View Channel** and **Send Messages** there - it's where ban reports and member appeals (with the Approve/Deny buttons) are posted, so the appeal process won't work until I can post to it. Fix my permissions on that channel, or pick a different log channel: {dash}",
+    "gateCatchup": "🔒 Gated {n} channel(s) that were created while I was offline, to keep the verification gate closed."
   },
   "setup": {
     "title": "## MadHoney setup",
@@ -219,6 +220,9 @@
       "recommended": "(recommended)",
       "requireVerifyHint": "This is the whole point of MadHoney. It gates your channels behind the verified role so the honeypot is the <b>only</b> place an unverified account can post, and it hides the honeypot from real members so no human ever gets caught. Turn this off and the honeypot still bans, but it's visible to everyone, so a member could wander in and get banned - you'd be relying only on the warning banner.",
       "verifOffWarn": "⚠️ <b>Verification is OFF.</b> The honeypot is not hidden from your members, so a human could post in it and get banned. Only the warning banner protects them. We strongly recommend turning verification back on.",
+      "gfIntentWarn": "⏳ <b>Grandfathering runs through our helper bot</b> while MadHoney awaits Discord's approval for the Server Members intent. <a href=\"{invite}\" target=\"_blank\" rel=\"noopener\">Invite WorkerBee</a>, drag its role above your verified role in Server Settings › Roles, then run <b>Grandfather</b> below — it joins, grants existing members access, and leaves. (Active members are also granted access automatically as they post.)",
+      "gfInviteBtn": "Invite WorkerBee",
+      "gfRunNow": "Run grandfathering now",
       "captchaDifficulty": "Captcha difficulty",
       "diffEasy": "Easy (4 chars, lighter)",
       "diffNormal": "Normal (5 chars)",
@@ -232,6 +236,7 @@
       "universalBanList": "Universal ban list",
       "applyList": "Apply the universal ban list to this server",
       "applyListHint": "Every honeypot catch across all MadHoney servers feeds one list. ON: users on it are banned when they join here (use \"Ban from List\" below to apply it retroactively). OFF: this server acts only on its own catches - which it keeps either way.",
+      "applyListSelfHost": "<b>Note:</b> this is a self-hosted instance, so \"the list\" means only the servers <i>this</i> bot runs — it is not connected to the hosted MadHoney network's ban list, by design. An empty pool just means your own honeypots haven't caught anyone across your servers yet.",
       "appeals": "Appeals",
       "letAppeal": "Let banned users appeal by DM",
       "letAppealHint": "When a honeypot ban happens, MadHoney DMs the user offering to appeal. If they do, the request lands in your <b>log channel</b> with Approve (unban + fresh invite) / Deny buttons. A user only ever sees servers they were actually banned from that turned this on - never anything else.",
@@ -379,6 +384,7 @@
     "act": {
       "gLineGate": "GATE behind \"{role}\" ({n}): {list}",
       "gLineKeep": "STAYS PUBLIC (verify gateway): {list}",
+      "gLineReadonly": "STAYS PUBLIC ({n} read-only for everyone - announcements etc., no spam risk): {list}",
       "gLineHoney": "HONEYPOT (open to everyone, hidden from verified): {list}",
       "gLineProtect": "KEEP ADMIN CHANNELS HIDDEN ({n}): {list}",
       "gLineSkip": "SKIP already private ({n})",

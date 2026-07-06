@@ -71,7 +71,8 @@
     "approvedReinvited": "✅ **Aprovado** por {mod} - desbanido e reconvidado.",
     "approvedNoInvite": "✅ **Aprovado** por {mod} - desbanido (não foi possível criar um convite automaticamente).",
     "deniedBy": "❌ **Negado** por {mod}.",
-    "permReminder": "🍯 Aviso do **MadHoney** sobre **{guild}**: não consegui postar no canal de log de moderação que você configurou. Preciso de **Ver canal** e **Enviar mensagens** lá - é onde os relatórios de banimento e os recursos dos membros (com os botões Aprovar/Negar) são postados, então o processo de recurso não vai funcionar até eu conseguir postar nele. Corrija minhas permissões nesse canal ou escolha outro canal de log: {dash}"
+    "permReminder": "🍯 Aviso do **MadHoney** sobre **{guild}**: não consegui postar no canal de log de moderação que você configurou. Preciso de **Ver canal** e **Enviar mensagens** lá - é onde os relatórios de banimento e os recursos dos membros (com os botões Aprovar/Negar) são postados, então o processo de recurso não vai funcionar até eu conseguir postar nele. Corrija minhas permissões nesse canal ou escolha outro canal de log: {dash}",
+    "gateCatchup": "🔒 Restringi {n} canal(is) criado(s) enquanto eu estava offline, para manter o portal de verificação fechado."
   },
   "setup": {
     "title": "## Configuração do MadHoney",
@@ -219,6 +220,9 @@
       "recommended": "(recomendado)",
       "requireVerifyHint": "Este é o objetivo central do MadHoney. Ele restringe seus canais atrás do cargo de verificado para que o honeypot seja o <b>único</b> lugar em que uma conta não verificada pode postar, e esconde o honeypot dos membros reais para que nenhum humano seja pego. Desligue isto e o honeypot ainda bane, mas fica visível para todos, então um membro poderia entrar e ser banido - você estaria contando apenas com o banner de aviso.",
       "verifOffWarn": "⚠️ <b>A verificação está DESLIGADA.</b> O honeypot não fica escondido dos seus membros, então um humano poderia postar nele e ser banido. Apenas o banner de aviso os protege. Recomendamos fortemente religar a verificação.",
+      "gfIntentWarn": "⏳ <b>A concessão em massa de cargo aos membros atuais é feita pelo nosso bot auxiliar</b> enquanto o MadHoney aguarda a aprovação do Discord para o intent Server Members. <a href=\"{invite}\" target=\"_blank\" rel=\"noopener\">Convide o WorkerBee</a>, arraste o cargo dele acima do seu cargo de verificado em Configurações do Servidor › Cargos e então execute <b>Conceder cargo aos membros atuais</b> abaixo — ele entra, concede acesso aos membros existentes e sai. (Os membros ativos também recebem acesso automaticamente assim que postam.)",
+      "gfInviteBtn": "Convidar WorkerBee",
+      "gfRunNow": "Conceder cargo aos membros atuais agora",
       "captchaDifficulty": "Dificuldade do captcha",
       "diffEasy": "Fácil (4 caracteres, mais leve)",
       "diffNormal": "Normal (5 caracteres)",
@@ -232,6 +236,7 @@
       "universalBanList": "Lista universal de banimentos",
       "applyList": "Aplicar a lista universal de banimentos a este servidor",
       "applyListHint": "Cada captura de honeypot em todos os servidores MadHoney alimenta uma única lista. ON: usuários nela são banidos ao entrarem aqui (use \"Banir da Lista\" abaixo para aplicá-la retroativamente). OFF: este servidor age apenas sobre as próprias capturas - que ele mantém de qualquer forma.",
+      "applyListSelfHost": "<b>Nota:</b> esta é uma instância self-host, então \"a lista\" significa apenas os servidores em que <i>este</i> bot roda - ela não está conectada à lista de banimentos da rede hospedada do MadHoney, por design. Um pool vazio significa apenas que os seus próprios honeypots ainda não capturaram ninguém em todos os seus servidores.",
       "appeals": "Recursos",
       "letAppeal": "Permitir que usuários banidos recorram por DM",
       "letAppealHint": "Quando ocorre um banimento por honeypot, o MadHoney envia uma DM ao usuário oferecendo a opção de recorrer. Se ele recorrer, o pedido chega ao seu <b>canal de log</b> com botões de Aprovar (desbanir + novo convite) / Negar. Um usuário só vê os servidores dos quais foi realmente banido e que ativaram isto - nunca nada além disso.",
@@ -379,6 +384,7 @@
     "act": {
       "gLineGate": "RESTRINGIR atrás de \"{role}\" ({n}): {list}",
       "gLineKeep": "CONTINUA PÚBLICO (portal de verificação): {list}",
+      "gLineReadonly": "CONTINUA PÚBLICO ({n} somente leitura para todos - anúncios etc., sem risco de spam): {list}",
       "gLineHoney": "HONEYPOT (aberto a todos, oculto dos verificados): {list}",
       "gLineProtect": "MANTER CANAIS DE ADMIN OCULTOS ({n}): {list}",
       "gLineSkip": "PULAR já privados ({n})",

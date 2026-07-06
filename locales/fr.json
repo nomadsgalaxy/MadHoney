@@ -71,7 +71,8 @@
     "approvedReinvited": "✅ **Approuvé** par {mod} - débanni et réinvité.",
     "approvedNoInvite": "✅ **Approuvé** par {mod} - débanni (impossible de créer automatiquement une invitation).",
     "deniedBy": "❌ **Refusé** par {mod}.",
-    "permReminder": "🍯 Petit rappel de **MadHoney** concernant **{guild}** : je n'ai pas pu publier dans le salon de journal que tu as configuré. Il me faut **Voir le salon** et **Envoyer des messages** sur ce salon - c'est là que sont publiés les rapports de bannissement et les appels des membres (avec les boutons Approuver/Refuser), donc le processus d'appel ne fonctionnera pas tant que je ne pourrai pas y publier. Corrige mes permissions sur ce salon, ou choisis un autre salon de journal : {dash}"
+    "permReminder": "🍯 Petit rappel de **MadHoney** concernant **{guild}** : je n'ai pas pu publier dans le salon de journal que tu as configuré. Il me faut **Voir le salon** et **Envoyer des messages** sur ce salon - c'est là que sont publiés les rapports de bannissement et les appels des membres (avec les boutons Approuver/Refuser), donc le processus d'appel ne fonctionnera pas tant que je ne pourrai pas y publier. Corrige mes permissions sur ce salon, ou choisis un autre salon de journal : {dash}",
+    "gateCatchup": "🔒 J'ai filtré {n} salon(s) créé(s) pendant que j'étais hors ligne, pour garder le filtrage de vérification fermé."
   },
   "setup": {
     "title": "## Configuration de MadHoney",
@@ -219,6 +220,9 @@
       "recommended": "(recommandé)",
       "requireVerifyHint": "C'est tout l'intérêt de MadHoney. Il filtre tes salons derrière le rôle vérifié pour que le honeypot soit le <b>seul</b> endroit où un compte non vérifié peut publier, et il masque le honeypot aux vrais membres pour qu'aucun humain ne se fasse jamais piéger. Désactive ceci et le honeypot bannit toujours, mais il est visible par tout le monde, un membre pourrait donc s'y aventurer et se faire bannir - tu ne compterais plus que sur la bannière d'avertissement.",
       "verifOffWarn": "⚠️ <b>La vérification est OFF.</b> Le honeypot n'est pas masqué à tes membres, un humain pourrait donc y publier et se faire bannir. Seule la bannière d'avertissement les protège. Nous recommandons vivement de réactiver la vérification.",
+      "gfIntentWarn": "⏳ <b>L'attribution du rôle aux membres existants passe par notre bot auxiliaire</b> pendant que MadHoney attend l'approbation de Discord pour l'intent Server Members. <a href=\"{invite}\" target=\"_blank\" rel=\"noopener\">Invitez WorkerBee</a>, glissez son rôle au-dessus de votre rôle vérifié dans Paramètres du serveur › Rôles, puis lancez <b>Attribuer le rôle aux membres existants</b> ci-dessous — il rejoint le serveur, accorde l'accès aux membres existants, puis repart. (Les membres actifs obtiennent aussi l'accès automatiquement dès qu'ils publient.)",
+      "gfInviteBtn": "Inviter WorkerBee",
+      "gfRunNow": "Lancer l'attribution maintenant",
       "captchaDifficulty": "Difficulté du captcha",
       "diffEasy": "Facile (4 caractères, plus léger)",
       "diffNormal": "Normal (5 caractères)",
@@ -232,6 +236,7 @@
       "universalBanList": "Liste de bannissement universelle",
       "applyList": "Appliquer la liste de bannissement universelle à ce serveur",
       "applyListHint": "Chaque capture honeypot de tous les serveurs MadHoney alimente une seule liste. ON : les utilisateurs qui y figurent sont bannis lorsqu'ils rejoignent ce serveur (utilise « Bannir depuis la liste » ci-dessous pour l'appliquer rétroactivement). OFF : ce serveur n'agit que sur ses propres captures - qu'il conserve dans les deux cas.",
+      "applyListSelfHost": "<b>Note :</b> il s'agit d'une instance auto-hébergée, donc « la liste » ne concerne que les serveurs gérés par <i>ce</i> bot — elle n'est pas connectée à la liste de bannissement du réseau MadHoney hébergé, et c'est voulu. Un pool vide signifie simplement que tes propres honeypots n'ont encore attrapé personne sur l'ensemble de tes serveurs.",
       "appeals": "Appels",
       "letAppeal": "Autoriser les utilisateurs bannis à faire appel par MP",
       "letAppealHint": "Lorsqu'un bannissement par honeypot se produit, MadHoney envoie un MP à l'utilisateur lui proposant de faire appel. S'il le fait, la demande arrive dans ton <b>salon de journal</b> avec des boutons Approuver (débannir + nouvelle invitation) / Refuser. Un utilisateur ne voit que les serveurs dont il a réellement été banni et qui ont activé cette option - jamais rien d'autre.",
@@ -379,6 +384,7 @@
     "act": {
       "gLineGate": "FILTRER derrière « {role} » ({n}) : {list}",
       "gLineKeep": "RESTE PUBLIC (passerelle de vérification) : {list}",
+      "gLineReadonly": "RESTE PUBLIC ({n} en lecture seule pour tous - annonces, etc., aucun risque de spam) : {list}",
       "gLineHoney": "HONEYPOT (ouvert à tous, masqué aux vérifiés) : {list}",
       "gLineProtect": "GARDER LES SALONS ADMIN MASQUÉS ({n}) : {list}",
       "gLineSkip": "IGNORER déjà privés ({n})",

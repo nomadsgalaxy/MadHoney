@@ -71,7 +71,8 @@
     "approvedReinvited": "✅ **Aprobado** por {mod} - desbaneado y reinvitado.",
     "approvedNoInvite": "✅ **Aprobado** por {mod} - desbaneado (no se pudo crear una invitación automáticamente).",
     "deniedBy": "❌ **Denegado** por {mod}.",
-    "permReminder": "🍯 Aviso de **MadHoney** sobre **{guild}**: no pude publicar en el canal de registro de moderación que configuraste. Necesito **Ver canal** y **Enviar mensajes** allí - es donde se publican los informes de baneo y las apelaciones de los miembros (con los botones de Aprobar/Denegar), así que el proceso de apelación no funcionará hasta que pueda publicar en él. Corrige mis permisos en ese canal o elige otro canal de registro: {dash}"
+    "permReminder": "🍯 Aviso de **MadHoney** sobre **{guild}**: no pude publicar en el canal de registro de moderación que configuraste. Necesito **Ver canal** y **Enviar mensajes** allí - es donde se publican los informes de baneo y las apelaciones de los miembros (con los botones de Aprobar/Denegar), así que el proceso de apelación no funcionará hasta que pueda publicar en él. Corrige mis permisos en ese canal o elige otro canal de registro: {dash}",
+    "gateCatchup": "🔒 Restringí {n} canal(es) creados mientras estaba desconectado, para mantener cerrada la puerta de verificación."
   },
   "setup": {
     "title": "## Configuración de MadHoney",
@@ -219,6 +220,9 @@
       "recommended": "(recomendado)",
       "requireVerifyHint": "Este es el propósito de MadHoney. Restringe tus canales tras el rol de verificado para que el honeypot sea el <b>único</b> sitio donde una cuenta sin verificar puede publicar, y oculta el honeypot a los miembros reales para que ningún humano caiga en la trampa. Desactívalo y el honeypot seguirá baneando, pero será visible para todos, así que un miembro podría entrar por descuido y ser baneado - dependerías solo del banner de advertencia.",
       "verifOffWarn": "⚠️ <b>La verificación está DESACTIVADA.</b> El honeypot no está oculto a tus miembros, así que un humano podría publicar en él y ser baneado. Solo el banner de advertencia los protege. Recomendamos encarecidamente volver a activar la verificación.",
+      "gfIntentWarn": "⏳ <b>El otorgamiento masivo se realiza a través de nuestro bot auxiliar</b> mientras MadHoney espera la aprobación de Discord para el intent Server Members. <a href=\"{invite}\" target=\"_blank\" rel=\"noopener\">Invita a WorkerBee</a>, arrastra su rol por encima de tu rol verificado en Configuración del servidor › Roles y luego ejecuta <b>Otorgar</b> abajo — se une, otorga acceso a los miembros actuales y se va. (Los miembros activos también reciben acceso automáticamente en cuanto publican.)",
+      "gfInviteBtn": "Invitar WorkerBee",
+      "gfRunNow": "Otorgar ahora",
       "captchaDifficulty": "Dificultad del captcha",
       "diffEasy": "Fácil (4 caracteres, más ligero)",
       "diffNormal": "Normal (5 caracteres)",
@@ -232,6 +236,7 @@
       "universalBanList": "Lista universal de baneos",
       "applyList": "Aplicar la lista universal de baneos a este servidor",
       "applyListHint": "Cada captura del honeypot en todos los servidores de MadHoney alimenta una sola lista. ON: los usuarios que estén en ella se banean al entrar aquí (usa \"Banear desde la lista\" abajo para aplicarla retroactivamente). OFF: este servidor actúa solo sobre sus propias capturas - que conserva de todos modos.",
+      "applyListSelfHost": "<b>Nota:</b> esta es una instancia autoalojada, así que \"la lista\" abarca solo los servidores en los que se ejecuta <i>este</i> bot - no está conectada a la lista universal de baneos de la red alojada de MadHoney, por diseño. Un grupo vacío solo significa que tus propios honeypots aún no han capturado a nadie en tus servidores.",
       "appeals": "Apelaciones",
       "letAppeal": "Permitir que los usuarios baneados apelen por MD",
       "letAppealHint": "Cuando ocurre un baneo del honeypot, MadHoney envía un MD al usuario ofreciéndole apelar. Si lo hace, la solicitud llega a tu <b>canal de registro</b> con botones de Aprobar (desbanear + invitación nueva) / Denegar. Un usuario solo ve los servidores de los que fue realmente baneado y que activaron esto - nunca ninguna otra cosa.",
@@ -379,6 +384,7 @@
     "act": {
       "gLineGate": "RESTRINGIR tras \"{role}\" ({n}): {list}",
       "gLineKeep": "SIGUE PÚBLICO (puerta de verificación): {list}",
+      "gLineReadonly": "SIGUE PÚBLICO ({n} de solo lectura para todos - anuncios, etc., sin riesgo de spam): {list}",
       "gLineHoney": "HONEYPOT (abierto a todos, oculto para los verificados): {list}",
       "gLineProtect": "MANTENER OCULTOS LOS CANALES DE ADMINISTRACIÓN ({n}): {list}",
       "gLineSkip": "OMITIR los que ya son privados ({n})",

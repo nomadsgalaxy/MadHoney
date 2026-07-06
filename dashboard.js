@@ -8,7 +8,7 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 const { getGuild, saveGuild, bans, trappedCount } = await import(process.env.MADHONEY_STORE ?? './store.js'); // pluggable store backend
-import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, grandfatherViaWorkerBee, workerBeeInvite, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { honeypotMode, staffRoles, adminRoles } from './trap.js';
 import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } from './captcha.js';
 import { makeCode } from './verify.js';
@@ -22,6 +22,11 @@ const PORT = Number(process.env.PORT || 8300);
 // bound to 127.0.0.1 unless you intend to expose it publicly.
 const HOST = process.env.HOST || '127.0.0.1';
 const PUBLIC_URL = (process.env.PUBLIC_URL || `http://127.0.0.1:${PORT}`).replace(/\/$/, '');
+// The Server Members privileged intent is unavailable (e.g. pending Discord's
+// review after crossing 10k users): bulk grandfathering can't enumerate members,
+// so we surface a warning. Lazy grandfathering still grants the role as members
+// post; full coverage returns when the intent is restored.
+const GF_DEGRADED = process.env.SERVER_MEMBERS === 'off';
 const API = 'https://discord.com/api/v10';
 const WEEK = 7 * 24 * 3600 * 1000;
 
@@ -489,6 +494,7 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   <label class="toggle"><input type="checkbox" name="verificationEnabled" ${verifyOn ? 'checked' : ''}>
     <span>${t('dash.guild.requireVerify', dl)} <b style="color:var(--honey)">${t('dash.guild.recommended', dl)}</b><small>${t('dash.guild.requireVerifyHint', dl)}</small></span></label>
   ${!verifyOn ? `<div class="warnbox">${t('dash.guild.verifOffWarn', dl)}</div>` : ''}
+  ${GF_DEGRADED ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite: workerBeeInvite() || '#' })}</div>` : ''}
   <label>${t('dash.guild.captchaDifficulty', dl)} <select name="captchaDifficulty" ${verifyOn ? '' : 'disabled'} onchange="cpvNew()">
     ${[['easy', t('dash.guild.diffEasy', dl)], ['normal', t('dash.guild.diffNormal', dl)], ['hard', t('dash.guild.diffHard', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'easy') === v ? 'selected' : ''}>${l}</option>`).join('')}
   </select><small>${t('dash.guild.captchaHint', dl)}</small></label>
@@ -509,11 +515,31 @@ ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
   ${SELF_HOSTED ? '' : `<label><small>${t('dash.guild.creditNote', dl)}</small></label>`}
   <div class="subh">${t('dash.guild.universalBanList', dl)}</div>
   <label class="toggle"><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''}>
-    <span>${t('dash.guild.applyList', dl)}<small>${t('dash.guild.applyListHint', dl)}</small></span></label>
+    <span>${t('dash.guild.applyList', dl)}<small>${t('dash.guild.applyListHint', dl)}${SELF_HOSTED ? ` ${t('dash.guild.applyListSelfHost', dl)}` : ''}</small></span></label>
   <div class="subh">${t('dash.guild.appeals', dl)}</div>
-  <label class="toggle"><input type="checkbox" name="appealEnabled" ${cfg.appealEnabled ? 'checked' : ''} ${cfg.logChannelId ? '' : 'disabled'}>
-    <span>${t('dash.guild.letAppeal', dl)}<small>${t('dash.guild.letAppealHint', dl)} ${cfg.logChannelId ? '' : t('dash.guild.setLogFirst', dl)}</small></span></label>
+  <label class="toggle"><input type="checkbox" id="appealToggle" name="appealEnabled" ${cfg.appealEnabled ? 'checked' : ''}>
+    <span>${t('dash.guild.letAppeal', dl)}<small>${t('dash.guild.letAppealHint', dl)} <span id="appealNeedsLog" style="color:#ff8a7d;${cfg.logChannelId ? 'display:none' : ''}">${t('dash.guild.setLogFirst', dl)}</span></small></span></label>
   <button class="btn">${t('dash.guild.saveConfig', dl)}</button>
+  <script>
+    // Appeals need a log channel (that's where the Approve/Deny buttons land),
+    // but that requirement is LIVE: choosing a log channel above must enable the
+    // toggle without a save round-trip. A disabled checkbox also wouldn't submit,
+    // so it's never disabled - instead we warn + block enabling until a log
+    // channel is picked, in this one form.
+    (function () {
+      var log = document.querySelector('[name=logChannelId]');
+      var appeal = document.getElementById('appealToggle');
+      var warn = document.getElementById('appealNeedsLog');
+      if (!log || !appeal) return;
+      function sync() {
+        var hasLog = !!log.value;
+        warn.style.display = hasLog ? 'none' : '';
+        if (!hasLog && appeal.checked) appeal.checked = false; // can't appeal with nowhere to send it
+      }
+      log.addEventListener('change', sync);
+      appeal.addEventListener('change', function () { if (appeal.checked && !log.value) { appeal.checked = false; warn.style.display = ''; } });
+    })();
+  </script>
 </form></div>
 <div class="card" id="banner"><h2>${t('dash.guild.honeypotBanner', dl)}</h2>${msgAt('banner')}
 <small>${t('dash.guild.bannerNote', dl)}</small>
@@ -588,7 +614,11 @@ ${[
   ['post_verify', '', t('dash.guild.step2Label', dl), t('dash.guild.step2Desc', dl)],
   ['post_banner', '', t('dash.guild.step3Label', dl), t('dash.guild.step3Desc', dl)],
 ].map(([val, cls, label, desc]) =>
-  `<div class="step"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></div>`).join('')}
+  // While the Server Members intent is down, grandfathering goes through the
+  // guided WorkerBee setup page instead of running in place.
+  (val === 'grandfather' && GF_DEGRADED)
+    ? `<div class="step"><a class="btn ${cls}" href="/g/${guild.id}/grandfather-setup">${label}</a><small>${desc}</small></div>`
+    : `<div class="step"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></div>`).join('')}
 <div class="step"><a class="btn" href="/g/${guild.id}/gate">${t('dash.guild.step4Label', dl)}</a><small>${t('dash.guild.step4Desc', dl)}</small></div>
 </form>
 <div class="subh">${t('dash.guild.maintenance', dl)}</div>
@@ -601,6 +631,28 @@ ${[
 </form></div>
 <div class="card"><h2>${t('dash.guild.recentBans', dl)} <span class="count">${t('dash.guild.trappedCount', dl, { n: trappedHere })}</span></h2>
 ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` : `<div class="empty">${t('dash.guild.noBans', dl)}</div>`}</div>`, { user: sess.user.username });
+  }
+
+  // Guided WorkerBee setup — shown when an admin clicks "Grandfather Members"
+  // while MadHoney's Server Members intent is down. Explains the helper bot,
+  // links the invite, and offers a Run button (posts do=grandfather, which the
+  // action handler routes through grandfatherViaWorkerBee). Only reachable while
+  // GF_DEGRADED; otherwise the step is a normal in-place grandfather button.
+  function grandfatherSetupPage(guild, sess) {
+    const dl = curLocale;
+    const invite = workerBeeInvite() || '#';
+    return layout(`MadHoney - ${t('dash.guild.step1Label', dl)}`, `
+<div class="subnav"><a class="backbtn" href="/g/${guild.id}#actions"><span class="chev">‹</span> ${esc(guild.name)}</a></div>
+<div class="ghead"><div class="gtitle"><h1>${t('dash.guild.step1Label', dl)}</h1></div></div>
+<div class="card">
+  <div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite })}</div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;align-items:center">
+    <a class="btn grey" href="${invite}" target="_blank" rel="noopener">${t('dash.guild.gfInviteBtn', dl)}</a>
+    <form method="post" action="/g/${guild.id}/action#actions" style="margin:0">
+      <button class="btn" name="do" value="grandfather">${t('dash.guild.gfRunNow', dl)}</button>
+    </form>
+  </div>
+</div>`, { user: sess.user.username });
   }
 
   // Channel gating picker: classify every channel and let the admin choose
@@ -644,6 +696,7 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
 </div>
 <div class="ghead"><div class="gtitle"><h1>${t('dash.gate.title', dl)}</h1></div></div>
 ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
+${GF_DEGRADED ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite: workerBeeInvite() || '#' })}</div>` : ''}
 ${cfg.grandfatherPending
     ? `<div class="warnbox">${t('dash.gate.gfRunningWarn', dl)}</div>`
     : (cfg.verificationEnabled !== false && cfg.verifiedRoleId && !cfg.grandfatheredAt
@@ -967,7 +1020,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
       }
 
       // ---- per-guild ----
-      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/captcha\.png|\/progress|\/gate)?$/);
+      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/captcha\.png|\/progress|\/gate|\/grandfather-setup)?$/);
       if (m) {
         const sess = session(req);
         if (!sess) {
@@ -1036,7 +1089,12 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           patch.staffRoleId = '';
           patch.adminRoleId = '';
           patch.banShare = form.get('banShare') === 'on';
-          patch.appealEnabled = form.get('appealEnabled') === 'on';
+          // Appeals require a log channel (where Approve/Deny land), NOT the ban
+          // list. Honor the toggle only when the EFFECTIVE log channel after this
+          // save is set; otherwise it can't function, so keep it off. (The form
+          // always submits logChannelId, so patch is authoritative when present.)
+          const effectiveLog = form.has('logChannelId') ? patch.logChannelId : getGuild(guild.id)?.logChannelId;
+          patch.appealEnabled = form.get('appealEnabled') === 'on' && Boolean(effectiveLog);
           patch.verificationEnabled = form.get('verificationEnabled') === 'on';
           if (form.has('banDeleteDays')) patch.banDeleteDays = Math.min(7, Math.max(0, Number(form.get('banDeleteDays')) || 0));
           if (patch.verifyChannelId && patch.verifyChannelId === patch.honeypotChannelId) {
@@ -1065,7 +1123,10 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           }
           // Member-by-member jobs (one API call each) run in the background
           // with a polled progress bar; one job at a time per guild.
-          const slowJobs = { grandfather, ban_sync: syncBans };
+          // While MadHoney's Server Members intent is down, route grandfathering
+          // through the WorkerBee helper (MadHoney orchestrates it). Same signature
+          // + progress shape, so the polled job runner is unchanged.
+          const slowJobs = { grandfather: GF_DEGRADED ? grandfatherViaWorkerBee : grandfather, ban_sync: syncBans };
           if (slowJobs[form.get('do')]) {
             if (gfJobs.get(guild.id) && !gfJobs.get(guild.id).finished) {
               return html(await guildPage(guild, sess, t('dash.msg.jobRunning', curLocale), 'actions'));
@@ -1099,6 +1160,9 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             return html(await gatePage(guild, sess, result));
           }
           return html(await gatePage(guild, sess));
+        }
+        if (m[2] === '/grandfather-setup') {
+          return html(grandfatherSetupPage(guild, sess));
         }
         if (url.searchParams.get('refresh')) {
           await Promise.all([guild.roles.fetch(), guild.channels.fetch()]).catch(() => {});

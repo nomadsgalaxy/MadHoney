@@ -71,7 +71,8 @@
     "approvedReinvited": "✅ **Approvato** da {mod} - sbannato e reinvitato.",
     "approvedNoInvite": "✅ **Approvato** da {mod} - sbannato (impossibile creare automaticamente un invito).",
     "deniedBy": "❌ **Rifiutato** da {mod}.",
-    "permReminder": "🍯 Avviso da **MadHoney** riguardo a **{guild}**: non sono riuscito a pubblicare nel canale di log che hai configurato. Lì mi servono **Visualizza canale** e **Invia messaggi** - è dove vengono segnalati i ban e i ricorsi dei membri (con i pulsanti Approva/Rifiuta), quindi il processo di ricorso non funzionerà finché non potrò pubblicarci. Sistema i miei permessi su quel canale, oppure scegli un altro canale di log: {dash}"
+    "permReminder": "🍯 Avviso da **MadHoney** riguardo a **{guild}**: non sono riuscito a pubblicare nel canale di log che hai configurato. Lì mi servono **Visualizza canale** e **Invia messaggi** - è dove vengono segnalati i ban e i ricorsi dei membri (con i pulsanti Approva/Rifiuta), quindi il processo di ricorso non funzionerà finché non potrò pubblicarci. Sistema i miei permessi su quel canale, oppure scegli un altro canale di log: {dash}",
+    "gateCatchup": "🔒 Gating applicato a {n} canali creati mentre ero offline, per mantenere chiusa la barriera di verifica."
   },
   "setup": {
     "title": "## Configurazione di MadHoney",
@@ -219,6 +220,9 @@
       "recommended": "(consigliato)",
       "requireVerifyHint": "Questo è tutto il senso di MadHoney. Protegge i tuoi canali dietro il ruolo verificato così l'honeypot è l'<b>unico</b> posto in cui un account non verificato può pubblicare, e nasconde l'honeypot ai membri reali così nessun umano viene mai catturato. Disattivalo e l'honeypot banna comunque, ma è visibile a tutti, quindi un membro potrebbe entrarci e venire bannato - ti affideresti solo al banner di avviso.",
       "verifOffWarn": "⚠️ <b>La verifica è DISATTIVATA.</b> L'honeypot non è nascosto ai tuoi membri, quindi un umano potrebbe pubblicarvi e venire bannato. Li protegge solo il banner di avviso. Consigliamo vivamente di riattivare la verifica.",
+      "gfIntentWarn": "⏳ <b>L'assegnazione ai membri esistenti avviene tramite il nostro bot ausiliario</b> mentre MadHoney attende l'approvazione di Discord per l'intent Server Members. <a href=\"{invite}\" target=\"_blank\" rel=\"noopener\">Invita WorkerBee</a>, trascina il suo ruolo sopra il tuo ruolo verificato in Impostazioni del server › Ruoli, poi esegui <b>Assegna il ruolo ai membri esistenti</b> qui sotto - entra, concede l'accesso ai membri esistenti ed esce. (Anche i membri attivi ottengono l'accesso automaticamente non appena pubblicano.)",
+      "gfInviteBtn": "Invita WorkerBee",
+      "gfRunNow": "Assegna il ruolo ai membri esistenti ora",
       "captchaDifficulty": "Difficoltà del captcha",
       "diffEasy": "Facile (4 caratteri, più leggero)",
       "diffNormal": "Normale (5 caratteri)",
@@ -232,6 +236,7 @@
       "universalBanList": "Lista di ban universale",
       "applyList": "Applica la lista di ban universale a questo server",
       "applyListHint": "Ogni cattura degli honeypot di tutti i server MadHoney alimenta un'unica lista. ON: gli utenti presenti vengono bannati quando entrano qui (usa \"Banna dalla lista\" qui sotto per applicarla retroattivamente). OFF: questo server agisce solo sulle proprie catture - che conserva comunque.",
+      "applyListSelfHost": "<b>Nota:</b> questa è un'istanza self-hosted, quindi \"la lista\" comprende solo i server gestiti da <i>questo</i> bot - non è collegata alla lista di ban della rete MadHoney ospitata, ed è una scelta voluta. Un pool vuoto significa semplicemente che i tuoi honeypot non hanno ancora catturato nessuno nei tuoi server.",
       "appeals": "Ricorsi",
       "letAppeal": "Consenti agli utenti bannati di fare ricorso via DM",
       "letAppealHint": "Quando avviene un ban dell'honeypot, MadHoney manda un DM all'utente offrendogli di fare ricorso. Se lo fa, la richiesta arriva nel tuo <b>canale di log</b> con i pulsanti Approva (sbanna + nuovo invito) / Rifiuta. Un utente vede sempre e solo i server da cui è stato effettivamente bannato che hanno attivato questa opzione - mai nient'altro.",
@@ -379,6 +384,7 @@
     "act": {
       "gLineGate": "GATING dietro \"{role}\" ({n}): {list}",
       "gLineKeep": "RESTA PUBBLICO (gateway di verifica): {list}",
+      "gLineReadonly": "RESTA PUBBLICO ({n} in sola lettura per tutti - annunci ecc., nessun rischio di spam): {list}",
       "gLineHoney": "HONEYPOT (aperto a tutti, nascosto ai verificati): {list}",
       "gLineProtect": "MANTIENI NASCOSTI I CANALI ADMIN ({n}): {list}",
       "gLineSkip": "SALTA già privati ({n})",

@@ -1,7 +1,7 @@
 // Guild actions shared by the slash commands (bot.js) and the dashboard
 // (dashboard.js). Each takes a discord.js Guild + the stored config and
 // returns a human-readable result string.
-import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
+import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, Client, GatewayIntentBits, Events } from 'discord.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { renderBanner, DEFAULT_BANNER, creditSuffix } from './banner.js';
 import { resolvedIncidents } from './incident.js';
@@ -196,17 +196,33 @@ export async function gateChannels(guild, cfg, apply = false, sel = null, loc = 
   const publicSet = new Set(!sel || Array.isArray(sel) ? [] : sel.public ?? []);
 
   const plan = { gate: [], keep: [], honeypot: [], skip: [], noaccess: [] };
+  const readonly = []; // viewable but NOT postable by @everyone: left public by default
   for (const ch of channels.values()) {
     if (!ch) continue;
-    const wantGate = gateSet ? gateSet.has(ch.id) : ch.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel);
+    const everyoneView = ch.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel);
+    // "Postable" per channel type: voice/stage = Connect, everything else = Send.
+    const postBit = ch.type === ChannelType.GuildVoice || ch.type === ChannelType.GuildStageVoice
+      ? PermissionFlagsBits.Connect : PermissionFlagsBits.SendMessages;
+    const everyonePosts = ch.permissionsFor(everyone).has(postBit);
+    // Default detection: gate what @everyone can both SEE and POST in. Read-only
+    // broadcast channels (#announcements and friends) carry no spam risk and are
+    // exactly what Discord Onboarding needs visible, so they stay public — pinned
+    // with an explicit View allow (below) so a gated parent category can't hide
+    // them. An explicit dashboard selection (gateSet) still overrides.
+    const isReadonly = !gateSet && everyoneView && !everyonePosts
+      && ch.id !== cfg.honeypotChannelId && ch.id !== cfg.verifyChannelId;
+    const wantGate = gateSet ? gateSet.has(ch.id) : (everyoneView && everyonePosts);
     const target = ch.id === cfg.honeypotChannelId ? 'honeypot'
       : ch.id === cfg.verifyChannelId ? 'keep'
       : wantGate ? 'gate'
-      : publicSet.has(ch.id) ? 'keep' // explicitly forced back to public
+      : (publicSet.has(ch.id) || isReadonly) ? 'keep' // forced public / read-only broadcast
       : 'skip';
     // The bot must be able to see AND manage roles on a channel to gate it.
     if ((target === 'gate' || target === 'keep') && !ch.permissionsFor(me).has(PermissionFlagsBits.ViewChannel)) plan.noaccess.push(ch);
-    else plan[target].push(ch);
+    else {
+      plan[target].push(ch);
+      if (target === 'keep' && isReadonly) readonly.push(ch);
+    }
   }
 
   // Granting the verified role View on a category cascades to its children.
@@ -221,7 +237,8 @@ export async function gateChannels(guild, cfg, apply = false, sel = null, loc = 
   const none = t('dash.act.gNone', loc);
   const lines = [
     t('dash.act.gLineGate', loc, { role: role.name, n: plan.gate.length, list: plan.gate.map(name).join(', ') || none }),
-    t('dash.act.gLineKeep', loc, { list: plan.keep.map(name).join(', ') || none }),
+    t('dash.act.gLineKeep', loc, { list: plan.keep.filter((c) => !readonly.includes(c)).map(name).join(', ') || none }),
+    ...(readonly.length ? [t('dash.act.gLineReadonly', loc, { n: readonly.length, list: readonly.map(name).join(', ') })] : []),
     t('dash.act.gLineHoney', loc, { list: plan.honeypot.map(name).join(', ') || none }),
     t('dash.act.gLineProtect', loc, { n: protect.length, list: protect.map(name).join(', ') || none }),
     t('dash.act.gLineSkip', loc, { n: plan.skip.length }),
@@ -235,10 +252,25 @@ export async function gateChannels(guild, cfg, apply = false, sel = null, loc = 
   const tryEdit = async (ch, fn) => {
     try { await fn(); ok++; } catch (e) { failed.push(`${name(ch)} (${e.message})`); }
   };
+  // Gating denies @everyone View, which would blind the BOT ITSELF on servers
+  // where it isn't Administrator (it doesn't hold the verified role) — it could
+  // no longer monitor gated channels (compromised-account detection) or manage
+  // them later. Pin its access with an explicit overwrite on its managed role.
+  // ManageMessages can only be self-granted where the bot already holds it
+  // (Discord rule), so fall back to View-only when that edit is refused.
+  const botTarget = me.roles.botRole ?? me;
+  const keepBotAccess = async (ch, reason) => {
+    try {
+      await ch.permissionOverwrites.edit(botTarget, { ViewChannel: true, ManageMessages: true, ReadMessageHistory: true }, { reason });
+    } catch {
+      await ch.permissionOverwrites.edit(botTarget, { ViewChannel: true, ReadMessageHistory: true }, { reason }).catch(() => {});
+    }
+  };
   for (const ch of plan.gate) {
     await tryEdit(ch, async () => {
       await ch.permissionOverwrites.edit(role, { ViewChannel: true }, { reason: 'MadHoney: gate behind verified' });
       await ch.permissionOverwrites.edit(everyone, { ViewChannel: false }, { reason: 'MadHoney: gate behind verified' });
+      await keepBotAccess(ch, 'MadHoney: keep bot able to monitor the gated channel');
     });
   }
   for (const ch of plan.keep) {
@@ -248,6 +280,7 @@ export async function gateChannels(guild, cfg, apply = false, sel = null, loc = 
     await tryEdit(ch, async () => {
       await ch.permissionOverwrites.edit(everyone, { ViewChannel: true, SendMessages: true }, { reason: 'MadHoney: honeypot open to unverified' });
       await ch.permissionOverwrites.edit(role, { ViewChannel: false }, { reason: 'MadHoney: hide honeypot from verified' });
+      await keepBotAccess(ch, 'MadHoney: keep bot able to delete trap posts'); // channel-scoped ManageMessages where grantable
     });
   }
   for (const ch of protect) {
@@ -291,6 +324,11 @@ export async function gateNewChannel(guild, cfg, channel, loc = cfg?.locale) {
   // ponytail: same call as gateChannels; admin channels under a gated category
   // stay hidden by inheritance, so we don't re-run its explicit-deny protect step.
   if (!channel.permissionOverwrites || !channel.permissionsFor(everyone).has(PermissionFlagsBits.ViewChannel)) return null;
+  // Read-only for @everyone = broadcast channel, no spam hole (same default as
+  // gateChannels): leave it public.
+  const newPostBit = channel.type === ChannelType.GuildVoice || channel.type === ChannelType.GuildStageVoice
+    ? PermissionFlagsBits.Connect : PermissionFlagsBits.SendMessages;
+  if (!channel.permissionsFor(everyone).has(newPostBit)) return null;
   const me = await guild.members.fetchMe();
   if (!channel.permissionsFor(me).has(PermissionFlagsBits.ViewChannel) ||
       !channel.permissionsFor(me).has(PermissionFlagsBits.ManageRoles)) {
@@ -301,6 +339,13 @@ export async function gateNewChannel(guild, cfg, channel, loc = cfg?.locale) {
   // role-first ordering (see gateChannels) so the bot doesn't lock itself out
   await channel.permissionOverwrites.edit(role, { ViewChannel: true }, { reason: 'MadHoney: auto-gate new channel' });
   await channel.permissionOverwrites.edit(everyone, { ViewChannel: false }, { reason: 'MadHoney: auto-gate new channel' });
+  // same bot-access pin as gateChannels (monitoring + later management)
+  const newBotTarget = me.roles.botRole ?? me;
+  try {
+    await channel.permissionOverwrites.edit(newBotTarget, { ViewChannel: true, ManageMessages: true, ReadMessageHistory: true }, { reason: 'MadHoney: keep bot able to monitor the gated channel' });
+  } catch {
+    await channel.permissionOverwrites.edit(newBotTarget, { ViewChannel: true, ReadMessageHistory: true }, { reason: 'MadHoney: keep bot able to monitor the gated channel' }).catch(() => {});
+  }
   saveGuild(guild.id, {
     gatedChannels: cfg.gatedChannels.includes(channel.id) ? cfg.gatedChannels : [...cfg.gatedChannels, channel.id],
     channelTreatment: { ...cfg.channelTreatment, [channel.id]: 'gate' },
@@ -333,12 +378,16 @@ export async function ungateChannels(guild, cfg, loc = cfg?.locale) {
     note = t('dash.act.unRecovered', loc);
   }
   let ok = 0; const failed = [];
+  const unMe = await guild.members.fetchMe();
+  const unBotTarget = unMe.roles.botRole ?? unMe;
   for (const id of ids) {
     const ch = await guild.channels.fetch(id).catch(() => null);
     if (!ch) continue;
     try {
       await ch.permissionOverwrites.edit(everyone, { ViewChannel: null, SendMessages: null }, { reason: 'MadHoney: restore pre-gate visibility' });
       if (role) await ch.permissionOverwrites.edit(role, { ViewChannel: null }, { reason: 'MadHoney: restore pre-gate visibility' });
+      // clear the bot-access pin gateChannels added (best-effort; harmless if absent)
+      await ch.permissionOverwrites.edit(unBotTarget, { ViewChannel: null, ManageMessages: null, ReadMessageHistory: null }, { reason: 'MadHoney: restore pre-gate visibility' }).catch(() => {});
       ok++;
     } catch (e) { failed.push(`#${ch.name} (${e.message})`); }
   }
@@ -426,6 +475,78 @@ export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) 
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length || 1) }, worker));
   saveGuild(guild.id, { grandfatherPending: false, grandfatheredAt: new Date().toISOString() });
   return t('dash.act.gfDone', loc, { role: role.name, added: progress.added, skipped: progress.skipped, failedPart: failures.length ? t('dash.act.gfFailed', loc, { n: failures.length, role: role.name, list: failures.slice(0, 5).join(', ') }) : '' });
+}
+
+// WorkerBee app id, derived from its token (a bot token's first segment is the
+// base64 bot user id) so the invite link needs no extra config.
+export function workerBeeInvite() {
+  const tok = process.env.SIDECAR_TOKEN;
+  if (!tok) return null;
+  let id; try { id = Buffer.from(tok.split('.')[0], 'base64').toString('utf8'); } catch { return null; }
+  return `https://discord.com/oauth2/authorize?client_id=${id}&scope=bot&permissions=268435456`; // Manage Roles
+}
+
+// Bulk grandfathering while MadHoney's own Server Members intent is unavailable
+// (pending Discord review). MadHoney orchestrates WorkerBee - a separate helper
+// app that DOES hold the intent: it logs WorkerBee in, has it fetch the member
+// list and grant the verified role, then WorkerBee LEAVES the server. Same
+// signature + progress shape as grandfather(), so it drops straight into the
+// dashboard's slow-job runner. Security: the grandfatheredAt cutoff means anyone
+// who joined AFTER grandfathering still has to verify - never auto-granted.
+let workerBeeBusy = false; // one WorkerBee gateway login at a time (shared token)
+export async function grandfatherViaWorkerBee(guild, cfg, progress = {}, loc = cfg?.locale) {
+  const token = process.env.SIDECAR_TOKEN;
+  if (!token) throw new Error('WorkerBee helper is not configured (SIDECAR_TOKEN unset).');
+  if (!cfg?.verifiedRoleId) throw new Error('Set a verified role before grandfathering.');
+  // Two concurrent logins with WorkerBee's single token would fight over the
+  // gateway connection - serialize so one server's run finishes before the next.
+  if (workerBeeBusy) throw new Error('WorkerBee is grandfathering another server right now — try again in a minute.');
+  workerBeeBusy = true;
+  const invite = workerBeeInvite();
+  const wb = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+  try {
+    await new Promise((res, rej) => {
+      const timer = setTimeout(() => rej(new Error('WorkerBee took too long to connect.')), 30_000);
+      wb.once(Events.ClientReady, () => { clearTimeout(timer); res(); });
+      wb.login(token).catch((e) => { clearTimeout(timer); rej(new Error(`WorkerBee could not log in: ${e.message}`)); });
+    });
+    const wbGuild = await wb.guilds.fetch(guild.id).then((g) => g.fetch()).catch(() => null);
+    if (!wbGuild) throw new Error(`WorkerBee isn't in this server yet. Invite it first: ${invite}`);
+    const role = await wbGuild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
+    if (!role) throw new Error('The verified role no longer exists.');
+    const me = await wbGuild.members.fetchMe();
+    if (me.roles.highest.comparePositionTo(role) <= 0) {
+      throw new Error(`WorkerBee's role must sit ABOVE "${role.name}". In Server Settings › Roles, drag WorkerBee's role above it, then run this again.`);
+    }
+    const cutoffMs = cfg.grandfatheredAt ? Date.parse(cfg.grandfatheredAt) : null;
+    const members = await wbGuild.members.fetch(); // needs the Server Members intent - WorkerBee has it
+    const targets = [];
+    let skipped = 0;
+    for (const m of members.values()) {
+      if (m.user.bot || m.roles.cache.has(role.id)) { skipped++; continue; }
+      if (cutoffMs !== null && m.joinedTimestamp >= cutoffMs) { skipped++; continue; } // joined after verification - must verify
+      targets.push(m);
+    }
+    Object.assign(progress, { label: 'Grandfathering via WorkerBee', total: targets.length, done: 0, added: 0, skipped, failed: 0 });
+    const failures = [];
+    let i = 0;
+    const worker = async () => {
+      while (i < targets.length) {
+        const m = targets[i++];
+        await m.roles.add(role, 'MadHoney via WorkerBee: grandfathered existing member')
+          .then(() => progress.added++)
+          .catch((e) => { progress.failed++; if (failures.length < 5) failures.push(`${m.user.tag}: ${e.message}`); });
+        progress.done++;
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(10, targets.length || 1) }, worker));
+    if (!cfg.grandfatheredAt) saveGuild(guild.id, { grandfatherPending: false, grandfatheredAt: new Date().toISOString() });
+    await wbGuild.leave().catch(() => { /* admin can kick it manually */ });
+    return t('dash.act.gfDone', loc, { role: role.name, added: progress.added, skipped: progress.skipped, failedPart: failures.length ? t('dash.act.gfFailed', loc, { n: failures.length, role: role.name, list: failures.slice(0, 5).join(', ') }) : '' }) + ' 🐝';
+  } finally {
+    await wb.destroy().catch(() => {});
+    workerBeeBusy = false;
+  }
 }
 
 // Ban from List: proactively ban every user on the active shared list (bans

@@ -125,7 +125,8 @@
     "approvedReinvited": "✅ **Schváleno** uživatelem {mod} - ban zrušen a znovu pozván.",
     "approvedNoInvite": "✅ **Schváleno** uživatelem {mod} - ban zrušen (nepodařilo se automaticky vytvořit pozvánku).",
     "deniedBy": "❌ **Zamítnuto** uživatelem {mod}.",
-    "permReminder": "🍯 Upozornění od **MadHoney** ohledně serveru **{guild}**: nepodařilo se mi odeslat zprávu do tvého nastaveného log kanálu. Potřebuji tam oprávnění **Zobrazit kanál** a **Posílat zprávy** - právě tam se posílají hlášení o banech a odvolání členů (s tlačítky Schválit/Zamítnout), takže dokud tam nebudu moct psát, odvolání nebudou fungovat. Oprav mi oprávnění v tom kanálu, nebo vyber jiný log kanál: {dash}"
+    "permReminder": "🍯 Upozornění od **MadHoney** ohledně serveru **{guild}**: nepodařilo se mi odeslat zprávu do tvého nastaveného log kanálu. Potřebuji tam oprávnění **Zobrazit kanál** a **Posílat zprávy** - právě tam se posílají hlášení o banech a odvolání členů (s tlačítky Schválit/Zamítnout), takže dokud tam nebudu moct psát, odvolání nebudou fungovat. Oprav mi oprávnění v tom kanálu, nebo vyber jiný log kanál: {dash}",
+    "gateCatchup": "🔒 Uzamkl jsem {n} kanál(ů) vytvořených v době, kdy jsem byl offline, aby ověřovací brána zůstala zavřená."
   },
   "dash": {
     "lang": "Jazyk",
@@ -219,6 +220,9 @@
       "recommended": "(doporučeno)",
       "requireVerifyHint": "To je celý smysl MadHoney. Uzamkne tvoje kanály za roli ověřeného, takže honeypot je <b>jediné</b> místo, kam může neověřený účet psát, a skryje honeypot před skutečnými členy, takže se žádný člověk nikdy nechytí. Vypni to a honeypot bude stále banovat, ale bude viditelný pro všechny, takže by do něj člen mohl zabloudit a dostat ban - spoléhal(a) by ses jen na varovný banner.",
       "verifOffWarn": "⚠️ <b>Ověřování je VYPNUTO.</b> Honeypot není skrytý před tvými členy, takže by do něj člověk mohl napsat a dostat ban. Chrání je jen varovný banner. Důrazně doporučujeme ověřování znovu zapnout.",
+      "gfIntentWarn": "⏳ <b>Hromadné přidělování rolí stávajícím členům probíhá přes našeho pomocného bota</b>, zatímco aplikace MadHoney čeká na schválení oprávnění Server Members intent od Discordu. <a href=\"{invite}\" target=\"_blank\" rel=\"noopener\">Pozvat WorkerBee</a>, přetáhni jeho roli nad tvoji roli ověřeného v Nastavení serveru › Role a poté níže spusť <b>Přidělit stávajícím</b> - připojí se, přidělí stávajícím členům přístup a odejde. (Aktivní členové navíc automaticky získají přístup, jakmile něco napíšou.)",
+      "gfInviteBtn": "Pozvat WorkerBee",
+      "gfRunNow": "Spustit přidělení stávajícím teď",
       "captchaDifficulty": "Obtížnost captcha",
       "diffEasy": "Snadná (4 znaky, lehčí)",
       "diffNormal": "Normální (5 znaků)",
@@ -232,6 +236,7 @@
       "universalBanList": "Univerzální seznam banů",
       "applyList": "Použít univerzální seznam banů na tento server",
       "applyListHint": "Každý úlovek honeypotu napříč všemi servery MadHoney doplňuje jeden seznam. ON: uživatelé na něm jsou při připojení sem zabanováni (použij „Zabanovat ze seznamu“ níže pro zpětné použití). OFF: tento server reaguje jen na vlastní úlovky - které si tak jako tak uchovává.",
+      "applyListSelfHost": "<b>Poznámka:</b> tohle je self-hostovaná instance, takže „seznam“ znamená jen servery, na kterých běží <i>tenhle</i> bot - není záměrně napojený na seznam banů hostované sítě MadHoney. Prázdný pool jen znamená, že tvé vlastní honeypoty zatím napříč tvými servery nikoho nechytily.",
       "appeals": "Odvolání",
       "letAppeal": "Umožnit zabanovaným uživatelům odvolat se přes DM",
       "letAppealHint": "Když dojde k banu z honeypotu, MadHoney pošle uživateli DM s nabídkou odvolání. Pokud se odvolá, žádost dorazí do tvého <b>log kanálu</b> s tlačítky Schválit (zrušit ban + nová pozvánka) / Zamítnout. Uživatel vždy vidí jen servery, ze kterých byl skutečně zabanován a které toto zapnuly - nikdy nic jiného.",
@@ -379,6 +384,7 @@
     "act": {
       "gLineGate": "UZAMKNOUT za „{role}“ ({n}): {list}",
       "gLineKeep": "ZŮSTÁVÁ VEŘEJNÉ (ověřovací brána): {list}",
+      "gLineReadonly": "ZŮSTÁVÁ VEŘEJNÉ ({n} pouze pro čtení pro všechny - oznámení apod., žádné riziko spamu): {list}",
       "gLineHoney": "HONEYPOT (otevřený pro všechny, skrytý před ověřenými): {list}",
       "gLineProtect": "PONECHAT ADMINISTRÁTORSKÉ KANÁLY SKRYTÉ ({n}): {list}",
       "gLineSkip": "PŘESKOČIT již soukromé ({n})",
