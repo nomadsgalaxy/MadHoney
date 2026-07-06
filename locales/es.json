@@ -62,6 +62,7 @@
     "banBtn": "Banear",
     "dismissBtn": "Descartar (sin acción)",
     "banshareReport": "🌐 **Baneado automáticamente al entrar** - este usuario está en la lista universal de baneos de MadHoney (atrapado por el honeypot de otro servidor).",
+    "banSyncSummary": "🌐 **Lista universal de baneos sincronizada** - baneada(s) **{n}** cuenta(s) atrapada(s) por otros servidores de MadHoney.",
     "webhookAlert": "🪝 **Un webhook publicó en el honeypot** (<#{channel}>) y su mensaje fue eliminado. Los webhooks no son miembros, así que no se pueden banear - abre **Configuración del servidor → Integraciones → Webhooks** y elimina los que no reconozcas.",
     "appealForward": "📩 **Apelación de baneo** - <@{id}> ({tag}, `{id}`) fue baneado por el honeypot y te pide que lo revises de nuevo.",
     "approveBtn": "Aprobar y reinvitar",

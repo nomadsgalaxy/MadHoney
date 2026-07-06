@@ -116,6 +116,7 @@
     "banBtn": "Zabanovat",
     "dismissBtn": "Zamítnout (žádná akce)",
     "banshareReport": "🌐 **Automaticky zabanován při připojení** - tento uživatel je na univerzálním seznamu banů MadHoney (chycen honeypotem jiného serveru).",
+    "banSyncSummary": "🌐 **Univerzální seznam banů synchronizován** - zabanováno **{n}** účtů z univerzálního seznamu banů MadHoney chycených jinými servery.",
     "webhookAlert": "🪝 **Do honeypotu napsal webhook** (<#{channel}>) a jeho zpráva byla smazána. Webhooky nejsou členové, takže je nelze zabanovat - otevři **Nastavení serveru → Integrace → Webhooky** a smaž ty, které nepoznáváš.",
     "appealForward": "📩 **Odvolání proti banu** - <@{id}> ({tag}, `{id}`) byl zabanován honeypotem a žádá tě, aby ses na to znovu podíval(a).",
     "approveBtn": "Schválit a znovu pozvat",

@@ -587,18 +587,28 @@ export async function syncBans(guild, cfg, progress = {}, loc = cfg?.locale) {
   }
   const CONCURRENCY = 10;
   let i = 0;
+  const bannedTags = [];
   const worker = async () => {
     while (i < targets.length) {
       const [id, info] = targets[i++];
       try {
         await guild.bans.create(id, { reason: 'MadHoney: synced from the shared ban list' });
         logBan({ id, tag: info.tag, guildId: guild.id, channel: '(ban-sync)', at: new Date().toISOString(), incidentId: info.incidentId });
-        progress.added++;
+        progress.added++; bannedTags.push(info.tag || id);
       } catch { progress.failed++; }
       progress.done++;
     }
   };
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length || 1) }, worker));
   saveGuild(guild.id, { banSyncPending: false });
+  // Tell the mod log channel what was banned from the shared list. ONE summary,
+  // never per-user - a sync can ban dozens at once. Lists tags when few.
+  if (progress.added > 0 && cfg.logChannelId) {
+    const listPart = bannedTags.length <= 15 ? '\n' + bannedTags.map((tag) => `• ${tag}`).join('\n') : '';
+    try {
+      const log = await guild.channels.fetch(cfg.logChannelId);
+      await log.send({ content: t('log.banSyncSummary', loc, { n: progress.added }) + listPart, allowedMentions: { parse: [] } });
+    } catch { /* mod channel unreachable - console + the returned string still record it */ }
+  }
   return t('dash.act.sbDone', loc, { added: progress.added, skipped: progress.skipped, failedPart: progress.failed ? t('dash.act.sbFailed', loc, { n: progress.failed }) : '', pool: pool.size });
 }

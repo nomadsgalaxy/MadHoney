@@ -62,6 +62,7 @@
     "banBtn": "Ban",
     "dismissBtn": "Dismiss (no action)",
     "banshareReport": "🌐 **Auto-banned on join** - this user is on the universal MadHoney ban list (caught by another server's honeypot).",
+    "banSyncSummary": "🌐 **Shared ban list synced** - banned **{n}** account(s) caught by other MadHoney servers.",
     "webhookAlert": "🪝 **A webhook posted in the honeypot** (<#{channel}>) and its message was deleted. Webhooks aren't members, so they can't be banned - open **Server Settings → Integrations → Webhooks** and delete any you don't recognize.",
     "appealForward": "📩 **Ban appeal** - <@{id}> ({tag}, `{id}`) was banned by the honeypot and is asking you to take another look.",
     "approveBtn": "Approve & re-invite",

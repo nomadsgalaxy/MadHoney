@@ -121,6 +121,63 @@ if (process.env.SERVER_MEMBERS !== 'off') intents.push(GatewayIntentBits.GuildMe
 if (process.env.MESSAGE_CONTENT === 'on') intents.push(GatewayIntentBits.MessageContent);
 const client = new Client({ intents });
 
+// ---- network-wide trap feed + daily report (operator's #madhoney-trapped) ----
+// Gated by TRAP_FEED_CHANNEL: unset on self-hosted instances, so nothing posts
+// there. Posts a live line on every honeypot catch across all servers, plus a
+// once-a-day summary. Never pings (allowedMentions cleared).
+const TRAP_FEED = process.env.TRAP_FEED_CHANNEL || '';
+const REPORT_HOUR = Number(process.env.TRAP_REPORT_HOUR ?? 12); // UTC hour to post the daily summary
+const REPORT_MARK = '📊 MadHoney daily report';
+async function feedSend(content) {
+  if (!TRAP_FEED) return;
+  try { const ch = await client.channels.fetch(TRAP_FEED); await ch.send({ content, allowedMentions: { parse: [] } }); }
+  catch (e) { console.error('[trap-feed] send failed:', e.message); }
+}
+// live feed: honeypot-origin catches only (ban-share propagations are skipped to
+// avoid one catch fanning out into a dozen feed posts across sharing servers).
+const notifyTrap = (guild, user, channelName) =>
+  feedSend(`🍯 **Trapped** in **${guild.name}** — ${user.tag} (\`${user.id}\`) posted in #${channelName}`);
+
+// once-a-day summary, deduped via the channel itself (no persisted state needed):
+// if a report dated today already exists, skip - so restarts/failover never double-post.
+async function maybeDailyReport() {
+  if (!TRAP_FEED) return;
+  const now = new Date();
+  if (now.getUTCHours() < REPORT_HOUR) return; // hold until the report hour (UTC)
+  const todayUtc = now.toISOString().slice(0, 10);
+  let ch;
+  try { ch = await client.channels.fetch(TRAP_FEED); } catch { return; }
+  try {
+    const recent = await ch.messages.fetch({ limit: 15 });
+    const already = recent.some((m) => m.author.id === client.user.id && m.content.includes(REPORT_MARK)
+      && new Date(m.createdTimestamp).toISOString().slice(0, 10) === todayUtc);
+    if (already) return;
+  } catch { return; } // can't read history -> skip rather than risk a double-post
+  // summarize the last 24h from the ban ledger: honeypot-origin catches only.
+  const since = Date.now() - 24 * 60 * 60 * 1000;
+  const rows = bans();
+  const byGuild = new Map();
+  const activeUsers = new Set();
+  const state = new Map(); // latest banned-state per (user,guild)
+  let total = 0;
+  for (const b of rows) {
+    state.set(`${b.id}:${b.guildId}`, !b.unbanned);
+    if (b.unbanned) continue;
+    if (b.channel === '(ban-share)' || b.channel === '(ban-sync)') continue; // origin only
+    if (Date.parse(b.at) < since) continue;
+    total++; byGuild.set(b.guildId, (byGuild.get(b.guildId) ?? 0) + 1);
+  }
+  for (const [k, v] of state) if (v) activeUsers.add(k.slice(0, k.lastIndexOf(':')));
+  const nameOf = (gid) => client.guilds.cache.get(gid)?.name ?? gid;
+  const lines = [...byGuild.entries()].sort((a, z) => z[1] - a[1]).slice(0, 10).map(([g, n]) => `• ${nameOf(g)}: ${n}`);
+  await feedSend([
+    `${REPORT_MARK} — ${todayUtc}`,
+    `Last 24h: **${total}** spammer${total === 1 ? '' : 's'} trapped across **${byGuild.size}** server${byGuild.size === 1 ? '' : 's'}.`,
+    lines.length ? lines.join('\n') : '_No honeypot catches in the last 24h._',
+    `Shared ban list: **${activeUsers.size}** accounts.`,
+  ].join('\n'));
+}
+
 // ---------- slash command ----------
 
 const command = new SlashCommandBuilder()
@@ -880,6 +937,7 @@ client.on(Events.MessageCreate, async (msg) => {
   await msg.delete().catch(() => {});
   // ...then sweep any stragglers the ban's purge raced past in other channels.
   if (banned) sweepStragglers(msg.guild, msg.author.id).catch(() => {});
+  if (banned) notifyTrap(msg.guild, msg.author, msg.channel.name).catch(() => {}); // network-wide trap feed
 });
 
 // Discord's ban `deleteMessageSeconds` purge is best-effort and races the message
@@ -1096,6 +1154,11 @@ client.once(Events.ClientReady, async (c) => {
   };
   // First pass 5 min after boot (let caches + boot jobs settle), then on the interval.
   setTimeout(() => { autoSync(); setInterval(autoSync, SYNC_EVERY_MS).unref?.(); }, 5 * 60 * 1000).unref?.();
+
+  // Daily trap-feed report: check ~2 min after boot, then hourly. maybeDailyReport
+  // self-dedupes against the channel, so hourly checks post at most once per day.
+  if (TRAP_FEED) setTimeout(() => { maybeDailyReport().catch(() => {}); setInterval(() => maybeDailyReport().catch(() => {}), 60 * 60 * 1000).unref?.(); }, 2 * 60 * 1000).unref?.();
+
   // Minimum viable: Manage Roles (verified role + channel overwrites), Manage
   // Channels, Ban Members, View Channels, Send Messages, Attach Files, Read
   // Message History. If gating a specific channel fails with Missing Access,

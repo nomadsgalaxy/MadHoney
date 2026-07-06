@@ -62,6 +62,7 @@
     "banBtn": "Banna",
     "dismissBtn": "Avfärda (ingen åtgärd)",
     "banshareReport": "🌐 **Automatiskt bannad vid anslutning** - den här användaren finns på den universella MadHoney-banlistan (fångad av en annan servers honeypot).",
+    "banSyncSummary": "🌐 **Universell banlista synkroniserad** - bannade **{n}** konto(n) som fångats av andra MadHoney-servrar.",
     "webhookAlert": "🪝 **En webhook postade i honeypotten** (<#{channel}>) och dess meddelande raderades. Webhooks är inte medlemmar, så de kan inte bannas - öppna **Serverinställningar → Integrationer → Webhooks** och radera alla du inte känner igen.",
     "appealForward": "📩 **Överklagan av banning** - <@{id}> ({tag}, `{id}`) bannades av honeypotten och ber dig att titta på det igen.",
     "approveBtn": "Godkänn & bjud in igen",
