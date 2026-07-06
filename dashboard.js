@@ -368,6 +368,24 @@ function body(req) {
 }
 
 export function startDashboard(client) {
+  // Live member counts without the Server Members intent. guild.memberCount only
+  // refreshes at (re)connect and never moves between restarts when member events
+  // don't fire (no GuildMembers intent), so the "members protected" total drifts.
+  // A low-frequency REST fetch with withCounts populates approximateMemberCount,
+  // which needs no privileged intent. Falls back to memberCount if a fetch fails.
+  const liveCounts = new Map(); // guildId -> approximate member count
+  async function refreshCounts() {
+    for (const id of client.guilds.cache.keys()) {
+      try {
+        const g = await client.guilds.fetch({ guild: id, withCounts: true, force: true });
+        if (g.approximateMemberCount != null) liveCounts.set(id, g.approximateMemberCount);
+      } catch { /* keep the last good value */ }
+    }
+  }
+  const memberTotal = () => client.guilds.cache.reduce((s, g) => s + (liveCounts.get(g.id) ?? g.memberCount ?? 0), 0);
+  refreshCounts();
+  setInterval(refreshCounts, 15 * 60 * 1000).unref?.(); // every 15 min; 19 guilds = trivial
+
   // Minimum viable permission set - see the note in bot.js.
   const inviteUrl = () =>
     `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268545044`;
@@ -764,7 +782,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">${t('dash.gate.cantAc
     const rows = bans();
     const trapped = trappedCount(rows);
     const servers = client.guilds.cache.size;
-    const members = client.guilds.cache.reduce((s, g) => s + (g.memberCount || 0), 0);
+    const members = memberTotal();
     // UNIQUE spammers, counted once on the day they were first caught (so a
     // user banned in several servers or re-logged by ban-share isn't double
     // counted). Only users still trapped somewhere are included.
@@ -980,7 +998,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
             .replaceAll('%%COSTS%%', costsWidget(dl))
             .replaceAll('%%INVITE%%', inviteUrl())
             .replaceAll('%%GUILDS%%', client.guilds.cache.size.toLocaleString(dl))
-            .replaceAll('%%MEMBERS%%', client.guilds.cache.reduce((s, g) => s + (g.memberCount || 0), 0).toLocaleString(dl))
+            .replaceAll('%%MEMBERS%%', memberTotal().toLocaleString(dl))
             .replaceAll('%%BANS%%', trappedCount().toLocaleString(dl)));
         }
         const manageable = [];

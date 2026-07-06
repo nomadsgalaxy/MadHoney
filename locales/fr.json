@@ -12,7 +12,7 @@
     "success": "Vérifié ✅ Bienvenue sur {guild}.",
     "tooMany": "Trop d'essais incorrects - appuie sur **Vérifier** pour une nouvelle image.",
     "wrong": "Ce n'est pas ça - appuie sur **Vérifier** pour une nouvelle image et réessaie. ({left} restants)",
-    "panelText": "**Vérifie-toi et accepte le règlement**\nClique sur **Vérifier** et saisis le code de l'image. La vérification confirme que tu as lu et accepté le règlement ci-dessus, et débloque le serveur.",
+    "panelText": "**Vérifie-toi et accepte le règlement**\nClique sur **Vérifier** et termine la vérification. La vérification confirme que tu as lu et accepté le règlement ci-dessus, et débloque le serveur. Tout se passe dans Discord, tu ne seras pas redirigé vers un site externe.",
     "pickStyle": "Comment veux-tu te vérifier ? Choisis une option :",
     "styleText": "🔤 Saisir un code",
     "stylePos": "🧩 Emboîter la pièce",

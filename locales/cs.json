@@ -12,7 +12,7 @@
     "success": "Ověřeno ✅ Vítej na {guild}.",
     "tooMany": "Příliš mnoho špatných pokusů - klepni na **Ověřit** pro nový obrázek.",
     "wrong": "To není správně - klepni na **Ověřit** pro nový obrázek a zkus to znovu. (zbývá {left})",
-    "panelText": "**Ověř se a přijmi pravidla**\nKlikni na **Ověřit** a napiš kód z obrázku. Ověřením potvrzuješ, že sis přečetl(a) pravidla výše a souhlasíš s nimi, a odemkneš server.",
+    "panelText": "**Ověř se a přijmi pravidla**\nKlikni na **Ověřit** a dokonči ověření. Ověřením potvrzuješ, že sis přečetl(a) pravidla výše a souhlasíš s nimi, a odemkneš server. Vše probíhá přímo v Discordu, nebudeš přesměrován(a) na externí stránku.",
     "pickStyle": "Jak se chceš ověřit? Vyber si:",
     "styleText": "🔤 Napsat kód",
     "stylePos": "🧩 Zasadit dílek",

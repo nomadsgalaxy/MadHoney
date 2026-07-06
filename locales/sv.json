@@ -12,7 +12,7 @@
     "success": "Verifierad ✅ Välkommen till {guild}.",
     "tooMany": "För många felaktiga försök - tryck på **Verifiera** för en ny bild.",
     "wrong": "Det stämmer inte - tryck på **Verifiera** för en ny bild och försök igen. ({left} kvar)",
-    "panelText": "**Verifiera dig och godkänn reglerna**\nKlicka på **Verifiera** och skriv koden från bilden. Att verifiera bekräftar att du har läst och godkänner reglerna ovan, och låser upp servern.",
+    "panelText": "**Verifiera dig och godkänn reglerna**\nKlicka på **Verifiera** och slutför verifieringen. Att verifiera bekräftar att du har läst och godkänner reglerna ovan, och låser upp servern. Allt detta sker inom Discord, du kommer inte att föras till en extern webbplats.",
     "pickStyle": "Hur vill du verifiera dig? Välj ett alternativ:",
     "styleText": "🔤 Skriv en kod",
     "stylePos": "🧩 Passa in biten",

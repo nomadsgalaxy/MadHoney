@@ -12,7 +12,7 @@
     "success": "Verifiziert ✅ Willkommen auf {guild}.",
     "tooMany": "Zu viele Fehlversuche - tippe auf **Verifizieren** für ein neues Bild.",
     "wrong": "Das stimmt nicht - tippe auf **Verifizieren** für ein neues Bild und versuch es erneut. (noch {left})",
-    "panelText": "**Verifiziere dich und akzeptiere die Regeln**\nKlicke auf **Verifizieren** und gib den Code aus dem Bild ein. Mit der Verifizierung bestätigst du, dass du die obigen Regeln gelesen hast und akzeptierst, und schaltest den Server frei.",
+    "panelText": "**Verifiziere dich und akzeptiere die Regeln**\nKlicke auf **Verifizieren** und schließe die Verifizierung ab. Mit der Verifizierung bestätigst du, dass du die obigen Regeln gelesen hast und akzeptierst, und schaltest den Server frei. Das alles geschieht innerhalb von Discord, du wirst nicht auf eine externe Website weitergeleitet.",
     "pickStyle": "Wie möchtest du dich verifizieren? Wähle eine Option:",
     "styleText": "🔤 Code eintippen",
     "stylePos": "🧩 Teil einpassen",
