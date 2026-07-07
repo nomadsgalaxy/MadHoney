@@ -337,6 +337,7 @@ function layout(title, body, opts = {}) {
   .kdot.public{background:#ffb31a}
   .kdot.private{background:transparent;border:2px solid #8b95a3}
   .kdot.admin{background:#d64545;border-radius:2px;transform:rotate(45deg) scale(.92)}
+  .kdot.gatedok{background:var(--ok);box-shadow:0 0 0 2px rgba(123,216,143,.25)}
   .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;margin:.4rem 0;align-items:start}
   @media(max-width:720px){.board{grid-template-columns:1fr}}
   .zcol{min-width:0;background:#0f1216;border:1px solid var(--line);border-radius:11px;padding:.6rem .7rem;display:flex;flex-direction:column}
@@ -655,7 +656,7 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>
 <div class="card" id="verify"><h2>${t('dash.guild.cardVerification', dl)}</h2>
 <p class="cardsub">${t('dash.guild.cardVerificationSub', dl)}</p>${msgAt('verify')}
 <form method="post" action="/g/${guild.id}/save#verify" data-dirty="${esc(t('dash.guild.cardVerification', dl))}">
-  <input type="hidden" name="back" value="verify"><input type="hidden" name="own" value="verificationEnabled autoGate">
+  <input type="hidden" name="back" value="verify"><input type="hidden" name="own" value="verificationEnabled">
   <label class="toggle"><input type="checkbox" name="verificationEnabled" id="vtog" ${verifyOn ? 'checked' : ''} aria-describedby="vhint"> ${t('dash.guild.requireVerify', dl)}&nbsp;<b style="color:var(--honey)">${t('dash.guild.recommended', dl)}</b></label>
   <small id="vhint">${t('dash.guild.requireVerifyShort', dl)}</small>
   <details class="more"><summary>${t('dash.guild.learnMore', dl)}</summary><div class="mb">${t('dash.guild.requireVerifyHint', dl)}</div></details>
@@ -681,8 +682,6 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>
     <label>${t('dash.guild.verifyMessage', dl)} <textarea name="verifyText" rows="3" placeholder="${esc(DEFAULT_VERIFY_TEXT)}">${esc(cfg.verifyText || '')}</textarea>
       <small>${t('dash.guild.verifyMessageHint', dl)}</small></label>
   </fieldset>
-  <label class="toggle"><input type="checkbox" name="autoGate" ${cfg.autoGate !== false ? 'checked' : ''} aria-describedby="aghint"> ${t('dash.guild.autoGateLabel', dl)}</label>
-  <small id="aghint">${t('dash.guild.autoGateHint', dl)}</small>
   ${SELF_HOSTED ? '' : `<div class="notebox">${t('dash.guild.creditNote', dl)}</div>`}
   <button class="btn">${t('dash.guild.saveVerification', dl)}</button>
   <h3 class="subh" id="deploy">${t('dash.guild.deployStatus', dl)}</h3>
@@ -856,10 +855,15 @@ ${table ? `<div class="tscroll"><table class="btable">${table}</table></div>
     const chip = (c) => {
       const tag = c.isCategory ? `<span class="ctag">${t('dash.gate.category', dl)}</span>`
         : c.parentId ? `<span class="ctag">${esc(catName(c.parentId) ?? '')}</span>` : '';
-      const kindDot = `<span class="kdot ${c.kind}" title="${esc(t('dash.gate.detectedTitle', dl, { kind: c.kind }))}"></span>`;
+      // "gated correctly" = hidden from @everyone with the verified role allowed AND
+      // MadHoney can still manage it (not blind) - both roles set up appropriately.
+      const okGated = c.gated && c.canManage;
+      const dotClass = okGated ? 'gatedok' : c.kind;
+      const dotTitle = okGated ? t('dash.gate.gatedOkTitle', dl) : t('dash.gate.detectedTitle', dl, { kind: c.kind });
+      const kindDot = `<span class="kdot ${dotClass}" title="${esc(dotTitle)}"></span>`;
       // a real <button> so keyboard users can Tab + Enter the tap-to-cycle path
       // that pointer users get via drag; type=button because it sits in gateForm
-      return `<button type="button" class="chip2 ${c.isCategory ? 'iscat' : ''}" draggable="true" data-id="${c.id}" data-cat="${c.parentId ?? ''}" data-type="${c.isCategory ? 'category' : 'channel'}" data-kind="${c.kind}" title="${esc(t('dash.gate.detectedTitle', dl, { kind: c.kind }))}">${kindDot}<span class="cn">${c.isCategory ? '▸ ' : '# '}${esc(c.name)}</span>${tag}</button>`;
+      return `<button type="button" class="chip2 ${c.isCategory ? 'iscat' : ''}" draggable="true" data-id="${c.id}" data-cat="${c.parentId ?? ''}" data-type="${c.isCategory ? 'category' : 'channel'}" data-kind="${c.kind}" title="${esc(dotTitle)}">${kindDot}<span class="cn">${c.isCategory ? '▸ ' : '# '}${esc(c.name)}</span>${tag}</button>`;
     };
     const zone = (id, title, hint) =>
       `<div class="zcol"><div class="zh"><b>${title}</b></div><small>${hint}</small>
@@ -879,7 +883,11 @@ ${cfg.grandfatherPending
       ? `<div class="warnbox">${t('dash.gate.gfNotDoneWarn', dl)}</div>` : '')}
 <div class="card">
 <p>${t('dash.gate.intro', dl)}</p>
-<div class="legend"><span class="kdot public"></span>${t('dash.gate.legendPublic', dl)} <span class="kdot private"></span>${t('dash.gate.legendPrivate', dl)} <span class="kdot admin"></span>${t('dash.gate.legendAdmin', dl)}</div>
+<div class="legend"><span class="kdot gatedok"></span>${t('dash.gate.legendGatedOk', dl)} <span class="kdot public"></span>${t('dash.gate.legendPublic', dl)} <span class="kdot private"></span>${t('dash.gate.legendPrivate', dl)} <span class="kdot admin"></span>${t('dash.gate.legendAdmin', dl)}</div>
+<form method="post" action="/g/${guild.id}/gate" style="margin:.2rem 0 1rem"><input type="hidden" name="do" value="autogate">
+  <label class="toggle"><input type="checkbox" name="autoGate" ${cfg.autoGate !== false ? 'checked' : ''} onchange="this.form.submit()" aria-describedby="aghint"> ${t('dash.guild.autoGateLabel', dl)}</label>
+  <small id="aghint">${t('dash.guild.autoGateHint', dl)}</small>
+</form>
 <form method="post" action="/g/${guild.id}/gate" id="gateForm">
 <div class="board">
   ${zone('gate', t('dash.gate.zoneGate', dl), t('dash.gate.zoneGateHint', dl))}
@@ -1286,7 +1294,6 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             patch.appealEnabled = form.get('appealEnabled') === 'on' && Boolean(effectiveLog);
           }
           if (own.has('verificationEnabled')) patch.verificationEnabled = form.get('verificationEnabled') === 'on';
-          if (own.has('autoGate')) patch.autoGate = form.get('autoGate') === 'on'; // default on; false = opt-out of auto-gating new channels
           if (form.has('banDeleteDays')) patch.banDeleteDays = Math.min(7, Math.max(0, Number(form.get('banDeleteDays')) || 0));
           const cur = getGuild(guild.id) ?? {};
           const effVerify = patch.verifyChannelId ?? cur.verifyChannelId;
@@ -1359,6 +1366,10 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             if (form.get('do') === 'reset') {
               saveGuild(guild.id, { channelTreatment: {} });
               return html(await gatePage(guild, sess, t('dash.msg.gateReset', curLocale)));
+            }
+            if (form.get('do') === 'autogate') {
+              saveGuild(guild.id, { autoGate: form.get('autoGate') === 'on' }); // default on; false = don't auto-gate new/offline channels
+              return html(await gatePage(guild, sess, t('dash.gate.autoGateSaved', curLocale)));
             }
             const result = await gateChannels(guild, cfg, true, { gate: form.getAll('gate'), public: form.getAll('public') }, curLocale).catch((e) => `❌ ${explainError(e.message, curLocale)}`);
             return html(await gatePage(guild, sess, result));
