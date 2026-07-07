@@ -4,13 +4,30 @@
 export const staffRoles = (cfg) => [...new Set([...(cfg?.staffRoleIds ?? []), cfg?.staffRoleId].filter(Boolean))];
 export const adminRoles = (cfg) => [...new Set([...(cfg?.adminRoleIds ?? []), cfg?.adminRoleId].filter(Boolean))];
 
-// The honeypot's mode: 'armed' (auto-ban, default), 'review' (hold each hit for
-// a mod to approve), or 'disarmed' (off). Falls back to the legacy
-// honeypotEnabled flag for configs saved before modes existed.
+// Every setup step EXCEPT arming is done. Mirrors the dashboard checklist's
+// done.config/gf/panels/gate (dashboard.js) - keep the two in sync. Used to
+// decide whether an unset honeypot mode should default to review (mid-setup) or
+// armed (ready). All fields come from the stored config, so it's pure.
+export function setupComplete(cfg) {
+  if (!cfg?.honeypotChannelId) return false;
+  const verifyOn = cfg.verificationEnabled !== false;
+  if (!verifyOn) return Boolean(cfg.bannerPosted); // honeypot-only: banner is the last step
+  return Boolean(cfg.verifiedRoleId && cfg.verifyChannelId)            // core config
+    && (Boolean(cfg.grandfatheredAt) || Boolean(cfg.grandfatherSkipped)) // grandfather
+    && Boolean(cfg.verifyPosted) && Boolean(cfg.bannerPosted)           // panels posted
+    && (cfg.gatedChannels?.length ?? 0) > 0;                            // channels gated
+}
+
+// The honeypot's mode: 'armed' (auto-ban), 'review' (hold each hit for a mod to
+// approve), or 'disarmed' (off). An explicit choice always wins. With no explicit
+// choice, it holds catches for review DURING setup - safe if the honeypot isn't
+// hidden from members yet - and auto-arms once every setup step is done. Falls
+// back to the legacy honeypotEnabled flag for configs saved before modes existed.
 export function honeypotMode(cfg) {
   if (!cfg) return 'disarmed';
   if (['armed', 'review', 'disarmed'].includes(cfg.honeypotMode)) return cfg.honeypotMode;
-  return cfg.honeypotEnabled === false ? 'disarmed' : 'armed';
+  if (cfg.honeypotEnabled === false) return 'disarmed';
+  return setupComplete(cfg) ? 'armed' : 'review';
 }
 
 // Pure decision: should this message trip the honeypot at all? (The mode then

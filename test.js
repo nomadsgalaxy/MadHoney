@@ -1,7 +1,7 @@
 // npm test - checks the pure logic. No Discord, no network.
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { shouldTrap, honeypotMode } from './trap.js';
+import { shouldTrap, honeypotMode, setupComplete } from './trap.js';
 import { makeCode, answerOk } from './verify.js';
 import { bannedElsewhere, trappedCount, appealableGuildIds, banEpoch } from './store.js';
 import { renderBanner } from './banner.js';
@@ -23,7 +23,17 @@ assert.equal(shouldTrap(base, { ...cfg, honeypotEnabled: false }), false, 'legac
 assert.equal(shouldTrap(base, { ...cfg, honeypotMode: 'disarmed' }), false, 'disarmed → no');
 assert.equal(shouldTrap(base, { ...cfg, honeypotMode: 'armed' }), true, 'armed → yes');
 assert.equal(shouldTrap(base, { ...cfg, honeypotMode: 'review' }), true, 'review still trips (mode decides action)');
-assert.equal(honeypotMode({}), 'armed', 'default mode is armed');
+// default mode: review while mid-setup (safe), auto-arm once every step is done
+const setupCfg = { honeypotChannelId: 'H', verifiedRoleId: 'R', verifyChannelId: 'V', verifyPosted: true, bannerPosted: true, grandfatheredAt: 'x', gatedChannels: ['a'] };
+assert.equal(honeypotMode({}), 'review', 'default is review during setup');
+assert.equal(honeypotMode(cfg), 'review', 'honeypot set but setup incomplete → review');
+assert.equal(setupComplete(setupCfg), true, 'setupComplete: all steps done');
+assert.equal(honeypotMode(setupCfg), 'armed', 'auto-arms once setup is complete');
+assert.equal(honeypotMode({ ...setupCfg, honeypotMode: 'review' }), 'review', 'explicit review wins over auto-arm');
+assert.equal(honeypotMode({ ...cfg, honeypotMode: 'armed' }), 'armed', 'explicit armed wins during setup');
+assert.equal(honeypotMode({ honeypotChannelId: 'H', verificationEnabled: false }), 'review', 'verif-off, no banner yet → review');
+assert.equal(honeypotMode({ honeypotChannelId: 'H', verificationEnabled: false, bannerPosted: true }), 'armed', 'verif-off + banner → armed');
+assert.equal(setupComplete({ ...setupCfg, grandfatheredAt: undefined, grandfatherSkipped: true }), true, 'grandfather-skipped counts as done');
 assert.equal(honeypotMode({ honeypotEnabled: false }), 'disarmed', 'legacy flag maps to disarmed');
 
 // captcha logic
