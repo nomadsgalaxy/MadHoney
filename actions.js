@@ -568,6 +568,7 @@ export async function syncBans(guild, cfg, progress = {}, loc = cfg?.locale) {
   const pool = new Map(); // userId -> { tag, incidentId }
   for (const b of perGuild.values()) {
     if (b.unbanned) continue;
+    if (b.noShare) continue; // origin (ungated + no verification) opted out of contributing to the shared list
     if (b.incidentId && resolved.has(b.incidentId)) continue; // appeal cleared it network-wide
     pool.set(b.id, { tag: b.tag, incidentId: b.incidentId }); // last writer wins; fine for the tag
   }

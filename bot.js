@@ -895,7 +895,13 @@ client.on(Events.MessageCreate, async (msg) => {
   // one appeal approval clears the whole thing network-wide (see incident.js).
   const now = Date.now();
   const incidentId = makeIncidentId(msg.guildId, msg.author.id, now);
-  logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date(now).toISOString(), incidentId });
+  // A server only CONTRIBUTES catches to the shared/global ban list if it actually
+  // enforces entry - gated channels OR required verification. An ungated server
+  // with verification off has a wide-open honeypot a real member can wander into,
+  // so its catches stay LOCAL (noShare): it still bans here + still CONSUMES the
+  // shared list, but its bans don't propagate. Keeps false positives off the network.
+  const noShare = !((cfg.gatedChannels?.length ?? 0) > 0 || (cfg.verificationEnabled !== false && !!cfg.verifiedRoleId));
+  logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date(now).toISOString(), incidentId, ...(noShare ? { noShare: true } : {}) });
 
   // Appeal DM (opt-in): a real human who tripped the trap can ask for review.
   // Sent BEFORE the ban so they're still reachable, and only lists servers they

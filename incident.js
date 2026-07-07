@@ -52,13 +52,14 @@ export function incidentOf(userId, guildId, rows) {
 // no server re-applies it. Returns the blocking guildId, or null if clear.
 export function reBanSource(userId, guild, rows) {
   const resolved = resolvedIncidents(rows);
-  const latest = new Map(); // guildId -> { banned, incidentId }
+  const latest = new Map(); // guildId -> { banned, incidentId, noShare }
   for (const r of rows) {
     if (r.id !== userId || r.guildId === RESOLUTION_GUILD) continue;
-    latest.set(r.guildId, { banned: !r.unbanned, incidentId: r.incidentId });
+    latest.set(r.guildId, { banned: !r.unbanned, incidentId: r.incidentId, noShare: r.noShare });
   }
   for (const [g, s] of latest) {
     if (g === guild || !s.banned) continue;
+    if (s.noShare) continue; // origin opted out of contributing (ungated + no verification) - don't propagate its catches
     if (s.incidentId && resolved.has(s.incidentId)) continue; // appeal cleared it network-wide
     return g;
   }

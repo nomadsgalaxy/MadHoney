@@ -43,6 +43,15 @@ rows = [
 assert.equal(reBanSource(U, 'B', rows), null, 'A no longer a source after Undo');
 assert.equal(incidentOf(U, 'A', rows), null, 'incidentOf null when latest row is unbanned');
 
+// --- noShare: an ungated+unverified origin does NOT contribute to the network ---
+// (theshork case: Lemontron false-banned a real member; its catch must not propagate)
+rows = [{ id: U, guildId: 'F', at: 't1', incidentId: makeIncidentId('F', U, 9000), noShare: true }];
+assert.equal(reBanSource(U, 'G', rows), null, 'noShare origin never propagates to other servers');
+// but a normal (shareable) ban elsewhere still blocks, even alongside a noShare one
+rows.push({ id: U, guildId: 'H', at: 't2', incidentId: makeIncidentId('H', U, 9500) });
+assert.equal(reBanSource(U, 'G', rows), 'H', 'a shareable ban still blocks past a noShare one');
+assert.equal(reBanSource(U, 'H', rows), null, 'the noShare guild F is still not a source for H');
+
 // resolvedIncidents ignores real-guild rows
 assert.equal(resolvedIncidents([{ guildId: 'A', incidentId: inc, resolved: true }]).size, 0, 'a real-guild row is never a resolution');
 
