@@ -338,6 +338,7 @@ function layout(title, body, opts = {}) {
   .kdot.private{background:transparent;border:2px solid #8b95a3}
   .kdot.admin{background:#d64545;border-radius:2px;transform:rotate(45deg) scale(.92)}
   .kdot.gatedok{background:var(--ok);box-shadow:0 0 0 2px rgba(123,216,143,.25)}
+  .agsaved{color:var(--ok);font-weight:700;margin-left:.2rem}
   .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;margin:.4rem 0;align-items:start}
   @media(max-width:720px){.board{grid-template-columns:1fr}}
   .zcol{min-width:0;background:#0f1216;border:1px solid var(--line);border-radius:11px;padding:.6rem .7rem;display:flex;flex-direction:column}
@@ -884,10 +885,10 @@ ${cfg.grandfatherPending
 <div class="card">
 <p>${t('dash.gate.intro', dl)}</p>
 <div class="legend"><span class="kdot gatedok"></span>${t('dash.gate.legendGatedOk', dl)} <span class="kdot public"></span>${t('dash.gate.legendPublic', dl)} <span class="kdot private"></span>${t('dash.gate.legendPrivate', dl)} <span class="kdot admin"></span>${t('dash.gate.legendAdmin', dl)}</div>
-<form method="post" action="/g/${guild.id}/gate" style="margin:.2rem 0 1rem"><input type="hidden" name="do" value="autogate">
-  <label class="toggle"><input type="checkbox" name="autoGate" ${cfg.autoGate !== false ? 'checked' : ''} onchange="this.form.submit()" aria-describedby="aghint"> ${t('dash.guild.autoGateLabel', dl)}</label>
+<div style="margin:.2rem 0 1rem">
+  <label class="toggle"><input type="checkbox" id="agToggle" ${cfg.autoGate !== false ? 'checked' : ''} aria-describedby="aghint"> ${t('dash.guild.autoGateLabel', dl)} <span id="agSaved" class="agsaved" aria-live="polite"></span></label>
   <small id="aghint">${t('dash.guild.autoGateHint', dl)}</small>
-</form>
+</div>
 <form method="post" action="/g/${guild.id}/gate" id="gateForm">
 <div class="board">
   ${zone('gate', t('dash.gate.zoneGate', dl), t('dash.gate.zoneGateHint', dl))}
@@ -928,6 +929,20 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">${t('dash.gate.cantAc
     live.textContent = movedMsg.replace('{channel}', c.querySelector('.cn').textContent.trim()).replace('{zone}', zoneNames[dropzone.dataset.zone] ?? dropzone.dataset.zone);
   };
   document.querySelectorAll('.chip2').forEach(wire);
+
+  // Auto-gate toggle saves in the background (no page reload) so it never wipes
+  // in-progress board drags. Reverts + flags the toggle if the save fails.
+  const ag = document.getElementById('agToggle'), agSaved = document.getElementById('agSaved');
+  if (ag) ag.addEventListener('change', async () => {
+    ag.disabled = true; agSaved.textContent = '…';
+    try {
+      const r = await fetch('/g/${guild.id}/gate', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: 'do=autogate&ajax=1&autoGate=' + (ag.checked ? 'on' : '') });
+      if (!r.ok) throw new Error(r.status);
+      agSaved.textContent = '✓'; setTimeout(() => { agSaved.textContent = ''; }, 1800);
+    } catch { ag.checked = !ag.checked; agSaved.textContent = '⚠'; }
+    ag.disabled = false;
+  });
+
   document.querySelectorAll('.drop').forEach((z) => {
     z.addEventListener('dragover', (e) => { e.preventDefault(); z.classList.add('over'); });
     z.addEventListener('dragleave', () => z.classList.remove('over'));
@@ -1369,6 +1384,9 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             }
             if (form.get('do') === 'autogate') {
               saveGuild(guild.id, { autoGate: form.get('autoGate') === 'on' }); // default on; false = don't auto-gate new/offline channels
+              // background toggle: acknowledge without re-rendering so the board's
+              // unsaved drags survive. Full re-render only for a no-JS form post.
+              if (form.get('ajax') === '1') { res.writeHead(204); return res.end(); }
               return html(await gatePage(guild, sess, t('dash.gate.autoGateSaved', curLocale)));
             }
             const result = await gateChannels(guild, cfg, true, { gate: form.getAll('gate'), public: form.getAll('public') }, curLocale).catch((e) => `❌ ${explainError(e.message, curLocale)}`);
