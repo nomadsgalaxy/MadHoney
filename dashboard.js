@@ -10,6 +10,7 @@ import { PermissionsBitField, ChannelType } from 'discord.js';
 const { getGuild, saveGuild, bans, trappedCount } = await import(process.env.MADHONEY_STORE ?? './store.js'); // pluggable store backend
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, grandfatherViaWorkerBee, workerBeeInvite, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { honeypotMode, staffRoles, adminRoles } from './trap.js';
+import { resolvedIncidents } from './incident.js';
 import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } from './captcha.js';
 import { makeCode } from './verify.js';
 import { renderBanner, DEFAULT_BANNER, FONTS, SELF_HOSTED } from './banner.js';
@@ -180,7 +181,7 @@ function layout(title, body, opts = {}) {
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{--honey:#ffb31a;--bg:#0a0b0d;--card:#12141a;--ink:#f2ede2;--dim:#9a948a;--line:#262b34}
+  :root{--honey:#ffb31a;--bg:#0a0b0d;--card:#12141a;--ink:#f2ede2;--dim:#9a948a;--line:#262b34;--field:#0f1216;--ok:#7bd88f;--warn2:#ff8a7d}
   *{box-sizing:border-box}
   html,body{overflow-x:hidden}
   body{font:15px/1.55 "Instrument Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:0}
@@ -205,8 +206,9 @@ function layout(title, body, opts = {}) {
   a{color:var(--honey);text-decoration:none} a:hover{text-decoration:underline}
   h1,h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;line-height:1.2;letter-spacing:-.02em} h1 span{color:var(--honey)}
   h1 img{height:38px;vertical-align:-8px;margin-right:.4rem}
-  h2{font-size:1.15rem}
+  h2{font-size:1.4rem;margin:.35rem 0 .45rem}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem;margin:1rem 0}
+  .cardsub{color:var(--dim);font-size:.9rem;margin:-.2rem 0 .5rem;max-width:64ch}
   .errpage{text-align:center;padding:4.5rem 1rem 3rem}
   .errpage .errcode{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:6.5rem;line-height:1;color:var(--honey);letter-spacing:-.04em;text-shadow:0 0 60px rgba(255,179,26,.25)}
   .errpage h1{margin:.4rem 0 .7rem}
@@ -215,10 +217,12 @@ function layout(title, body, opts = {}) {
   .errpage .btn:hover{text-decoration:none;transform:translateY(-1px)}
   label{display:block;margin:.7rem 0;font-weight:600}
   input[type=text],textarea,select{display:block;width:100%;padding:.5rem;margin-top:.2rem;background:#0f1216;color:var(--ink);border:1px solid var(--line);border-radius:7px;font:inherit}
-  .rolechecks{max-height:140px;overflow-y:auto;background:#0f1216;border:1px solid var(--line);border-radius:7px;padding:.35rem .55rem;margin-top:.2rem}
+  .rolechecks{max-height:220px;overflow-y:auto;background:#0f1216;border:1px solid var(--line);border-radius:7px;padding:.35rem .55rem;margin-top:.3rem}
   .rolechecks label{display:flex;align-items:center;gap:.5rem;margin:.1rem 0;font-weight:400;cursor:pointer}
   .rolechecks input[type=checkbox]{width:auto;margin:0;flex:none}
-  input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--honey)}
+  input[type=text]:focus,textarea:focus,select:focus{border-color:var(--honey)}
+  :focus-visible{outline:2px solid var(--honey);outline-offset:2px}
+  select.narrow{max-width:38ch}
   input[type=color]{appearance:none;-webkit-appearance:none;width:100%;height:38px;padding:3px;margin-top:.2rem;background:#0f1216;border:1px solid var(--line);border-radius:7px;cursor:pointer}
   input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
   input[type=color]::-webkit-color-swatch{border:none;border-radius:4px}
@@ -226,10 +230,19 @@ function layout(title, body, opts = {}) {
   .colors{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem}
   .cols2{display:grid;grid-template-columns:2fr 1fr;gap:.9rem}
   @media (max-width:640px){.colors,.cols2{grid-template-columns:1fr}}
-  small{display:block;font-weight:400;color:var(--dim)}
+  small{display:block;font-weight:400;color:var(--dim);font-size:.85rem;max-width:62ch;margin-top:.15rem}
+  details.more{margin:.25rem 0 .55rem;font-size:.85rem;color:var(--dim);max-width:62ch}
+  details.more summary{cursor:pointer;color:var(--honey);font-weight:600;list-style:none;width:max-content}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more summary::before{content:"▸ "}
+  details.more[open] summary::before{content:"▾ "}
+  details.more .mb{margin:.35rem 0 0}
   .btn{display:inline-block;padding:.55rem 1.1rem;border:0;border-radius:7px;background:var(--honey);color:#141005;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;margin:.2rem .3rem .2rem 0;transition:transform .12s}
   .btn:hover{transform:translateY(-1px);text-decoration:none}
   .btn.grey{background:#39414c;color:var(--ink)} .btn.red{background:#d64545;color:#fff}
+  .btn.danger{background:transparent;color:var(--warn2);border:1px solid rgba(214,69,69,.5)}
+  .btn.danger.confirming,.btn.confirming{background:#d64545;color:#fff;border-color:#d64545}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
   .btn.sm{padding:.42rem .85rem;font-size:.85rem}
   pre{background:#0f1216;border:1px solid var(--line);padding:.8rem;border-radius:7px;white-space:pre-wrap;overflow-x:auto}
   progress{width:100%;height:14px;accent-color:var(--honey);margin-top:.6rem}
@@ -263,13 +276,46 @@ function layout(title, body, opts = {}) {
   .chip{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:.3rem .75rem;font-size:.82rem;color:var(--dim)}
   .chip b{color:var(--ink);font-weight:700}
   .chip.on{border-color:rgba(255,179,26,.5);color:var(--honey)}
-  .chip.off{opacity:.75}
-  .subh{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--honey);margin:1.3rem 0 .1rem;padding-top:1rem;border-top:1px solid var(--line)}
-  .subh.first{margin-top:0;padding-top:0;border-top:0}
+  .chip.off{color:#b3ada2}
+  .chip.bad{border-color:rgba(214,69,69,.55);color:#ffb3aa}
+  .kv{display:flex;gap:.4rem 1.4rem;flex-wrap:wrap;margin:0 0 1rem;font-size:.85rem;color:var(--dim)}
+  .kv b{color:var(--ink);font-weight:600}
+  .kv a{color:inherit;text-decoration:none} .kv a:hover b{color:var(--honey)}
+  .kv .warn{color:#ffb3aa;font-weight:600}
+  .gstat{margin-left:auto;text-align:right}
+  .gstat a{text-decoration:none;color:inherit;display:block}
+  .gstat .n{font-family:"Bricolage Grotesque",sans-serif;font-size:1.9rem;font-weight:800;color:var(--honey);line-height:1;font-variant-numeric:tabular-nums}
+  .gstat .l{font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-top:.15rem}
+  .subh{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:.98rem;letter-spacing:0;color:var(--honey);margin:1.6rem 0 .15rem;padding-top:1.1rem;border-top:1px solid var(--line)}
+  .subh.first{margin-top:.6rem;padding-top:0;border-top:0}
   .grid2f{display:grid;grid-template-columns:1fr 1fr;gap:0 1.1rem}
   @media(max-width:620px){.grid2f{grid-template-columns:1fr}}
-  .toggle{display:flex;gap:.6rem;align-items:flex-start;margin:.7rem 0;font-weight:600;cursor:pointer}
-  .toggle input{width:18px;height:18px;margin-top:.15rem;accent-color:var(--honey);flex:0 0 auto}
+  .toggle{display:flex;gap:.6rem;align-items:center;margin:1rem 0 0;font-weight:600;cursor:pointer;width:max-content;max-width:100%}
+  .toggle input{width:22px;height:22px;margin:0;accent-color:var(--honey);flex:0 0 auto}
+  .toggle+small,.toggle+small+details.more{margin-left:calc(22px + .6rem)}
+  .check{list-style:none;padding:0;margin:.4rem 0 0}
+  .check li{display:grid;grid-template-columns:26px 1fr auto;gap:.3rem .7rem;align-items:center;padding:.65rem 0;border-top:1px solid var(--line)}
+  .check li:first-child{border-top:0}
+  .check .tick{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;background:rgba(123,216,143,.15);color:var(--ok)}
+  .check .tick.todo{background:var(--field);color:var(--dim);border:1px dashed var(--line)}
+  .check .what b{display:block}
+  .check .what small{margin-top:.05rem}
+  .check .ctl{white-space:nowrap}
+  .check .ctl .btn{margin:.1rem 0 .1rem .3rem}
+  @media(max-width:560px){.check li{grid-template-columns:26px 1fr}.check .ctl{grid-column:2;white-space:normal}}
+  .bgrid{display:grid;grid-template-columns:1fr 280px;gap:1.2rem;align-items:start}
+  @media(max-width:720px){.bgrid{grid-template-columns:1fr}}
+  .bprev{position:sticky;top:calc(56px + 5px + .8rem)}
+  .rolewrap .rcmeta{display:flex;gap:.7rem;align-items:center;margin-top:.3rem}
+  .rolewrap .rfilter{margin:0;font-size:.85rem;padding:.35rem .5rem}
+  .rolewrap .cnt{font-size:.78rem;color:var(--dim);white-space:nowrap;font-weight:400}
+  #savebar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(18,20,26,.97);border-top:1px solid var(--honey);padding:.6rem 1rem;display:none}
+  #savebar.show{display:block}
+  #savebar .in{max-width:880px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+  #savebar .msg{font-weight:600}
+  #savebar .msg b{color:var(--honey)}
+  #savebar .btn{margin:0}
+  .notebox{background:rgba(255,179,26,.07);border:1px solid rgba(255,179,26,.35);border-radius:8px;padding:.6rem .85rem;margin:.5rem 0;font-size:.9rem;color:var(--dim);line-height:1.5}
   .steps{margin-top:.6rem}
   .step{display:grid;grid-template-columns:210px 1fr;gap:.4rem 1rem;align-items:center;padding:.7rem 0;border-top:1px solid var(--line)}
   .step:first-child{border-top:0}
@@ -288,7 +334,9 @@ function layout(title, body, opts = {}) {
   .legend{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;color:var(--dim);font-size:.82rem;margin:.2rem 0 .8rem}
   .kdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 .15rem 0 .6rem;vertical-align:middle}
   .kdot:first-child{margin-left:0}
-  .kdot.public{background:#ffb31a}.kdot.private{background:#6c7683}.kdot.admin{background:#d64545}
+  .kdot.public{background:#ffb31a}
+  .kdot.private{background:transparent;border:2px solid #8b95a3}
+  .kdot.admin{background:#d64545;border-radius:2px;transform:rotate(45deg) scale(.92)}
   .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;margin:.4rem 0;align-items:start}
   @media(max-width:720px){.board{grid-template-columns:1fr}}
   .zcol{min-width:0;background:#0f1216;border:1px solid var(--line);border-radius:11px;padding:.6rem .7rem;display:flex;flex-direction:column}
@@ -298,6 +346,8 @@ function layout(title, body, opts = {}) {
   .drop.over{border-color:var(--honey);background:rgba(255,179,26,.06)}
   .zempty{color:var(--dim);font-size:.8rem;text-align:center;padding:1.2rem .3rem}
   .chip2{display:flex;align-items:center;gap:.4rem;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.35rem .5rem;font-size:.85rem;cursor:grab;user-select:none}
+  button.chip2{width:100%;text-align:left;font:inherit;color:var(--ink)}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .chip2:hover{border-color:var(--honey)}
   .chip2.iscat{background:#171b22;font-weight:700}
   .chip2.dragging{opacity:.4}
@@ -416,11 +466,14 @@ export function startDashboard(client) {
       `<option value="${r.id}" ${r.id === sel ? 'selected' : ''}>${esc(r.name)}</option>`)].join('');
     const chanOpts = (sel) => ['<option value="">(none)</option>', ...chans.map((c) =>
       `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>#${esc(c.name)}</option>`)].join('');
-    // multi-select as a scrollable checkbox list (native <select multiple> is
-    // ctrl-click hostile, especially on mobile)
+    // checked-first checkbox list with a filter and a live selected-count: a flat
+    // 5-row scroll box hides checked roles below the fold on servers with dozens
+    // of roles (and native <select multiple> is ctrl-click hostile on mobile)
     const roleChecks = (name, selected) => {
       const sel = new Set(selected ?? []);
-      return `<div class="rolechecks">${roles.map((r) =>
+      const ordered = [...roles.values()].sort((a, z) => ((sel.has(z.id) ? 1 : 0) - (sel.has(a.id) ? 1 : 0)) || z.position - a.position);
+      return `<div class="rcmeta"><input class="rfilter" type="text" placeholder="${esc(t('dash.guild.filterRoles', dl))}" data-target="rc_${name}" aria-label="${esc(t('dash.guild.filterRoles', dl))}"></div>
+      <div class="rolechecks" id="rc_${name}">${ordered.map((r) =>
         `<label><input type="checkbox" name="${name}" value="${r.id}" ${sel.has(r.id) ? 'checked' : ''}>${esc(r.name)}</label>`).join('') || '<span style="color:var(--dim)">(no roles)</span>'}</div>`;
     };
     const banRows = bans(guild.id);
@@ -432,20 +485,36 @@ export function startDashboard(client) {
     const mode = honeypotMode(cfg); // 'armed' | 'review' | 'disarmed'
     // With verification off there's no verified role/gate to require - just the honeypot.
     const configured = cfg.honeypotChannelId && (!verifyOn || (cfg.verifiedRoleId && cfg.verifyChannelId));
-    const modeChip = { armed: `<span class="chip on"><b>${t('dash.guild.mArmed', dl)}</b></span>`, review: `<span class="chip on"><b>${t('dash.guild.mReview', dl)}</b></span>`, disarmed: `<span class="chip off"><b>${t('dash.guild.mDisarmed', dl)}</b></span>` }[mode];
-    const chips = [
-      !configured ? `<span class="chip off">${t('dash.guild.needsSetup', dl)}</span>` : modeChip,
-      `<span class="chip">${t('dash.guild.trappedChip', dl)} <b>${trappedHere}</b></span>`,
-      verifyOn
-        ? (roleName ? `<span class="chip">${t('dash.guild.verifiedRoleChip', dl)} <b>${esc(roleName)}</b></span>` : '')
-        : `<span class="chip off">${t('dash.guild.verifOffChip', dl)}</span>`,
-      `<span class="chip ${cfg.banShare ? 'on' : 'off'}">${t('dash.guild.universalChip', dl)} <b>${cfg.banShare ? t('dash.guild.on', dl) : t('dash.guild.off', dl)}</b></span>`,
-    ].filter(Boolean).join('');
+
+    // Setup progress, derived from config the server already tracks. It both
+    // orders the page (checklist leads until done, monitoring leads after) and
+    // drives the stateful checklist rows.
+    const gatedCount = (cfg.gatedChannels ?? []).length;
+    const done = {
+      config: Boolean(configured),
+      gf: !verifyOn || Boolean(cfg.grandfatheredAt),
+      panels: (!verifyOn || Boolean(cfg.verifyPosted)) && Boolean(cfg.bannerPosted),
+      gate: !verifyOn || gatedCount > 0,
+      arm: mode !== 'disarmed',
+    };
+    const setupDone = Object.values(done).every(Boolean);
+
+    // shared-list pool size for the ban-sync confirm label (approximate is fine
+    // here - syncBans reports exact numbers when it actually runs)
+    const allRows = bans();
+    const resolvedInc = resolvedIncidents(allRows);
+    const poolState = new Map();
+    for (const r of allRows) {
+      if (r.guildId === guild.id || r.guildId === 'incident' || !r.id) continue;
+      poolState.set(`${r.id}:${r.guildId}`, (r.unbanned || r.noShare || (r.incidentId && resolvedInc.has(r.incidentId))) ? null : r.id);
+    }
+    const poolN = new Set([...poolState.values()].filter(Boolean)).size;
+
     const modeBtn = (val, label) => `<button class="modeb ${mode === val ? 'active' : ''}" name="do" value="mode_${val}" ${mode === val ? 'disabled' : ''}>${label}</button>`;
     const armDesc = { armed: t('dash.guild.armDescArmed', dl), review: t('dash.guild.armDescReview', dl), disarmed: t('dash.guild.armDescDisarmed', dl) }[mode];
     const armBar = configured ? `<form method="post" action="/g/${guild.id}/action" class="armbar ${mode === 'disarmed' ? 'off' : 'on'}">
       <div><b>${{ armed: t('dash.guild.armTitleArmed', dl), review: t('dash.guild.armTitleReview', dl), disarmed: t('dash.guild.armTitleDisarmed', dl) }[mode]}</b>
-      <small>${armDesc}${mode === 'review' && !cfg.logChannelId ? ` <b style="color:#ff8a7d">${t('dash.guild.armReviewNoLog', dl)}</b>` : ''}</small></div>
+      <small>${armDesc}${mode === 'review' && !cfg.logChannelId ? ` <b style="color:#ff8a7d">${t('dash.guild.armReviewNoLog', dl)}</b>` : ''} <a href="#honeypot">${t('dash.guild.honeySettingsLink', dl)} ↓</a></small></div>
       <div class="modebtns">${modeBtn('armed', t('dash.guild.mArmed', dl))}${modeBtn('review', t('dash.guild.mReview', dl))}${modeBtn('disarmed', t('dash.guild.mOff', dl))}</div>
     </form>` : '';
 
@@ -454,161 +523,31 @@ export function startDashboard(client) {
       return `<tr><td>${x.unbanned ? `<span class="badge un">${t('dash.guild.badgeUnban', dl)}</span>` : `<span class="badge ban">${t('dash.guild.badgeBan', dl)}</span>`}</td><td>${esc(x.tag ?? x.id)}</td><td class="k">${esc(x.channel ?? '')}</td><td class="k">${when}</td></tr>`;
     }).join('');
 
-    return layout(`MadHoney - ${guild.name}`, `
-<div class="subnav">
-  <a class="backbtn" href="/"><span class="chev">‹</span> ${t('dash.guild.allServers', dl)}</a>
-  <a class="pillbtn spacer" href="/g/${guild.id}?refresh=1" title="${esc(t('dash.guild.refreshTitle', dl))}"><span class="ico">⟳</span> ${t('dash.guild.refresh', dl)}</a>
-</div>
-<div class="ghead">${avatar}<div class="gtitle"><h1>${esc(guild.name)}</h1></div></div>
-<div class="chips">${chips}</div>
-${armBar}
-${problem ? `<div class="card" style="border-color:#d64545"><b style="color:#ff5b4d">${t('dash.guild.setupProblem', dl)}</b><pre style="margin-top:.5rem">${esc(problem)}</pre></div>` : ''}
-${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
-<details class="card guide" ${configured ? '' : 'open'}>
-<summary><b>${t('dash.guild.guideSummary', dl)}</b></summary>
-<div class="gb">
-<p>${t('dash.guild.guideP1', dl)}</p>
-<p>${t('dash.guild.guideP2', dl)}</p>
-<p>${t('dash.guild.guideOrder', dl)}</p>
-<ol>
-<li>${t('dash.guild.guideLi1', dl)}</li>
-<li>${t('dash.guild.guideLi2', dl)}</li>
-<li>${t('dash.guild.guideLi3', dl)}</li>
-<li>${t('dash.guild.guideLi4', dl)}</li>
-<li>${t('dash.guild.guideLi5', dl)}</li>
-</ol>
-<div class="tip">${t('dash.guild.tipNaming', dl)}</div>
-<div class="tip">${t('dash.guild.tipMode', dl)}</div>
-<div class="tip">${t('dash.guild.tipOnboarding', dl)}</div>
-<div class="tip">${t('dash.guild.tipPerm', dl)}</div>
-</div>
-</details>
-<div class="card" id="config"><h2>${t('dash.guild.configuration', dl)}</h2>${msgAt('config')}
-<form method="post" action="/g/${guild.id}/save#config">
-  <div class="subh first">${t('dash.guild.coreSetup', dl)}</div>
-  <div class="grid2f">
-  <label>${t('dash.guild.verifiedRole', dl)} <select name="verifiedRoleId">${roleOpts(cfg.verifiedRoleId)}</select>
-    <small>${t('dash.guild.verifiedRoleHint', dl)}</small></label>
-  <label>${t('dash.guild.verifyChannel', dl)} <select name="verifyChannelId">${chanOpts(cfg.verifyChannelId)}</select>
-    <small>${t('dash.guild.verifyChannelHint', dl)}</small></label>
-  <label>${t('dash.guild.honeypotChannel', dl)} <select name="honeypotChannelId">${chanOpts(cfg.honeypotChannelId)}</select>
-    <small>${t('dash.guild.honeypotChannelHint', dl)}</small></label>
-  <label>${t('dash.guild.logChannel', dl)} <select name="logChannelId">${chanOpts(cfg.logChannelId)}</select>
-    <small>${t('dash.guild.logChannelHint', dl)}</small></label>
-  <label>${t('dash.guild.deleteOnBan', dl)} <select name="banDeleteDays">
-    ${[[0, t('dash.guild.del0', dl)], [1, t('dash.guild.del1', dl)], [3, t('dash.guild.del3', dl)], [7, t('dash.guild.del7', dl)]].map(([v, l]) => `<option value="${v}" ${Number(cfg.banDeleteDays ?? 7) === v ? 'selected' : ''}>${l}</option>`).join('')}
-  </select><small>${t('dash.guild.deleteHint', dl)}</small></label>
-  </div>
-  <div class="subh">${t('dash.guild.staffAccess', dl)}</div>
-  <div class="grid2f">
-  <label>${t('dash.guild.staffRole', dl)}
-    ${roleChecks('staffRoleIds', staffRoles(cfg))}
-    <small>${t('dash.guild.staffRoleHint', dl)}</small></label>
-  <label>${t('dash.guild.adminRole', dl)}
-    ${roleChecks('adminRoleIds', adminRoles(cfg))}
-    <small>${t('dash.guild.adminRoleHint', dl)}</small></label>
-  </div>
-  <div class="subh">${t('dash.guild.verification', dl)}</div>
-  <label class="toggle"><input type="checkbox" name="verificationEnabled" ${verifyOn ? 'checked' : ''}>
-    <span>${t('dash.guild.requireVerify', dl)} <b style="color:var(--honey)">${t('dash.guild.recommended', dl)}</b><small>${t('dash.guild.requireVerifyHint', dl)}</small></span></label>
-  ${!verifyOn ? `<div class="warnbox">${t('dash.guild.verifOffWarn', dl)}</div>` : ''}
-  ${GF_DEGRADED ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite: workerBeeInvite() || '#' })}</div>` : ''}
-  <label>${t('dash.guild.captchaDifficulty', dl)} <select name="captchaDifficulty" ${verifyOn ? '' : 'disabled'} onchange="cpvNew()">
-    ${[['easy', t('dash.guild.diffEasy', dl)], ['normal', t('dash.guild.diffNormal', dl)], ['hard', t('dash.guild.diffHard', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'easy') === v ? 'selected' : ''}>${l}</option>`).join('')}
-  </select><small>${t('dash.guild.captchaHint', dl)}</small></label>
-  <label>${t('dash.guild.captchaStyle', dl)} <select name="captchaStyle" ${verifyOn ? '' : 'disabled'} onchange="cpvNew()">
-    ${[['text', t('dash.guild.styleText', dl)], ['position', t('dash.guild.stylePos', dl)], ['choice', t('dash.guild.styleChoice', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaStyle ?? 'position') === v ? 'selected' : ''}>${l}</option>`).join('')}
-  </select><small>${t('dash.guild.captchaStyleHint', dl)}</small></label>
-  ${verifyOn ? `<div style="margin:.4rem 0 .8rem">
-    <img id="cpv" src="/g/${guild.id}/captcha.png" alt="captcha preview" style="max-width:100%;border-radius:8px;border:1px solid var(--line)"><br>
-    <button type="button" class="btn ghost sm" onclick="cpvNew()">${t('dash.guild.captchaPreviewNew', dl)}</button>
-    <small style="display:block;color:var(--dim);margin-top:.3rem">${t('dash.guild.captchaTestHint', dl)}</small>
-    <script>function cpvNew(){const s=document.querySelector('[name=captchaStyle]'),d=document.querySelector('[name=captchaDifficulty]');document.getElementById('cpv').src='/g/${guild.id}/captcha.png?style='+encodeURIComponent(s?s.value:'text')+'&diff='+encodeURIComponent(d?d.value:'easy')+'&r='+Math.random()}</script>
-  </div>` : ''}
-  <label>${t('dash.guild.botLanguage', dl)} <select name="locale">
-    ${SUPPORTED.map((c) => `<option value="${c}" ${(cfg.locale || 'en') === c ? 'selected' : ''}>${LOCALE_NAMES[c]}</option>`).join('')}
-  </select><small>${t('dash.guild.botLanguageHint', dl)}</small></label>
-  <label>${t('dash.guild.verifyMessage', dl)} <textarea name="verifyText" rows="3" ${verifyOn ? '' : 'disabled'} placeholder="${esc(DEFAULT_VERIFY_TEXT)}">${esc(cfg.verifyText || '')}</textarea>
-    <small>${t('dash.guild.verifyMessageHint', dl)}</small></label>
-  ${SELF_HOSTED ? '' : `<label><small>${t('dash.guild.creditNote', dl)}</small></label>`}
-  <div class="subh">${t('dash.guild.universalBanList', dl)}</div>
-  <label class="toggle"><input type="checkbox" name="banShare" ${cfg.banShare ? 'checked' : ''}>
-    <span>${t('dash.guild.applyList', dl)}<small>${t('dash.guild.applyListHint', dl)}${SELF_HOSTED ? ` ${t('dash.guild.applyListSelfHost', dl)}` : ''}</small></span></label>
-  <div class="subh">${t('dash.guild.appeals', dl)}</div>
-  <label class="toggle"><input type="checkbox" id="appealToggle" name="appealEnabled" ${cfg.appealEnabled ? 'checked' : ''}>
-    <span>${t('dash.guild.letAppeal', dl)}<small>${t('dash.guild.letAppealHint', dl)} <span id="appealNeedsLog" style="color:#ff8a7d;${cfg.logChannelId ? 'display:none' : ''}">${t('dash.guild.setLogFirst', dl)}</span></small></span></label>
-  <button class="btn">${t('dash.guild.saveConfig', dl)}</button>
-  <script>
-    // Appeals need a log channel (that's where the Approve/Deny buttons land),
-    // but that requirement is LIVE: choosing a log channel above must enable the
-    // toggle without a save round-trip. A disabled checkbox also wouldn't submit,
-    // so it's never disabled - instead we warn + block enabling until a log
-    // channel is picked, in this one form.
-    (function () {
-      var log = document.querySelector('[name=logChannelId]');
-      var appeal = document.getElementById('appealToggle');
-      var warn = document.getElementById('appealNeedsLog');
-      if (!log || !appeal) return;
-      function sync() {
-        var hasLog = !!log.value;
-        warn.style.display = hasLog ? 'none' : '';
-        if (!hasLog && appeal.checked) appeal.checked = false; // can't appeal with nowhere to send it
-      }
-      log.addEventListener('change', sync);
-      appeal.addEventListener('change', function () { if (appeal.checked && !log.value) { appeal.checked = false; warn.style.display = ''; } });
-    })();
-  </script>
-</form></div>
-<div class="card" id="banner"><h2>${t('dash.guild.honeypotBanner', dl)}</h2>${msgAt('banner')}
-<small>${t('dash.guild.bannerNote', dl)}</small>
-<img class="banner" id="bannerPreview" src="/g/${guild.id}/banner.png?${Date.now()}" alt="banner preview" style="margin-top:.6rem">
-<form method="post" action="/g/${guild.id}/save#banner" id="bannerForm">
-  <label>${t('dash.guild.headline', dl)} <input type="text" name="banner_title" value="${esc(b.title)}"></label>
-  <label>${t('dash.guild.bodyText', dl)} <textarea name="banner_text" rows="2">${esc(b.text)}</textarea></label>
-  <div class="colors">
-    <label>${t('dash.guild.accent', dl)} <input type="color" name="banner_accent" value="${esc(b.accent)}"></label>
-    <label>${t('dash.guild.textColor', dl)} <input type="color" name="banner_color" value="${esc(b.color)}"></label>
-    <label>${t('dash.guild.background', dl)} <input type="color" name="banner_bg" value="${esc(b.bg)}"></label>
-  </div>
-  <div class="colors">
-    <label>${t('dash.guild.mentionHighlight', dl)} <input type="color" name="banner_mentionColor" value="${esc(b.mentionColor)}">
-      <small>${t('dash.guild.mentionHighlightHint', dl)}</small></label>
-    <label>${t('dash.guild.roleColoring', dl)} <select name="banner_mentionMode">
-      <option value="custom" ${b.mentionMode !== 'role' ? 'selected' : ''}>${t('dash.guild.roleColorCustom', dl)}</option>
-      <option value="role" ${b.mentionMode === 'role' ? 'selected' : ''}>${t('dash.guild.roleColorReal', dl)}</option>
-    </select>
-      <small>${t('dash.guild.roleColoringHint', dl)}</small></label>
-  </div>
-  <div class="cols2">
-    <label>${t('dash.guild.logo', dl)} <input type="text" name="banner_logoUrl" value="${esc(b.logoUrl)}" placeholder="${esc(t('dash.guild.logoPlaceholder', dl))}">
-      <small>${t('dash.guild.logoHint', dl)}</small></label>
-    <label>${t('dash.guild.font', dl)} <select name="banner_font">${FONTS.map((f) => `<option ${f === b.font ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
-  </div>
-  <label>${t('dash.guild.distortion', dl)} <select name="banner_distort">
-    ${[[0, t('dash.guild.distNone', dl)], [1, t('dash.guild.distLight', dl)], [2, t('dash.guild.distMedium', dl)], [3, t('dash.guild.distHeavy', dl)]].map(([v, l]) => `<option value="${v}" ${Number(b.distort ?? 0) === v ? 'selected' : ''}>${l}</option>`).join('')}
-  </select><small>${t('dash.guild.distortionHint', dl)}</small></label>
-  ${SELF_HOSTED
-    ? `<label class="toggle"><input type="checkbox" name="banner_hidecredit" ${b.hideCredit ? 'checked' : ''}>
-    <span>${t('dash.guild.hideCredit', dl)}<small>${t('dash.guild.hideCreditHint', dl)}</small></span></label>`
-    : ''}
-  <button class="btn">${t('dash.guild.saveBanner', dl)}</button>
-</form>
-<script>
-(() => {
-  const form = document.getElementById('bannerForm'), img = document.getElementById('bannerPreview');
-  let t;
-  form.addEventListener('input', () => {
-    clearTimeout(t);
-    t = setTimeout(() => {
-      const p = new URLSearchParams(new FormData(form));
-      img.src = '/g/${guild.id}/banner.png?' + p.toString();
-    }, 250);
-  });
-})();
-</script></div>
-<div class="card" id="actions"><h2>${t('dash.guild.actions', dl)}</h2>${msgAt('actions')}
-${gfJobs.has(guild.id) ? `
-<div id="gfwrap"><progress id="gfbar" max="1" value="0"></progress><small id="gftext">${t('dash.guild.gfStarting', dl)}</small></div>
+    // Deploy/setup checklist: instruction and control share a row, done-ness
+    // comes from cfg, and every step stays actionable (re-run / re-post) after
+    // setup so the same list doubles as deploy status.
+    const step = (isDone, label, hint, ctl) =>
+      `<li><span class="tick${isDone ? '' : ' todo'}"${isDone ? ` title="${esc(t('dash.guild.stepDone', dl))}"` : ''}>${isDone ? '✓' : ''}</span><span class="what"><b>${label}</b><small>${hint}</small></span><span class="ctl">${ctl}</span></li>`;
+    const gfMins = Math.max(1, Math.ceil((guild.memberCount || 0) / 60));
+    const gfConfirm = esc(t('dash.guild.confirmGf', dl, { members: (guild.memberCount || 0).toLocaleString(dl) }));
+    const gfBtn = GF_DEGRADED
+      ? `<a class="btn sm ${done.gf ? 'grey' : ''}" href="/g/${guild.id}/grandfather-setup">${t('dash.guild.actGrandfather', dl)}</a>`
+      : `<button form="actform" name="do" value="grandfather" class="btn sm ${done.gf ? 'grey' : ''}" data-confirm="${gfConfirm}">${done.gf ? t('dash.guild.rerun', dl) : t('dash.guild.actGrandfather', dl)}</button>`;
+    const checklist = `<ul class="check">
+      ${step(done.config, t('dash.guild.stepConfigL', dl), t('dash.guild.stepConfigH', dl), `<a class="btn sm ${done.config ? 'grey' : ''}" href="#honeypot">${t('dash.guild.configuration', dl)}</a>`)}
+      ${verifyOn ? step(done.gf, t('dash.guild.stepGfL', dl), t('dash.guild.gfEstimate', dl, { members: (guild.memberCount || 0).toLocaleString(dl), mins: gfMins }), gfBtn) : ''}
+      ${step(done.panels, t('dash.guild.stepPanelsL', dl), t('dash.guild.stepPanelsH', dl),
+    `${verifyOn ? `<button form="actform" name="do" value="post_verify" class="btn sm ${cfg.verifyPosted ? 'grey' : ''}">${cfg.verifyPosted ? t('dash.guild.repost', dl) : t('dash.guild.actPostPanel', dl)}</button>` : ''}<button form="actform" name="do" value="post_banner" class="btn sm ${cfg.bannerPosted ? 'grey' : ''}">${cfg.bannerPosted ? t('dash.guild.repost', dl) : t('dash.guild.actPostBanner', dl)}</button>`)}
+      ${verifyOn ? step(done.gate, t('dash.guild.stepGateL', dl), t('dash.guild.step4Desc', dl), `<a class="btn sm ${done.gate ? 'grey' : ''}" href="/g/${guild.id}/gate">${t('dash.guild.actGate', dl)}</a>`) : ''}
+      ${step(done.arm, t('dash.guild.stepArmL', dl), t('dash.guild.stepArmH', dl), done.arm ? '' : `<button form="actform" name="do" value="mode_armed" class="btn sm">${t('dash.guild.mArmed', dl)}</button>`)}
+    </ul>`;
+    const guideDetails = `<details class="more"><summary>${t('dash.guild.howItWorks', dl)}</summary>
+      <div class="mb">${t('dash.guild.guideP1', dl)}</div><div class="mb">${t('dash.guild.guideP2', dl)}</div>
+      <div class="mb">${t('dash.guild.tipNaming', dl)}</div><div class="mb">${t('dash.guild.tipMode', dl)}</div>
+      <div class="mb">${t('dash.guild.tipOnboarding', dl)}</div><div class="mb">${t('dash.guild.tipPerm', dl)}</div></details>`;
+
+    const progressBlock = gfJobs.has(guild.id) ? `
+<div class="card" id="gfwrap"><progress id="gfbar" max="1" value="0"></progress><small id="gftext">${t('dash.guild.gfStarting', dl)}</small></div>
 <script>
 (async function poll() {
   try {
@@ -624,31 +563,215 @@ ${gfJobs.has(guild.id) ? `
   } catch {}
   setTimeout(poll, 1200);
 })();
-</script>` : ''}
-<div class="subh first">${t('dash.guild.deployHeader', dl)}</div>
-<form method="post" action="/g/${guild.id}/action#actions" class="steps">
-${[
-  ['grandfather', 'grey', t('dash.guild.step1Label', dl), `${t('dash.guild.step1Desc', dl)}<br><span style="color:var(--honey)">${t('dash.guild.gfEstimate', dl, { members: (guild.memberCount || 0).toLocaleString(dl), mins: Math.max(1, Math.ceil((guild.memberCount || 0) / 60)) })}</span>`],
-  ['post_verify', '', t('dash.guild.step2Label', dl), t('dash.guild.step2Desc', dl)],
-  ['post_banner', '', t('dash.guild.step3Label', dl), t('dash.guild.step3Desc', dl)],
-].map(([val, cls, label, desc]) =>
-  // While the Server Members intent is down, grandfathering goes through the
-  // guided WorkerBee setup page instead of running in place.
-  (val === 'grandfather' && GF_DEGRADED)
-    ? `<div class="step"><a class="btn ${cls}" href="/g/${guild.id}/grandfather-setup">${label}</a><small>${desc}</small></div>`
-    : `<div class="step"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></div>`).join('')}
-<div class="step"><a class="btn" href="/g/${guild.id}/gate">${t('dash.guild.step4Label', dl)}</a><small>${t('dash.guild.step4Desc', dl)}</small></div>
-</form>
-<div class="subh">${t('dash.guild.maintenance', dl)}</div>
-<form method="post" action="/g/${guild.id}/action#actions" class="steps">
-${[
-  ['ungate', 'grey', t('dash.guild.ungateLabel', dl), t('dash.guild.ungateDesc', dl)],
-  ['ban_sync', 'grey', t('dash.guild.banSyncLabel', dl), t('dash.guild.banSyncDesc', dl)],
-].map(([val, cls, label, desc]) =>
-  `<div class="step"><button class="btn ${cls}" name="do" value="${val}">${label}</button><small>${desc}</small></div>`).join('')}
+</script>` : '';
+
+    return layout(`MadHoney - ${guild.name}`, `
+<div class="subnav">
+  <a class="backbtn" href="/"><span class="chev">‹</span> ${t('dash.guild.allServers', dl)}</a>
+  <a class="pillbtn spacer" href="/g/${guild.id}?refresh=1" title="${esc(t('dash.guild.refreshTitle', dl))}"><span class="ico">⟳</span> ${t('dash.guild.refresh', dl)}</a>
+</div>
+<form id="actform" method="post" action="/g/${guild.id}/action"></form>
+<div class="ghead" id="top">${avatar}<div class="gtitle"><h1>${esc(guild.name)}</h1></div>
+  <div class="gstat"><a href="#activity"><div class="n">${trappedHere}</div><div class="l">${t('dash.guild.trappedChip', dl)}</div></a></div></div>
+<div class="kv">
+  ${configured ? '' : `<span class="chip bad">${t('dash.guild.needsSetup', dl)}</span>`}
+  ${verifyOn ? (roleName ? `<span>${t('dash.guild.verifiedRoleChip', dl)} <b>${esc(roleName)}</b></span>` : '') : `<a href="#verify"><span class="warn">${t('dash.guild.verifOffChip', dl)}</span></a>`}
+  <span>${t('dash.guild.universalChip', dl)} <a href="#modcard"><b>${cfg.banShare ? t('dash.guild.on', dl) : t('dash.guild.off', dl)}</b></a></span>
+  <span>${t('dash.guild.appeals', dl)} <a href="#modcard"><b>${cfg.appealEnabled ? t('dash.guild.on', dl) : t('dash.guild.off', dl)}</b></a></span>
+  <span>${t('dash.guild.kvSetup', dl)} <a href="${setupDone ? '#deploy' : '#setup'}"><b style="color:${setupDone ? 'var(--ok)' : 'var(--warn2)'}">${setupDone ? t('dash.guild.kvComplete', dl) : t('dash.guild.kvIncomplete', dl)}</b></a></span>
+</div>
+${armBar}
+${progressBlock}
+${problem ? `<div class="warnbox" style="white-space:pre-wrap"><b>${t('dash.guild.setupProblem', dl)}</b>
+${esc(problem)}</div>` : ''}
+${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
+${setupDone ? '' : `<div class="card" id="setup"><h2>${t('dash.guild.setupTitle', dl)}</h2>${msgAt('setup')}
+${GF_DEGRADED && verifyOn && !done.gf ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite: workerBeeInvite() || '#' })}</div>` : ''}
+${checklist}
+${guideDetails}
+</div>`}
+<div class="card" id="activity"><h2>${t('dash.guild.cardActivity', dl)} <span class="count">${t('dash.guild.trappedCount', dl, { n: trappedHere })}</span></h2>${msgAt('activity')}
+${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` : `<div class="empty">${t('dash.guild.noBans', dl)}</div>`}</div>
+<div class="card" id="honeypot"><h2>${t('dash.guild.cardHoneypot', dl)}</h2>
+<p class="cardsub">${t('dash.guild.cardHoneypotSub', dl)}</p>${msgAt('honeypot')}
+<form method="post" action="/g/${guild.id}/save#honeypot" id="hpForm" data-dirty="${esc(t('dash.guild.cardHoneypot', dl))}">
+  <input type="hidden" name="back" value="honeypot">
+  <div class="grid2f">
+  <label>${t('dash.guild.honeypotChannel', dl)} <select name="honeypotChannelId">${chanOpts(cfg.honeypotChannelId)}</select>
+    <small>${t('dash.guild.honeypotChannelHint', dl)}</small></label>
+  <label>${t('dash.guild.deleteOnBan', dl)} <select name="banDeleteDays">
+    ${[[0, t('dash.guild.del0', dl)], [1, t('dash.guild.del1', dl)], [3, t('dash.guild.del3', dl)], [7, t('dash.guild.del7', dl)]].map(([v, l]) => `<option value="${v}" ${Number(cfg.banDeleteDays ?? 7) === v ? 'selected' : ''}>${l}</option>`).join('')}
+  </select><small>${t('dash.guild.deleteHint', dl)}</small></label>
+  </div>
+  <h3 class="subh">${t('dash.guild.honeypotBanner', dl)}</h3>
+  <details class="more"><summary>${t('dash.guild.learnMore', dl)}</summary><div class="mb">${t('dash.guild.bannerNote', dl)}</div></details>
+  <div class="bgrid">
+    <div>
+      <label>${t('dash.guild.headline', dl)} <input type="text" name="banner_title" value="${esc(b.title)}"></label>
+      <label>${t('dash.guild.bodyText', dl)} <textarea name="banner_text" rows="2">${esc(b.text)}</textarea></label>
+      <div class="colors">
+        <label>${t('dash.guild.accent', dl)} <input type="color" name="banner_accent" value="${esc(b.accent)}"></label>
+        <label>${t('dash.guild.textColor', dl)} <input type="color" name="banner_color" value="${esc(b.color)}"></label>
+        <label>${t('dash.guild.background', dl)} <input type="color" name="banner_bg" value="${esc(b.bg)}"></label>
+      </div>
+      <div class="colors">
+        <label>${t('dash.guild.mentionHighlight', dl)} <input type="color" name="banner_mentionColor" value="${esc(b.mentionColor)}">
+          <small>${t('dash.guild.mentionHighlightHint', dl)}</small></label>
+        <label>${t('dash.guild.roleColoring', dl)} <select name="banner_mentionMode">
+          <option value="custom" ${b.mentionMode !== 'role' ? 'selected' : ''}>${t('dash.guild.roleColorCustom', dl)}</option>
+          <option value="role" ${b.mentionMode === 'role' ? 'selected' : ''}>${t('dash.guild.roleColorReal', dl)}</option>
+        </select>
+          <small>${t('dash.guild.roleColoringHint', dl)}</small></label>
+      </div>
+      <div class="cols2">
+        <label>${t('dash.guild.logo', dl)} <input type="text" name="banner_logoUrl" value="${esc(b.logoUrl)}" placeholder="${esc(t('dash.guild.logoPlaceholder', dl))}">
+          <small>${t('dash.guild.logoHint', dl)}</small></label>
+        <label>${t('dash.guild.font', dl)} <select name="banner_font">${FONTS.map((f) => `<option ${f === b.font ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+      </div>
+      <label>${t('dash.guild.distortion', dl)} <select name="banner_distort">
+        ${[[0, t('dash.guild.distNone', dl)], [1, t('dash.guild.distLight', dl)], [2, t('dash.guild.distMedium', dl)], [3, t('dash.guild.distHeavy', dl)]].map(([v, l]) => `<option value="${v}" ${Number(b.distort ?? 0) === v ? 'selected' : ''}>${l}</option>`).join('')}
+      </select><small>${t('dash.guild.distortionHint', dl)}</small></label>
+      ${SELF_HOSTED ? `<label class="toggle"><input type="checkbox" name="banner_hidecredit" ${b.hideCredit ? 'checked' : ''}> ${t('dash.guild.hideCredit', dl)}</label>
+      <small>${t('dash.guild.hideCreditHint', dl)}</small>` : ''}
+    </div>
+    <div class="bprev"><img class="banner" id="bannerPreview" src="/g/${guild.id}/banner.png?${Date.now()}" alt="banner preview"></div>
+  </div>
+  <button class="btn">${t('dash.guild.saveHoneypot', dl)}</button>
+  <button form="actform" name="do" value="post_banner" class="btn grey">${t('dash.guild.actPostBanner', dl)}</button>
 </form></div>
-<div class="card"><h2>${t('dash.guild.recentBans', dl)} <span class="count">${t('dash.guild.trappedCount', dl, { n: trappedHere })}</span></h2>
-${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` : `<div class="empty">${t('dash.guild.noBans', dl)}</div>`}</div>`, { user: sess.user.username });
+<div class="card" id="verify"><h2>${t('dash.guild.cardVerification', dl)}</h2>
+<p class="cardsub">${t('dash.guild.cardVerificationSub', dl)}</p>${msgAt('verify')}
+<form method="post" action="/g/${guild.id}/save#verify" data-dirty="${esc(t('dash.guild.cardVerification', dl))}">
+  <input type="hidden" name="back" value="verify"><input type="hidden" name="own" value="verificationEnabled">
+  <label class="toggle"><input type="checkbox" name="verificationEnabled" id="vtog" ${verifyOn ? 'checked' : ''} aria-describedby="vhint"> ${t('dash.guild.requireVerify', dl)}&nbsp;<b style="color:var(--honey)">${t('dash.guild.recommended', dl)}</b></label>
+  <small id="vhint">${t('dash.guild.requireVerifyShort', dl)}</small>
+  <details class="more"><summary>${t('dash.guild.learnMore', dl)}</summary><div class="mb">${t('dash.guild.requireVerifyHint', dl)}</div></details>
+  ${!verifyOn ? `<div class="warnbox">${t('dash.guild.verifOffWarn', dl)}</div>` : ''}
+  <fieldset id="vfields" ${verifyOn ? '' : 'disabled'} style="border:0;padding:0;margin:0;min-width:0${verifyOn ? '' : ';opacity:.45'}">
+    <div class="grid2f">
+    <label>${t('dash.guild.verifiedRole', dl)} <select name="verifiedRoleId">${roleOpts(cfg.verifiedRoleId)}</select>
+      <small>${t('dash.guild.verifiedRoleHint', dl)}</small></label>
+    <label>${t('dash.guild.verifyChannel', dl)} <select name="verifyChannelId">${chanOpts(cfg.verifyChannelId)}</select>
+      <small>${t('dash.guild.verifyChannelHint', dl)}</small></label>
+    <label>${t('dash.guild.captchaDifficulty', dl)} <select name="captchaDifficulty" onchange="cpvNew()">
+      ${[['easy', t('dash.guild.diffEasy', dl)], ['normal', t('dash.guild.diffNormal', dl)], ['hard', t('dash.guild.diffHard', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaDifficulty ?? 'easy') === v ? 'selected' : ''}>${l}</option>`).join('')}
+    </select><small>${t('dash.guild.captchaHint', dl)}</small></label>
+    <label>${t('dash.guild.captchaStyle', dl)} <select name="captchaStyle" onchange="cpvNew()">
+      ${[['text', t('dash.guild.styleText', dl)], ['position', t('dash.guild.stylePos', dl)], ['choice', t('dash.guild.styleChoice', dl)]].map(([v, l]) => `<option value="${v}" ${(cfg.captchaStyle ?? 'position') === v ? 'selected' : ''}>${l}</option>`).join('')}
+    </select><small>${t('dash.guild.captchaStyleHint', dl)}</small></label>
+    </div>
+    <div style="margin:.4rem 0 .8rem">
+      <img id="cpv" src="/g/${guild.id}/captcha.png" alt="captcha preview" style="max-width:100%;border-radius:8px;border:1px solid var(--line)"><br>
+      <button type="button" class="btn grey sm" onclick="cpvNew()">${t('dash.guild.captchaPreviewNew', dl)}</button>
+      <small>${t('dash.guild.captchaTestHint', dl)}</small>
+    </div>
+    <label>${t('dash.guild.verifyMessage', dl)} <textarea name="verifyText" rows="3" placeholder="${esc(DEFAULT_VERIFY_TEXT)}">${esc(cfg.verifyText || '')}</textarea>
+      <small>${t('dash.guild.verifyMessageHint', dl)}</small></label>
+  </fieldset>
+  ${SELF_HOSTED ? '' : `<div class="notebox">${t('dash.guild.creditNote', dl)}</div>`}
+  <button class="btn">${t('dash.guild.saveVerification', dl)}</button>
+  <h3 class="subh" id="deploy">${t('dash.guild.deployStatus', dl)}</h3>
+  ${setupDone ? checklist : `<small><a href="#setup">${t('dash.guild.setupTitle', dl)} ↑</a></small>`}
+  ${gatedCount ? `<details class="more"><summary>${t('dash.guild.ungateLabel', dl)}</summary><div class="mb">${t('dash.guild.ungateDesc', dl)}<br>
+    <button form="actform" name="do" value="ungate" class="btn danger sm" style="margin-top:.5rem" data-confirm="${esc(t('dash.guild.confirmRestore', dl, { n: gatedCount }))}">${t('dash.guild.actRestore', dl)}</button></div></details>` : ''}
+</form></div>
+<script>function cpvNew(){const s=document.querySelector('[name=captchaStyle]'),d=document.querySelector('[name=captchaDifficulty]');document.getElementById('cpv').src='/g/${guild.id}/captcha.png?style='+encodeURIComponent(s?s.value:'text')+'&diff='+encodeURIComponent(d?d.value:'easy')+'&r='+Math.random()}</script>
+<div class="card" id="modcard"><h2>${t('dash.guild.cardModeration', dl)}</h2>
+<p class="cardsub">${t('dash.guild.cardModerationSub', dl)}</p>${msgAt('modcard')}
+<form method="post" action="/g/${guild.id}/save#modcard" data-dirty="${esc(t('dash.guild.cardModeration', dl))}">
+  <input type="hidden" name="back" value="modcard"><input type="hidden" name="own" value="banShare appealEnabled">
+  <label>${t('dash.guild.logChannel', dl)} <select name="logChannelId" class="narrow">${chanOpts(cfg.logChannelId)}</select>
+    <small>${t('dash.guild.logChannelHint', dl)}</small></label>
+  <label class="toggle"><input type="checkbox" name="banShare" id="bltog" ${cfg.banShare ? 'checked' : ''} aria-describedby="blhint"> ${t('dash.guild.applyList', dl)}</label>
+  <small id="blhint">${t('dash.guild.applyListShort', dl)}</small>
+  <details class="more"><summary>${t('dash.guild.learnMore', dl)}</summary><div class="mb">${t('dash.guild.applyListHint', dl)}${SELF_HOSTED ? ` ${t('dash.guild.applyListSelfHost', dl)}` : ''}</div></details>
+  <div style="margin:.2rem 0 .4rem"><button form="actform" name="do" value="ban_sync" id="bansyncBtn" class="btn danger sm" ${cfg.banShare ? '' : 'disabled'} data-confirm="${esc(t('dash.guild.confirmBanSync', dl, { n: poolN }))}">${t('dash.guild.actBanSync', dl)}</button>
+  <small id="bansyncWhy"${cfg.banShare ? ' style="display:none"' : ''}>${t('dash.guild.turnOnListFirst', dl)}</small></div>
+  <label class="toggle"><input type="checkbox" name="appealEnabled" id="appealToggle" ${cfg.appealEnabled ? 'checked' : ''} aria-describedby="aphint"> ${t('dash.guild.letAppeal', dl)}</label>
+  <small id="aphint">${t('dash.guild.letAppealShort', dl)}</small>
+  <details class="more"><summary>${t('dash.guild.learnMore', dl)}</summary><div class="mb">${t('dash.guild.letAppealHint', dl)}</div></details>
+  <div class="warnbox" id="appealNeedsLog"${cfg.logChannelId ? ' style="display:none"' : ''}>${t('dash.guild.setLogFirst', dl)}</div>
+  <button class="btn">${t('dash.guild.saveModeration', dl)}</button>
+</form></div>
+<div class="card" id="access"><h2>${t('dash.guild.cardAccess', dl)}</h2>
+<p class="cardsub">${t('dash.guild.cardAccessSub', dl)}</p>${msgAt('access')}
+<form method="post" action="/g/${guild.id}/save#access" data-dirty="${esc(t('dash.guild.cardAccess', dl))}">
+  <input type="hidden" name="back" value="access"><input type="hidden" name="own" value="roles">
+  <div class="grid2f">
+  <div class="rolewrap"><label style="margin-bottom:0">${t('dash.guild.staffRole', dl)} <span class="cnt" data-count="rc_staffRoleIds"></span></label>
+    <small>${t('dash.guild.staffRoleHint', dl)}</small>
+    ${roleChecks('staffRoleIds', staffRoles(cfg))}</div>
+  <div class="rolewrap"><label style="margin-bottom:0">${t('dash.guild.adminRole', dl)} <span class="cnt" data-count="rc_adminRoleIds"></span></label>
+    <small>${t('dash.guild.adminRoleHint', dl)}</small>
+    ${roleChecks('adminRoleIds', adminRoles(cfg))}</div>
+  </div>
+  <label>${t('dash.guild.botLanguage', dl)} <select name="locale" class="narrow">
+    ${SUPPORTED.map((c) => `<option value="${c}" ${(cfg.locale || 'en') === c ? 'selected' : ''}>${LOCALE_NAMES[c]}</option>`).join('')}
+  </select><small>${t('dash.guild.botLanguageHint', dl)}</small></label>
+  <button class="btn">${t('dash.guild.saveAccess', dl)}</button>
+</form></div>
+<div id="savebar"><div class="in"><span class="msg">${t('dash.guild.unsavedIn', dl, { card: '<b id="sbwhere"></b>' })}</span>
+<button class="btn sm" id="sbsave" type="button">${t('dash.guild.saveBtn', dl)}</button>
+<button class="btn grey sm" id="sbdiscard" type="button">${t('dash.guild.discardBtn', dl)}</button></div></div>
+<script>
+(() => {
+  // banner live preview (debounced). Reads the whole honeypot form; the
+  // banner.png endpoint only consumes banner_* params, so extras are harmless.
+  const hp = document.getElementById('hpForm'), img = document.getElementById('bannerPreview');
+  if (hp && img) { let tm; hp.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(() => {
+    img.src = '/g/${guild.id}/banner.png?' + new URLSearchParams(new FormData(hp)).toString(); }, 250); }); }
+
+  // dirty-state: editing any card shows a sticky save bar naming that card, and
+  // navigating away with unsaved edits asks first (cleared on submit)
+  const bar = document.getElementById('savebar'), sbw = document.getElementById('sbwhere');
+  let dirtyForm = null;
+  document.querySelectorAll('form[data-dirty]').forEach((f) => {
+    f.addEventListener('input', () => { dirtyForm = f; sbw.textContent = f.dataset.dirty; bar.classList.add('show'); });
+    f.addEventListener('submit', () => { dirtyForm = null; bar.classList.remove('show'); });
+  });
+  document.getElementById('sbsave').addEventListener('click', () => dirtyForm?.requestSubmit());
+  document.getElementById('sbdiscard').addEventListener('click', () => { dirtyForm = null; location.reload(); });
+  window.addEventListener('beforeunload', (e) => { if (dirtyForm) { e.preventDefault(); e.returnValue = ''; } });
+
+  // two-step confirm on destructive/long-running actions: first click arms the
+  // button with the consequence (and count), second click actually submits
+  document.querySelectorAll('[data-confirm]').forEach((btn) => {
+    const orig = btn.textContent; let armed = false, tm2;
+    btn.addEventListener('click', (e) => {
+      if (armed) return;
+      e.preventDefault(); armed = true; btn.classList.add('confirming'); btn.textContent = btn.dataset.confirm;
+      tm2 = setTimeout(() => { armed = false; btn.classList.remove('confirming'); btn.textContent = orig; }, 4000);
+    });
+  });
+
+  // verification toggle governs its fieldset live (no save round-trip)
+  const vtog = document.getElementById('vtog'), vf = document.getElementById('vfields');
+  if (vtog && vf) vtog.addEventListener('change', () => { vf.disabled = !vtog.checked; vf.style.opacity = vtog.checked ? '' : '.45'; });
+
+  // ban-from-list needs the list on - disabled with the reason inline
+  const bl = document.getElementById('bltog'), bs = document.getElementById('bansyncBtn'), bw = document.getElementById('bansyncWhy');
+  if (bl && bs) bl.addEventListener('change', () => { bs.disabled = !bl.checked; bw.style.display = bl.checked ? 'none' : ''; });
+
+  // appeals need a log channel - the dependency is local and loud now
+  const log = document.querySelector('[name=logChannelId]'), ap = document.getElementById('appealToggle'), aw = document.getElementById('appealNeedsLog');
+  if (log && ap) {
+    log.addEventListener('change', () => { const has = !!log.value; aw.style.display = has ? 'none' : ''; if (!has && ap.checked) ap.checked = false; });
+    ap.addEventListener('change', () => { if (ap.checked && !log.value) { ap.checked = false; aw.style.display = ''; } });
+  }
+
+  // role pickers: filter + live selected-count
+  document.querySelectorAll('.rfilter').forEach((inp) => inp.addEventListener('input', () => {
+    const q = inp.value.toLowerCase();
+    document.getElementById(inp.dataset.target)?.querySelectorAll('label').forEach((l) => { l.style.display = l.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+  }));
+  const counts = () => document.querySelectorAll('[data-count]').forEach((c) => {
+    const n = document.getElementById(c.dataset.count)?.querySelectorAll('input:checked').length ?? 0;
+    c.textContent = '· ' + ${JSON.stringify(t('dash.guild.selectedCount', dl))}.replace('{n}', n);
+  });
+  document.querySelectorAll('.rolechecks').forEach((r) => r.addEventListener('change', counts));
+  counts();
+})();
+</script>`, { user: sess.user.username });
   }
 
   // Guided WorkerBee setup — shown when an admin clicks "Grandfather Members"
@@ -660,13 +783,13 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
     const dl = curLocale;
     const invite = workerBeeInvite() || '#';
     return layout(`MadHoney - ${t('dash.guild.step1Label', dl)}`, `
-<div class="subnav"><a class="backbtn" href="/g/${guild.id}#actions"><span class="chev">‹</span> ${esc(guild.name)}</a></div>
+<div class="subnav"><a class="backbtn" href="/g/${guild.id}#setup"><span class="chev">‹</span> ${esc(guild.name)}</a></div>
 <div class="ghead"><div class="gtitle"><h1>${t('dash.guild.step1Label', dl)}</h1></div></div>
 <div class="card">
   <div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite })}</div>
   <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;align-items:center">
     <a class="btn grey" href="${invite}" target="_blank" rel="noopener">${t('dash.guild.gfInviteBtn', dl)}</a>
-    <form method="post" action="/g/${guild.id}/action#actions" style="margin:0">
+    <form method="post" action="/g/${guild.id}/action" style="margin:0">
       <button class="btn" name="do" value="grandfather">${t('dash.guild.gfRunNow', dl)}</button>
     </form>
   </div>
@@ -681,7 +804,7 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
     if (!cfg.verifiedRoleId || !cfg.verifyChannelId || !cfg.honeypotChannelId) {
       return layout('MadHoney - Gate', `<div class="subnav"><a class="backbtn" href="/g/${guild.id}"><span class="chev">‹</span> ${esc(guild.name)}</a></div>
         <div class="ghead"><div class="gtitle"><h1>${t('dash.gate.title', dl)}</h1></div></div>
-        <div class="card"><p>${t('dash.gate.notConfigBody', dl, { config: `<a href="/g/${guild.id}#config">${t('dash.gate.configLink', dl)}</a>` })}</p></div>`, { user: sess.user.username });
+        <div class="card"><p>${t('dash.gate.notConfigBody', dl, { config: `<a href="/g/${guild.id}#honeypot">${t('dash.gate.configLink', dl)}</a>` })}</p></div>`, { user: sess.user.username });
     }
     const chans = (await classifyChannels(guild, cfg)).sort((a, z) => a.position - z.position);
     const override = cfg.channelTreatment ?? {};
@@ -701,7 +824,9 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
       const tag = c.isCategory ? `<span class="ctag">${t('dash.gate.category', dl)}</span>`
         : c.parentId ? `<span class="ctag">${esc(catName(c.parentId) ?? '')}</span>` : '';
       const kindDot = `<span class="kdot ${c.kind}" title="${esc(t('dash.gate.detectedTitle', dl, { kind: c.kind }))}"></span>`;
-      return `<div class="chip2 ${c.isCategory ? 'iscat' : ''}" draggable="true" data-id="${c.id}" data-cat="${c.parentId ?? ''}" data-type="${c.isCategory ? 'category' : 'channel'}" data-kind="${c.kind}">${kindDot}<span class="cn">${c.isCategory ? '▸ ' : '# '}${esc(c.name)}</span>${tag}</div>`;
+      // a real <button> so keyboard users can Tab + Enter the tap-to-cycle path
+      // that pointer users get via drag; type=button because it sits in gateForm
+      return `<button type="button" class="chip2 ${c.isCategory ? 'iscat' : ''}" draggable="true" data-id="${c.id}" data-cat="${c.parentId ?? ''}" data-type="${c.isCategory ? 'category' : 'channel'}" data-kind="${c.kind}" title="${esc(t('dash.gate.detectedTitle', dl, { kind: c.kind }))}">${kindDot}<span class="cn">${c.isCategory ? '▸ ' : '# '}${esc(c.name)}</span>${tag}</button>`;
     };
     const zone = (id, title, hint) =>
       `<div class="zcol"><div class="zh"><b>${title}</b></div><small>${hint}</small>
@@ -736,17 +861,22 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">${t('dash.gate.cantAc
 </form>
 <form method="post" action="/g/${guild.id}/gate" style="margin-top:.4rem"><input type="hidden" name="do" value="reset">
   <button class="btn grey" style="background:none;box-shadow:none;color:var(--dim);padding-left:0">${t('dash.gate.reset', dl)}</button></form>
+<div class="visually-hidden" aria-live="polite" id="gateLive"></div>
 </div>
 <script>
 (() => {
   let drag;
+  const zoneNames = { gate: ${JSON.stringify(t('dash.gate.zoneGate', dl))}, public: ${JSON.stringify(t('dash.gate.zonePublic', dl))}, leave: ${JSON.stringify(t('dash.gate.zoneLeave', dl))} };
+  const live = document.getElementById('gateLive');
+  const movedMsg = ${JSON.stringify(t('dash.gate.movedTo', dl))};
   const wire = (c) => {
     c.addEventListener('dragstart', () => { drag = c; setTimeout(() => c.classList.add('dragging'), 0); });
     c.addEventListener('dragend', () => { c.classList.remove('dragging'); drag = null; });
-    c.addEventListener('click', () => { // tap-to-cycle (touch fallback)
+    c.addEventListener('click', () => { // tap-to-cycle (touch + keyboard: chips are real buttons)
       const zones = ['gate', 'public', 'leave'];
       const cur = c.closest('.drop').dataset.zone;
       moveTo(c, document.querySelector('.drop[data-zone="' + zones[(zones.indexOf(cur) + 1) % 3] + '"]'));
+      c.focus(); // moving the node steals focus - hand it back for repeated Enter presses
     });
   };
   const moveTo = (c, dropzone) => {
@@ -754,6 +884,7 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">${t('dash.gate.cantAc
     dropzone.appendChild(c);
     if (c.dataset.type === 'category') // categories carry their channels, like Discord
       document.querySelectorAll('.chip2[data-cat="' + c.dataset.id + '"]').forEach((ch) => dropzone.appendChild(ch));
+    live.textContent = movedMsg.replace('{channel}', c.querySelector('.cn').textContent.trim()).replace('{zone}', zoneNames[dropzone.dataset.zone] ?? dropzone.dataset.zone);
   };
   document.querySelectorAll('.chip2').forEach(wire);
   document.querySelectorAll('.drop').forEach((z) => {
@@ -1085,7 +1216,15 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           return res.end(png);
         }
         if (m[2] === '/save' && req.method === 'POST') {
+          // The page is split into per-task cards that each POST only their own
+          // fields, so this handler is field-driven: text/select fields patch only
+          // when present, checkboxes only when the form DECLARES ownership via the
+          // hidden `own` field (an unchecked checkbox submits nothing, so absence
+          // alone can't distinguish "off" from "different card").
           const form = await body(req);
+          const back = ['honeypot', 'verify', 'modcard', 'access', 'setup'].includes(form.get('back')) ? form.get('back') : 'top';
+          const own = new Set((form.get('own') ?? '').split(' ').filter(Boolean));
+          const patch = {};
           if (form.has('banner_title') || form.has('banner_text')) {
             const banner = { ...DEFAULT_BANNER, ...getGuild(guild.id)?.banner };
             for (const k of ['title', 'text', 'accent', 'color', 'bg', 'font', 'logoUrl', 'mentionColor', 'mentionMode', 'distort']) {
@@ -1093,33 +1232,36 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             }
             banner.hideCredit = SELF_HOSTED && form.get('banner_hidecredit') === 'on';
             delete banner.credit; // effective credit is resolved at render time
-            saveGuild(guild.id, { banner });
-            return html(await guildPage(guild, sess, t('dash.msg.bannerSaved', curLocale), 'banner'));
+            patch.banner = banner;
           }
-          const patch = {};
           for (const k of ['verifiedRoleId', 'verifyChannelId', 'honeypotChannelId', 'logChannelId', 'verifyText', 'captchaDifficulty', 'captchaStyle', 'locale']) {
             if (form.has(k)) patch[k] = form.get(k).trim();
           }
-          // staff / dashboard-admin roles are multi-select checkboxes; the array
-          // is authoritative, so clear the legacy single fields on save
-          patch.staffRoleIds = form.getAll('staffRoleIds').filter(Boolean);
-          patch.adminRoleIds = form.getAll('adminRoleIds').filter(Boolean);
-          patch.staffRoleId = '';
-          patch.adminRoleId = '';
-          patch.banShare = form.get('banShare') === 'on';
-          // Appeals require a log channel (where Approve/Deny land), NOT the ban
-          // list. Honor the toggle only when the EFFECTIVE log channel after this
-          // save is set; otherwise it can't function, so keep it off. (The form
-          // always submits logChannelId, so patch is authoritative when present.)
-          const effectiveLog = form.has('logChannelId') ? patch.logChannelId : getGuild(guild.id)?.logChannelId;
-          patch.appealEnabled = form.get('appealEnabled') === 'on' && Boolean(effectiveLog);
-          patch.verificationEnabled = form.get('verificationEnabled') === 'on';
+          if (own.has('roles')) {
+            // staff / dashboard-admin roles are multi-select checkboxes; the array
+            // is authoritative, so clear the legacy single fields on save
+            patch.staffRoleIds = form.getAll('staffRoleIds').filter(Boolean);
+            patch.adminRoleIds = form.getAll('adminRoleIds').filter(Boolean);
+            patch.staffRoleId = '';
+            patch.adminRoleId = '';
+          }
+          if (own.has('banShare')) patch.banShare = form.get('banShare') === 'on';
+          if (own.has('appealEnabled')) {
+            // Appeals require a log channel (where Approve/Deny land). Honor the
+            // toggle only when the EFFECTIVE log channel after this save is set.
+            const effectiveLog = form.has('logChannelId') ? patch.logChannelId : getGuild(guild.id)?.logChannelId;
+            patch.appealEnabled = form.get('appealEnabled') === 'on' && Boolean(effectiveLog);
+          }
+          if (own.has('verificationEnabled')) patch.verificationEnabled = form.get('verificationEnabled') === 'on';
           if (form.has('banDeleteDays')) patch.banDeleteDays = Math.min(7, Math.max(0, Number(form.get('banDeleteDays')) || 0));
-          if (patch.verifyChannelId && patch.verifyChannelId === patch.honeypotChannelId) {
-            return html(await guildPage(guild, sess, t('dash.msg.channelClash', curLocale), 'config'));
+          const cur = getGuild(guild.id) ?? {};
+          const effVerify = patch.verifyChannelId ?? cur.verifyChannelId;
+          const effHoney = patch.honeypotChannelId ?? cur.honeypotChannelId;
+          if (effVerify && effVerify === effHoney) {
+            return html(await guildPage(guild, sess, t('dash.msg.channelClash', curLocale), back));
           }
           saveGuild(guild.id, patch);
-          return html(await guildPage(guild, sess, t('dash.msg.saved', curLocale), 'config'));
+          return html(await guildPage(guild, sess, patch.banner ? t('dash.msg.bannerSaved', curLocale) : t('dash.msg.saved', curLocale), back));
         }
         if (m[2] === '/action' && req.method === 'POST') {
           const form = await body(req);
@@ -1137,7 +1279,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             return html(await guildPage(guild, sess, note, 'top'));
           }
           if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
-            return html(await guildPage(guild, sess, t('dash.msg.finishConfig', curLocale), 'actions'));
+            return html(await guildPage(guild, sess, t('dash.msg.finishConfig', curLocale), 'setup'));
           }
           // Member-by-member jobs (one API call each) run in the background
           // with a polled progress bar; one job at a time per guild.
@@ -1147,14 +1289,14 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           const slowJobs = { grandfather: GF_DEGRADED ? grandfatherViaWorkerBee : grandfather, ban_sync: syncBans };
           if (slowJobs[form.get('do')]) {
             if (gfJobs.get(guild.id) && !gfJobs.get(guild.id).finished) {
-              return html(await guildPage(guild, sess, t('dash.msg.jobRunning', curLocale), 'actions'));
+              return html(await guildPage(guild, sess, t('dash.msg.jobRunning', curLocale), 'top'));
             }
             const progress = { finished: false, at: Date.now() };
             gfJobs.set(guild.id, progress);
             slowJobs[form.get('do')](guild, getGuild(guild.id), progress, curLocale)
               .then((r) => Object.assign(progress, { finished: true, result: r, at: Date.now() }))
               .catch((e) => Object.assign(progress, { finished: true, result: `❌ ${explainError(e.message, curLocale)}`, at: Date.now() }));
-            return html(await guildPage(guild, sess, '', 'actions'));
+            return html(await guildPage(guild, sess, '', 'top'));
           }
           const acts = {
             post_verify: () => postVerifyPanel(guild, cfg, curLocale),
@@ -1162,9 +1304,11 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             ungate: () => ungateChannels(guild, cfg, curLocale),
           };
           const act = acts[form.get('do')];
-          if (!act) return html(await guildPage(guild, sess, t('dash.msg.unknownAction', curLocale), 'actions'), 400);
+          if (!act) return html(await guildPage(guild, sess, t('dash.msg.unknownAction', curLocale), 'top'), 400);
           const result = await act().catch((e) => `❌ ${explainError(e.message, curLocale)}`);
-          return html(await guildPage(guild, sess, result, 'actions'));
+          // land the result message inside the card the action belongs to
+          const actAt = { post_verify: 'verify', post_banner: 'honeypot', ungate: 'verify' }[form.get('do')] ?? 'top';
+          return html(await guildPage(guild, sess, result, actAt));
         }
         if (m[2] === '/gate') {
           const cfg = getGuild(guild.id);
