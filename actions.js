@@ -313,6 +313,7 @@ export async function gateChannels(guild, cfg, apply = false, sel = null, loc = 
 // already can't see), and channels the admin explicitly forced public/left
 // alone. Returns a short status string, or null when it did nothing.
 export async function gateNewChannel(guild, cfg, channel, loc = cfg?.locale) {
+  if (cfg?.autoGate === false) return null; // opt-out: this server manages gating manually (no auto-gate of new/offline channels)
   if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) return null;
   if (!cfg.gatedChannels?.length) return null; // this server doesn't use gating
   if (channel.id === cfg.verifyChannelId || channel.id === cfg.honeypotChannelId) return null;
