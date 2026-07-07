@@ -6,7 +6,7 @@
 //
 // Importing this module (for its side effects) once, before any canvas text is
 // drawn, is enough — ES modules run their top level a single time. banner.js,
-// captcha.js and og-gen.mjs all import it.
+// captcha.js and tools/og-gen.mjs all import it.
 //
 // Fonts: DejaVu (Bitstream Vera + DejaVu changes), a permissive license that
 // allows bundling and redistribution. See fonts/LICENSE.

@@ -29,3 +29,9 @@ jobrunner.js
 status-worker/
 # deployment-only self-measuring D1 cost estimator
 d1cost.js
+
+# one-off / operational tools (generators, migrations, data fixes, dev checks).
+# Maintainer-only, not part of the distribution - the folder's README is tracked
+# to document the convention, everything else in it is ignored.
+tools/*
+!tools/README.md

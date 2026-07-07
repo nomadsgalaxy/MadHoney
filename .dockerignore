@@ -20,3 +20,5 @@ costs.json
 costs-history.jsonl
 # dev-only OCR data
 *.traineddata
+# one-off / operational tools (never needed in the runtime image)
+tools
