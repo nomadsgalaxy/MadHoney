@@ -11,6 +11,7 @@ import {
   ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder,
 } from 'discord.js';
 import { shouldTrap, honeypotMode, staffRoles } from './trap.js';
+import { compromisedSettings, messageSignature, recordAndCheck, sweep as sweepCompromised } from './compromised.js';
 import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
@@ -45,6 +46,16 @@ setInterval(() => { const now = Date.now(); for (const [k, v] of pending) if (no
 // messages - restart, crash, outage - is swept on the next boot.
 const LASTSEEN = new URL('./.lastseen', import.meta.url);
 setInterval(() => { if (client.isReady()) { try { writeFileSync(LASTSEEN, String(Date.now())); } catch { /* best effort */ } } }, 60_000).unref?.();
+
+// Per-process fan-out tracker for compromised-account detection (compromised.js).
+// Swept every 5 min so one-off posters don't linger; per-message pruning does the
+// tight in-window work.
+const compromisedStore = new Map();
+setInterval(() => sweepCompromised(compromisedStore, Date.now(), 5 * 60 * 1000), 5 * 60 * 1000).unref?.();
+// Detection ships as "Coming soon": stays fully off (dashboard shows a preview)
+// until we flip COMPROMISED_LIVE=on. Belt-and-suspenders over Message Content
+// dormancy, so it can't silently activate when that intent is approved.
+const COMPROMISED_LIVE = process.env.COMPROMISED_LIVE === 'on';
 
 // Sign appeal buttons so a forged `mh_appeal_<gid>` can't be used to probe
 // "am I banned here?" - the signature binds the button to this user + ban
@@ -832,6 +843,24 @@ client.on(Events.MessageCreate, async (msg) => {
       .catch(() => {});
   }
 
+  // Compromised-account detection: a hijacked member blasts the same message
+  // across many channels in seconds - faster than a human switching channels by
+  // hand. If this non-privileged member's post matches their own recent posts in
+  // enough OTHER channels within the window, treat the account as compromised and
+  // take the configured action. Compares content, so it's dormant without the
+  // Message Content intent (empty signature -> skipped). Independent of the
+  // honeypot; skips the honeypot channel, webhooks, bots, owner and staff.
+  const comp = compromisedSettings(cfg);
+  if (COMPROMISED_LIVE && cfg && comp.enabled && msg.member && !msg.author.bot && !msg.webhookId
+    && msg.guild.ownerId !== msg.author.id && msg.channelId !== cfg.honeypotChannelId
+    && !((msg.member.permissions?.has(PermissionsBitField.Flags.ManageGuild) ?? false)
+      || staffRoles(cfg).some((r) => msg.member.roles.cache.has(r)))) {
+    const sig = messageSignature({ content: msg.content, attachmentNames: [...msg.attachments.values()].map((a) => a.name) });
+    const blast = recordAndCheck(compromisedStore, `${msg.guildId}:${msg.author.id}`, sig,
+      { channelId: msg.channelId, messageId: msg.id }, msg.createdTimestamp, comp);
+    if (blast) { await handleCompromised(msg.member, cfg, comp, blast); return; }
+  }
+
   const facts = {
     channelId: msg.channelId,
     authorIsBot: msg.author.bot,
@@ -945,6 +974,38 @@ client.on(Events.MessageCreate, async (msg) => {
   if (banned) sweepStragglers(msg.guild, msg.author.id).catch(() => {});
   if (banned) notifyTrap(msg.guild, msg.author, msg.channel.name).catch(() => {}); // network-wide trap feed
 });
+
+// Act on a detected compromised-account blast (compromised.js). Deletes the
+// blasted messages across channels (best-effort), then applies the server's
+// action: kick (default), quarantine (strip the verified role so they must
+// re-verify), ban, or notify-only. Always alerts the mod log. Self-contained and
+// never throws - if the action fails (missing permission, role hierarchy) it
+// downgrades to a notify so mods still see it.
+async function handleCompromised(member, cfg, comp, blast) {
+  const guild = member.guild;
+  const { user: { tag }, id } = member;
+  const n = blast.length;
+  try {
+    if (comp.deleteMessages) {
+      for (const { channelId, messageId } of blast) {
+        await guild.channels.cache.get(channelId)?.messages.delete(messageId).catch(() => {});
+      }
+    }
+    const reason = `MadHoney: compromised-account blast across ${n} channels`;
+    let action = comp.action;
+    const fail = (e) => { console.log(`[${guild.name}] compromised ${action} failed for ${tag}: ${e.message}`); action = 'notify'; };
+    if (action === 'kick') await member.kick(reason).catch(fail);
+    else if (action === 'ban') await guild.bans.create(id, { reason, deleteMessageSeconds: 3600 }).catch(fail);
+    else if (action === 'quarantine') {
+      if (cfg.verifiedRoleId) await member.roles.remove(cfg.verifiedRoleId, reason).catch(fail);
+      else action = 'notify'; // nothing to strip
+    }
+    console.log(`[${guild.name}] compromised: ${tag} (${id}) blasted ${n} channels -> ${action}`);
+    await logSend(guild, cfg, { content: t(`log.compromised_${action}`, cfg.locale, { tag, id, n }) }, 'critical');
+  } catch (e) {
+    console.log(`[${guild.name}] compromised handler error for ${tag}: ${e.message}`);
+  }
+}
 
 // Discord's ban `deleteMessageSeconds` purge is best-effort and races the message
 // indexer: a message posted in the ~second before the ban can survive as a

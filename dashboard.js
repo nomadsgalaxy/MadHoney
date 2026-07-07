@@ -10,6 +10,7 @@ import { PermissionsBitField, ChannelType } from 'discord.js';
 const { getGuild, saveGuild, bans, trappedCount } = await import(process.env.MADHONEY_STORE ?? './store.js'); // pluggable store backend
 import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, grandfatherViaWorkerBee, workerBeeInvite, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { honeypotMode, staffRoles, adminRoles } from './trap.js';
+import { compromisedSettings } from './compromised.js';
 import { resolvedIncidents } from './incident.js';
 import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } from './captcha.js';
 import { makeCode } from './verify.js';
@@ -28,6 +29,14 @@ const PUBLIC_URL = (process.env.PUBLIC_URL || `http://127.0.0.1:${PORT}`).replac
 // so we surface a warning. Lazy grandfathering still grants the role as members
 // post; full coverage returns when the intent is restored.
 const GF_DEGRADED = process.env.SERVER_MEMBERS === 'off';
+// Compromised-account detection compares message content, so it needs the Message
+// Content intent. While that's unavailable the tile shows a "dormant" warning; the
+// settings still save so a server is armed the moment the intent lands.
+const MC_DEGRADED = process.env.MESSAGE_CONTENT !== 'on';
+// Compromised-account detection is built but launches as "Coming soon": the tile
+// shows a disabled preview and the bot's detection stays fully off until we flip
+// COMPROMISED_LIVE=on (so it never silently activates when Message Content lands).
+const COMPROMISED_LIVE = process.env.COMPROMISED_LIVE === 'on';
 const API = 'https://discord.com/api/v10';
 const WEEK = 7 * 24 * 3600 * 1000;
 
@@ -257,6 +266,7 @@ function layout(title, body, opts = {}) {
   .spill.setup{background:rgba(255,138,125,.14);color:#ff8a7d}
   .spill.add{background:#1c2029;color:var(--dim)}
   h2 .count{font:400 .8rem/1 "Instrument Sans",sans-serif;color:var(--dim);margin-left:.5rem}
+  h2 .soon{display:inline-block;vertical-align:middle;font:700 .62rem/1 "Instrument Sans",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--honey);background:rgba(255,179,26,.12);border:1px solid rgba(255,179,26,.4);border-radius:20px;padding:.28rem .6rem;margin-left:.55rem}
   /* guild page */
   .ghead{display:flex;align-items:center;gap:1rem;margin:.6rem 0 1rem}
   .ghead .savatar{width:58px;height:58px;border-radius:16px;flex:0 0 58px;font-size:1.6rem}
@@ -485,6 +495,7 @@ export function startDashboard(client) {
     const roleName = cfg.verifiedRoleId ? (roles.get(cfg.verifiedRoleId)?.name ?? 'set') : null;
     const verifyOn = cfg.verificationEnabled !== false; // default on
     const mode = honeypotMode(cfg); // 'armed' | 'review' | 'disarmed'
+    const comp = compromisedSettings(cfg); // compromised-account detection settings
     // With verification off there's no verified role/gate to require - just the honeypot.
     const configured = cfg.honeypotChannelId && (!verifyOn || (cfg.verifiedRoleId && cfg.verifyChannelId));
 
@@ -685,11 +696,13 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>
   </fieldset>
   ${SELF_HOSTED ? '' : `<div class="notebox">${t('dash.guild.creditNote', dl)}</div>`}
   <button class="btn">${t('dash.guild.saveVerification', dl)}</button>
-  <h3 class="subh" id="deploy">${t('dash.guild.deployStatus', dl)}</h3>
-  ${setupDone ? checklist : `<small><a href="#setup">${t('dash.guild.setupTitle', dl)} ↑</a></small>`}
-  ${gatedCount ? `<details class="more"><summary>${t('dash.guild.ungateLabel', dl)}</summary><div class="mb">${t('dash.guild.ungateDesc', dl)}<br>
-    <button form="actform" name="do" value="ungate" class="btn danger sm" style="margin-top:.5rem" data-confirm="${esc(t('dash.guild.confirmRestore', dl, { n: gatedCount }))}">${t('dash.guild.actRestore', dl)}</button></div></details>` : ''}
 </form></div>
+<div class="card" id="deploy"><h2>${t('dash.guild.deployStatus', dl)}</h2>
+<p class="cardsub">${t('dash.guild.deployStatusSub', dl)}</p>
+${setupDone ? checklist : `<small><a href="#setup">${t('dash.guild.setupTitle', dl)} ↑</a></small>`}
+${gatedCount ? `<details class="more"><summary>${t('dash.guild.ungateLabel', dl)}</summary><div class="mb">${t('dash.guild.ungateDesc', dl)}<br>
+  <button form="actform" name="do" value="ungate" class="btn danger sm" style="margin-top:.5rem" data-confirm="${esc(t('dash.guild.confirmRestore', dl, { n: gatedCount }))}">${t('dash.guild.actRestore', dl)}</button></div></details>` : ''}
+</div>
 <script>function cpvNew(){const s=document.querySelector('[name=captchaStyle]'),d=document.querySelector('[name=captchaDifficulty]');document.getElementById('cpv').src='/g/${guild.id}/captcha.png?style='+encodeURIComponent(s?s.value:'text')+'&diff='+encodeURIComponent(d?d.value:'easy')+'&r='+Math.random()}</script>
 <div class="card" id="modcard"><h2>${t('dash.guild.cardModeration', dl)}</h2>
 <p class="cardsub">${t('dash.guild.cardModerationSub', dl)}</p>${msgAt('modcard')}
@@ -708,6 +721,39 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>
   <div class="warnbox" id="appealNeedsLog"${cfg.logChannelId ? ' style="display:none"' : ''}>${t('dash.guild.setLogFirst', dl)}</div>
   <button class="btn">${t('dash.guild.saveModeration', dl)}</button>
 </form></div>
+<div class="card" id="compromised"><h2>${t('dash.guild.cardCompromised', dl)}${COMPROMISED_LIVE ? '' : ` <span class="soon">${t('dash.guild.comingSoon', dl)}</span>`}</h2>
+<p class="cardsub">${t('dash.guild.cardCompromisedSub', dl)}</p>${msgAt('compromised')}
+${COMPROMISED_LIVE ? `${MC_DEGRADED ? `<div class="warnbox">${t('dash.guild.compIntentWarn', dl)}</div>` : ''}
+<form method="post" action="/g/${guild.id}/save#compromised" data-dirty="${esc(t('dash.guild.cardCompromised', dl))}">
+  <input type="hidden" name="back" value="compromised"><input type="hidden" name="own" value="compromised">
+  <label class="toggle"><input type="checkbox" name="comp_enabled" ${comp.enabled ? 'checked' : ''} aria-describedby="cmphint"> ${t('dash.guild.compEnable', dl)}</label>
+  <small id="cmphint">${t('dash.guild.compEnableShort', dl)}</small>
+  <details class="more"><summary>${t('dash.guild.learnMore', dl)}</summary><div class="mb">${t('dash.guild.compEnableHint', dl)}</div></details>
+  <fieldset id="cmpfields" ${comp.enabled ? '' : 'disabled'} style="border:0;padding:0;margin:0;min-width:0${comp.enabled ? '' : ';opacity:.45'}">
+  <div class="grid2f">
+  <label>${t('dash.guild.compChannels', dl)} <select name="comp_channels">
+    ${[2, 3, 4, 5].map((v) => `<option value="${v}" ${comp.channels === v ? 'selected' : ''}>${t('dash.guild.compChannelsN', dl, { n: v })}</option>`).join('')}
+  </select><small>${t('dash.guild.compChannelsHint', dl)}</small></label>
+  <label>${t('dash.guild.compWindow', dl)} <select name="comp_window">
+    ${[2, 5, 10, 30].map((v) => `<option value="${v}" ${comp.windowSec === v ? 'selected' : ''}>${t('dash.guild.compWindowN', dl, { n: v })}</option>`).join('')}
+  </select><small>${t('dash.guild.compWindowHint', dl)}</small></label>
+  <label>${t('dash.guild.compAction', dl)} <select name="comp_action">
+    ${[['kick', 'compActKick'], ['quarantine', 'compActQuarantine'], ['ban', 'compActBan'], ['notify', 'compActNotify']].map(([v, k]) => `<option value="${v}" ${comp.action === v ? 'selected' : ''}>${t('dash.guild.' + k, dl)}</option>`).join('')}
+  </select><small>${t('dash.guild.compActionHint', dl)}</small></label>
+  </div>
+  <label class="toggle"><input type="checkbox" name="comp_delete" ${comp.deleteMessages ? 'checked' : ''}> ${t('dash.guild.compDelete', dl)}</label>
+  <small>${t('dash.guild.compDeleteHint', dl)}</small>
+  </fieldset>
+  <button class="btn">${t('dash.guild.saveCompromised', dl)}</button>
+</form>
+<script>(function(){var c=document.querySelector('[name=comp_enabled]');if(c)c.addEventListener('change',function(){document.getElementById('cmpfields').disabled=!c.checked;document.getElementById('cmpfields').style.opacity=c.checked?'':'.45'})})();</script>` : `<div class="mb">${t('dash.guild.compEnableHint', dl)}</div>
+<fieldset disabled style="border:0;padding:0;margin:.4rem 0 0;min-width:0;opacity:.5">
+  <div class="grid2f">
+  <label>${t('dash.guild.compChannels', dl)} <select><option>${t('dash.guild.compChannelsN', dl, { n: 3 })}</option></select></label>
+  <label>${t('dash.guild.compWindow', dl)} <select><option>${t('dash.guild.compWindowN', dl, { n: 5 })}</option></select></label>
+  <label>${t('dash.guild.compAction', dl)} <select><option>${t('dash.guild.compActKick', dl)}</option></select></label>
+  </div>
+</fieldset>`}</div>
 <div class="card" id="access"><h2>${t('dash.guild.cardAccess', dl)}</h2>
 <p class="cardsub">${t('dash.guild.cardAccessSub', dl)}</p>${msgAt('access')}
 <form method="post" action="/g/${guild.id}/save#access" data-dirty="${esc(t('dash.guild.cardAccess', dl))}">
@@ -1278,7 +1324,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           // hidden `own` field (an unchecked checkbox submits nothing, so absence
           // alone can't distinguish "off" from "different card").
           const form = await body(req);
-          const back = ['honeypot', 'verify', 'modcard', 'access', 'setup'].includes(form.get('back')) ? form.get('back') : 'top';
+          const back = ['honeypot', 'verify', 'modcard', 'access', 'setup', 'compromised'].includes(form.get('back')) ? form.get('back') : 'top';
           const own = new Set((form.get('own') ?? '').split(' ').filter(Boolean));
           const patch = {};
           if (form.has('banner_title') || form.has('banner_text')) {
@@ -1309,6 +1355,19 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             patch.appealEnabled = form.get('appealEnabled') === 'on' && Boolean(effectiveLog);
           }
           if (own.has('verificationEnabled')) patch.verificationEnabled = form.get('verificationEnabled') === 'on';
+          if (own.has('compromised')) {
+            // Compromised-account detection settings. Store the raw knobs; the bot
+            // clamps them through compromisedSettings() at read time. Merge onto the
+            // current object so a future field can be added without wiping the rest.
+            patch.compromised = {
+              ...(getGuild(guild.id)?.compromised ?? {}),
+              enabled: form.get('comp_enabled') === 'on',
+              channels: Math.max(2, Math.min(10, Number(form.get('comp_channels')) || 3)),
+              windowSec: Math.max(1, Math.min(60, Number(form.get('comp_window')) || 5)),
+              action: ['kick', 'ban', 'quarantine', 'notify'].includes(form.get('comp_action')) ? form.get('comp_action') : 'kick',
+              deleteMessages: form.get('comp_delete') === 'on',
+            };
+          }
           if (form.has('banDeleteDays')) patch.banDeleteDays = Math.min(7, Math.max(0, Number(form.get('banDeleteDays')) || 0));
           const cur = getGuild(guild.id) ?? {};
           const effVerify = patch.verifyChannelId ?? cur.verifyChannelId;
