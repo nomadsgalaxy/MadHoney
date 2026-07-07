@@ -183,16 +183,20 @@ export function renderPositionCaptcha(slot, difficulty = 'easy', rand = Math.ran
   }
 
   // interference stays in the top band and UNDER the piece - noise for a bot's
-  // segmentation, but it must never obscure the shape a human has to match
-  interference(ctx, W, 40, INK[Math.floor(rand() * INK.length)], 1.5 + rand() * 1.5, rand);
+  // segmentation, but it must never obscure the shape a human has to match.
+  // Pass count and stroke width scale with difficulty (easy 1 pass, hard 3) so
+  // the setting is actually visible on this style, like it is on the text one.
+  for (let i = 0; i < Math.max(1, Math.round(k * 2 - 0.1)); i++) {
+    interference(ctx, W, 40, INK[Math.floor(rand() * INK.length)], (1.5 + rand() * 1.5) * k, rand);
+  }
 
   // the floating piece, top band, at a horizontal position UNRELATED to the
-  // answer, with a slight wobble (small enough to still eyeball-match)
+  // answer, with a difficulty-scaled wobble (hard ≈ ±13°, still eyeball-matchable)
   const s = 48;
   const px = 70 + rand() * (W - 140);
   ctx.save();
   ctx.translate(px, 44);
-  ctx.rotate((rand() - 0.5) * 0.14);
+  ctx.rotate((rand() - 0.5) * 0.14 * k);
   piecePath(ctx, 0, 0, s, target);
   ctx.fillStyle = INK[Math.floor(rand() * INK.length)];
   ctx.fill();
@@ -207,10 +211,10 @@ export function renderPositionCaptcha(slot, difficulty = 'easy', rand = Math.ran
   let d = 0;
   for (let n = 1; n <= POSITION_SLOTS; n++) {
     const cx = pitch * (n - 0.5), cy = 118;
-    const jx = (rand() - 0.5) * 8, jy = (rand() - 0.5) * 6;
+    const jx = (rand() - 0.5) * 8 * k, jy = (rand() - 0.5) * 6 * k;
     ctx.save();
     ctx.translate(cx + jx, cy + jy);
-    ctx.rotate((rand() - 0.5) * 0.1);
+    ctx.rotate((rand() - 0.5) * 0.1 * k);
     ctx.fillStyle = '#232a34';
     ctx.beginPath();
     ctx.roundRect(-pitch / 2 + 8, -34, pitch - 16, 68, 8);

@@ -518,7 +518,8 @@ export function startDashboard(client) {
       <div class="modebtns">${modeBtn('armed', t('dash.guild.mArmed', dl))}${modeBtn('review', t('dash.guild.mReview', dl))}${modeBtn('disarmed', t('dash.guild.mOff', dl))}</div>
     </form>` : '';
 
-    const recent = banRows.slice(-12).reverse().map((x) => {
+    // headline card shows just the latest 5; the /log page has the full history
+    const recent = banRows.slice(-5).reverse().map((x) => {
       const when = esc(String(x.at).replace('T', ' ').slice(0, 16));
       return `<tr><td>${x.unbanned ? `<span class="badge un">${t('dash.guild.badgeUnban', dl)}</span>` : `<span class="badge ban">${t('dash.guild.badgeBan', dl)}</span>`}</td><td>${esc(x.tag ?? x.id)}</td><td class="k">${esc(x.channel ?? '')}</td><td class="k">${when}</td></tr>`;
     }).join('');
@@ -537,7 +538,7 @@ export function startDashboard(client) {
       ${step(done.config, t('dash.guild.stepConfigL', dl), t('dash.guild.stepConfigH', dl), `<a class="btn sm ${done.config ? 'grey' : ''}" href="#honeypot">${t('dash.guild.configuration', dl)}</a>`)}
       ${verifyOn ? step(done.gf, t('dash.guild.stepGfL', dl), t('dash.guild.gfEstimate', dl, { members: (guild.memberCount || 0).toLocaleString(dl), mins: gfMins }), gfBtn) : ''}
       ${step(done.panels, t('dash.guild.stepPanelsL', dl), t('dash.guild.stepPanelsH', dl),
-    `${verifyOn ? `<button form="actform" name="do" value="post_verify" class="btn sm ${cfg.verifyPosted ? 'grey' : ''}">${cfg.verifyPosted ? t('dash.guild.repost', dl) : t('dash.guild.actPostPanel', dl)}</button>` : ''}<button form="actform" name="do" value="post_banner" class="btn sm ${cfg.bannerPosted ? 'grey' : ''}">${cfg.bannerPosted ? t('dash.guild.repost', dl) : t('dash.guild.actPostBanner', dl)}</button>`)}
+    `${verifyOn ? `<button form="actform" name="do" value="post_verify" class="btn sm ${cfg.verifyPosted ? 'grey' : ''}">${cfg.verifyPosted ? t('dash.guild.repostPanel', dl) : t('dash.guild.actPostPanel', dl)}</button>` : ''}<button form="actform" name="do" value="post_banner" class="btn sm ${cfg.bannerPosted ? 'grey' : ''}">${cfg.bannerPosted ? t('dash.guild.repostBanner', dl) : t('dash.guild.actPostBanner', dl)}</button>`)}
       ${verifyOn ? step(done.gate, t('dash.guild.stepGateL', dl), t('dash.guild.step4Desc', dl), `<a class="btn sm ${done.gate ? 'grey' : ''}" href="/g/${guild.id}/gate">${t('dash.guild.actGate', dl)}</a>`) : ''}
       ${step(done.arm, t('dash.guild.stepArmL', dl), t('dash.guild.stepArmH', dl), done.arm ? '' : `<button form="actform" name="do" value="mode_armed" class="btn sm">${t('dash.guild.mArmed', dl)}</button>`)}
     </ul>`;
@@ -591,7 +592,8 @@ ${checklist}
 ${guideDetails}
 </div>`}
 <div class="card" id="activity"><h2>${t('dash.guild.cardActivity', dl)} <span class="count">${t('dash.guild.trappedCount', dl, { n: trappedHere })}</span></h2>${msgAt('activity')}
-${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` : `<div class="empty">${t('dash.guild.noBans', dl)}</div>`}</div>
+${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>
+<small style="margin-top:.5rem"><a href="/g/${guild.id}/log">${t('dash.guild.viewFullLog', dl)}</a></small>` : `<div class="empty">${t('dash.guild.noBans', dl)}</div>`}</div>
 <div class="card" id="honeypot"><h2>${t('dash.guild.cardHoneypot', dl)}</h2>
 <p class="cardsub">${t('dash.guild.cardHoneypotSub', dl)}</p>${msgAt('honeypot')}
 <form method="post" action="/g/${guild.id}/save#honeypot" id="hpForm" data-dirty="${esc(t('dash.guild.cardHoneypot', dl))}">
@@ -642,7 +644,7 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
 <div class="card" id="verify"><h2>${t('dash.guild.cardVerification', dl)}</h2>
 <p class="cardsub">${t('dash.guild.cardVerificationSub', dl)}</p>${msgAt('verify')}
 <form method="post" action="/g/${guild.id}/save#verify" data-dirty="${esc(t('dash.guild.cardVerification', dl))}">
-  <input type="hidden" name="back" value="verify"><input type="hidden" name="own" value="verificationEnabled">
+  <input type="hidden" name="back" value="verify"><input type="hidden" name="own" value="verificationEnabled autoGate">
   <label class="toggle"><input type="checkbox" name="verificationEnabled" id="vtog" ${verifyOn ? 'checked' : ''} aria-describedby="vhint"> ${t('dash.guild.requireVerify', dl)}&nbsp;<b style="color:var(--honey)">${t('dash.guild.recommended', dl)}</b></label>
   <small id="vhint">${t('dash.guild.requireVerifyShort', dl)}</small>
   <details class="more"><summary>${t('dash.guild.learnMore', dl)}</summary><div class="mb">${t('dash.guild.requireVerifyHint', dl)}</div></details>
@@ -668,6 +670,8 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
     <label>${t('dash.guild.verifyMessage', dl)} <textarea name="verifyText" rows="3" placeholder="${esc(DEFAULT_VERIFY_TEXT)}">${esc(cfg.verifyText || '')}</textarea>
       <small>${t('dash.guild.verifyMessageHint', dl)}</small></label>
   </fieldset>
+  <label class="toggle"><input type="checkbox" name="autoGate" ${cfg.autoGate !== false ? 'checked' : ''} aria-describedby="aghint"> ${t('dash.guild.autoGateLabel', dl)}</label>
+  <small id="aghint">${t('dash.guild.autoGateHint', dl)}</small>
   ${SELF_HOSTED ? '' : `<div class="notebox">${t('dash.guild.creditNote', dl)}</div>`}
   <button class="btn">${t('dash.guild.saveVerification', dl)}</button>
   <h3 class="subh" id="deploy">${t('dash.guild.deployStatus', dl)}</h3>
@@ -772,6 +776,24 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>` 
   counts();
 })();
 </script>`, { user: sess.user.username });
+  }
+
+  // Full ban/appeal history — the Activity card on the server page shows only
+  // the latest 5; this is the detailed log it links to.
+  function logPage(guild, sess) {
+    const dl = curLocale;
+    const rows = bans(guild.id).slice(-200).reverse();
+    const table = rows.map((x) => {
+      const when = esc(String(x.at).replace('T', ' ').slice(0, 16));
+      return `<tr><td>${x.unbanned ? `<span class="badge un">${t('dash.guild.badgeUnban', dl)}</span>` : `<span class="badge ban">${t('dash.guild.badgeBan', dl)}</span>`}</td><td>${esc(x.tag ?? x.id)}</td><td class="k">${esc(x.id ?? '')}</td><td class="k">${esc(x.channel ?? '')}</td><td class="k">${when}</td></tr>`;
+    }).join('');
+    return layout(`MadHoney - ${t('dash.guild.logTitle', dl)}`, `
+<div class="subnav"><a class="backbtn" href="/g/${guild.id}#activity"><span class="chev">‹</span> ${esc(guild.name)}</a></div>
+<div class="ghead"><div class="gtitle"><h1>${t('dash.guild.logTitle', dl)}</h1></div></div>
+<div class="card">
+${table ? `<div class="tscroll"><table class="btable">${table}</table></div>
+<small style="margin-top:.5rem">${t('dash.guild.logShowing', dl, { n: rows.length })}</small>` : `<div class="empty">${t('dash.guild.noBans', dl)}</div>`}
+</div>`, { user: sess.user.username });
   }
 
   // Guided WorkerBee setup — shown when an admin clicks "Grandfather Members"
@@ -1169,7 +1191,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
       }
 
       // ---- per-guild ----
-      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/captcha\.png|\/progress|\/gate|\/grandfather-setup)?$/);
+      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/captcha\.png|\/progress|\/gate|\/grandfather-setup|\/log)?$/);
       if (m) {
         const sess = session(req);
         if (!sess) {
@@ -1253,6 +1275,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             patch.appealEnabled = form.get('appealEnabled') === 'on' && Boolean(effectiveLog);
           }
           if (own.has('verificationEnabled')) patch.verificationEnabled = form.get('verificationEnabled') === 'on';
+          if (own.has('autoGate')) patch.autoGate = form.get('autoGate') === 'on'; // default on; false = opt-out of auto-gating new channels
           if (form.has('banDeleteDays')) patch.banDeleteDays = Math.min(7, Math.max(0, Number(form.get('banDeleteDays')) || 0));
           const cur = getGuild(guild.id) ?? {};
           const effVerify = patch.verifyChannelId ?? cur.verifyChannelId;
@@ -1325,6 +1348,9 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
         }
         if (m[2] === '/grandfather-setup') {
           return html(grandfatherSetupPage(guild, sess));
+        }
+        if (m[2] === '/log') {
+          return html(logPage(guild, sess));
         }
         if (url.searchParams.get('refresh')) {
           await Promise.all([guild.roles.fetch(), guild.channels.fetch()]).catch(() => {});
