@@ -474,7 +474,8 @@ export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) 
     }
   };
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, targets.length || 1) }, worker));
-  saveGuild(guild.id, { grandfatherPending: false, grandfatheredAt: new Date().toISOString() });
+  // a real pass supersedes any manual "mark as done" and re-enables lazy grandfathering
+  saveGuild(guild.id, { grandfatherPending: false, grandfatheredAt: new Date().toISOString(), grandfatherSkipped: false });
   return t('dash.act.gfDone', loc, { role: role.name, added: progress.added, skipped: progress.skipped, failedPart: failures.length ? t('dash.act.gfFailed', loc, { n: failures.length, role: role.name, list: failures.slice(0, 5).join(', ') }) : '' });
 }
 
@@ -541,7 +542,7 @@ export async function grandfatherViaWorkerBee(guild, cfg, progress = {}, loc = c
       }
     };
     await Promise.all(Array.from({ length: Math.min(10, targets.length || 1) }, worker));
-    if (!cfg.grandfatheredAt) saveGuild(guild.id, { grandfatherPending: false, grandfatheredAt: new Date().toISOString() });
+    if (!cfg.grandfatheredAt) saveGuild(guild.id, { grandfatherPending: false, grandfatheredAt: new Date().toISOString(), grandfatherSkipped: false });
     await wbGuild.leave().catch(() => { /* admin can kick it manually */ });
     return t('dash.act.gfDone', loc, { role: role.name, added: progress.added, skipped: progress.skipped, failedPart: failures.length ? t('dash.act.gfFailed', loc, { n: failures.length, role: role.name, list: failures.slice(0, 5).join(', ') }) : '' }) + ' 🐝';
   } finally {

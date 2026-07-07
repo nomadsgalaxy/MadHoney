@@ -492,7 +492,7 @@ export function startDashboard(client) {
     const gatedCount = (cfg.gatedChannels ?? []).length;
     const done = {
       config: Boolean(configured),
-      gf: !verifyOn || Boolean(cfg.grandfatheredAt),
+      gf: !verifyOn || Boolean(cfg.grandfatheredAt) || Boolean(cfg.grandfatherSkipped),
       panels: (!verifyOn || Boolean(cfg.verifyPosted)) && Boolean(cfg.bannerPosted),
       gate: !verifyOn || gatedCount > 0,
       arm: mode !== 'disarmed',
@@ -531,12 +531,23 @@ export function startDashboard(client) {
       `<li><span class="tick${isDone ? '' : ' todo'}"${isDone ? ` title="${esc(t('dash.guild.stepDone', dl))}"` : ''}>${isDone ? '✓' : ''}</span><span class="what"><b>${label}</b><small>${hint}</small></span><span class="ctl">${ctl}</span></li>`;
     const gfMins = Math.max(1, Math.ceil((guild.memberCount || 0) / 60));
     const gfConfirm = esc(t('dash.guild.confirmGf', dl, { members: (guild.memberCount || 0).toLocaleString(dl) }));
-    const gfBtn = GF_DEGRADED
-      ? `<a class="btn sm ${done.gf ? 'grey' : ''}" href="/g/${guild.id}/grandfather-setup">${t('dash.guild.actGrandfather', dl)}</a>`
-      : `<button form="actform" name="do" value="grandfather" class="btn sm ${done.gf ? 'grey' : ''}" data-confirm="${gfConfirm}">${done.gf ? t('dash.guild.rerun', dl) : t('dash.guild.actGrandfather', dl)}</button>`;
+    // marked-done-manually = the skip flag is set AND a real pass never ran (a real
+    // run supersedes and re-enables lazy grandfathering)
+    const gfSkippedOnly = Boolean(cfg.grandfatherSkipped) && !cfg.grandfatheredAt;
+    const gfRunBtn = GF_DEGRADED
+      ? `<a class="btn sm ${done.gf ? 'grey' : ''}" href="/g/${guild.id}/grandfather-setup">${cfg.grandfatheredAt ? t('dash.guild.rerun', dl) : t('dash.guild.actGrandfather', dl)}</a>`
+      : `<button form="actform" name="do" value="grandfather" class="btn sm ${done.gf ? 'grey' : ''}" data-confirm="${gfConfirm}">${cfg.grandfatheredAt ? t('dash.guild.rerun', dl) : t('dash.guild.actGrandfather', dl)}</button>`;
+    // skip control: "Mark as done" when not handled, "Not done" to undo a manual
+    // mark. Once a real pass has run, neither is offered (grandfatheredAt wins).
+    const gfSkipBtn = cfg.grandfatheredAt ? ''
+      : gfSkippedOnly
+        ? `<button form="actform" name="do" value="gf_unskip" class="btn grey sm">${t('dash.guild.gfUnmark', dl)}</button>`
+        : `<button form="actform" name="do" value="gf_skip" class="btn grey sm">${t('dash.guild.gfMarkDone', dl)}</button>`;
+    const gfCtl = gfRunBtn + gfSkipBtn;
+    const gfHint = gfSkippedOnly ? t('dash.guild.gfSkippedHint', dl) : t('dash.guild.gfEstimate', dl, { members: (guild.memberCount || 0).toLocaleString(dl), mins: gfMins });
     const checklist = `<ul class="check">
       ${step(done.config, t('dash.guild.stepConfigL', dl), t('dash.guild.stepConfigH', dl), `<a class="btn sm ${done.config ? 'grey' : ''}" href="#honeypot">${t('dash.guild.configuration', dl)}</a>`)}
-      ${verifyOn ? step(done.gf, t('dash.guild.stepGfL', dl), t('dash.guild.gfEstimate', dl, { members: (guild.memberCount || 0).toLocaleString(dl), mins: gfMins }), gfBtn) : ''}
+      ${verifyOn ? step(done.gf, t('dash.guild.stepGfL', dl), gfHint, gfCtl) : ''}
       ${step(done.panels, t('dash.guild.stepPanelsL', dl), t('dash.guild.stepPanelsH', dl),
     `${verifyOn ? `<button form="actform" name="do" value="post_verify" class="btn sm ${cfg.verifyPosted ? 'grey' : ''}">${cfg.verifyPosted ? t('dash.guild.repostPanel', dl) : t('dash.guild.actPostPanel', dl)}</button>` : ''}<button form="actform" name="do" value="post_banner" class="btn sm ${cfg.bannerPosted ? 'grey' : ''}">${cfg.bannerPosted ? t('dash.guild.repostBanner', dl) : t('dash.guild.actPostBanner', dl)}</button>`)}
       ${verifyOn ? step(done.gate, t('dash.guild.stepGateL', dl), t('dash.guild.step4Desc', dl), `<a class="btn sm ${done.gate ? 'grey' : ''}" href="/g/${guild.id}/gate">${t('dash.guild.actGate', dl)}</a>`) : ''}
@@ -864,7 +875,7 @@ ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 ${GF_DEGRADED ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite: workerBeeInvite() || '#' })}</div>` : ''}
 ${cfg.grandfatherPending
     ? `<div class="warnbox">${t('dash.gate.gfRunningWarn', dl)}</div>`
-    : (cfg.verificationEnabled !== false && cfg.verifiedRoleId && !cfg.grandfatheredAt
+    : (cfg.verificationEnabled !== false && cfg.verifiedRoleId && !cfg.grandfatheredAt && !cfg.grandfatherSkipped
       ? `<div class="warnbox">${t('dash.gate.gfNotDoneWarn', dl)}</div>` : '')}
 <div class="card">
 <p>${t('dash.gate.intro', dl)}</p>
@@ -1300,6 +1311,14 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
               disarmed: t('dash.msg.noteDisarmed', curLocale),
             }[m];
             return html(await guildPage(guild, sess, note, 'top'));
+          }
+          // Manually mark grandfathering done (server already handled member
+          // access, or deliberately makes everyone verify). Just a flag - it does
+          // NOT set grandfatheredAt, so lazy grandfathering stays off. Reversible.
+          if (form.get('do') === 'gf_skip' || form.get('do') === 'gf_unskip') {
+            const skip = form.get('do') === 'gf_skip';
+            saveGuild(guild.id, { grandfatherSkipped: skip });
+            return html(await guildPage(guild, sess, t(skip ? 'dash.guild.gfMarkedMsg' : 'dash.guild.gfUnmarkedMsg', curLocale), 'setup'));
           }
           if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
             return html(await guildPage(guild, sess, t('dash.msg.finishConfig', curLocale), 'setup'));
