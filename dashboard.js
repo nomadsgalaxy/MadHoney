@@ -382,6 +382,8 @@ function layout(title, body, opts = {}) {
   details.guide .tip{background:#0f1216;border:1px solid var(--line);border-radius:8px;padding:.55rem .8rem;margin:.55rem 0;line-height:1.5}
   .warnbox{background:rgba(214,69,69,.1);border:1px solid rgba(214,69,69,.45);border-radius:8px;padding:.6rem .85rem;margin:.3rem 0 .2rem;font-size:.9rem;line-height:1.5;color:#ffb3aa}
   .warnbox b{color:#fff}
+  .hlist{margin:.4rem 0 0;padding-left:.2rem;list-style:none}
+  .hlist li{margin:.35rem 0;padding-left:0}
   .armbar{display:flex;align-items:center;gap:1rem;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:.9rem 1.2rem;margin:0 0 1rem}
   .armbar.on{border-color:rgba(255,179,26,.5);background:rgba(255,179,26,.06)}
   .armbar.off{border-color:rgba(214,69,69,.5);background:rgba(214,69,69,.07)}
@@ -468,7 +470,10 @@ export function startDashboard(client) {
     const cfg = getGuild(guild.id) ?? {};
     const msgAt = (key) => (msg && at === key ? `<pre style="margin-top:.6rem">${esc(msg)}</pre>` : '');
     // standing health warning: catches the classic "bot role below verified role" mistake
-    const problem = (cfg.verificationEnabled !== false && cfg.verifiedRoleId) ? await preflight(guild, cfg, dl).catch((e) => e.message) : null;
+    // Health check (validates the real Discord state, not just config flags):
+    // an array of { level, msg }, block-level first. Only runs for verify-on
+    // servers with a verified role set.
+    const problems = (cfg.verificationEnabled !== false && cfg.verifiedRoleId) ? await preflight(guild, cfg, dl).catch((e) => [{ level: 'block', msg: e.message }]) : [];
     const b = { ...DEFAULT_BANNER, ...cfg.banner };
     const roles = guild.roles.cache.filter((r) => !r.managed && r.id !== guild.id)
       .sort((a, z) => z.position - a.position);
@@ -607,8 +612,7 @@ export function startDashboard(client) {
 </div>
 ${armBar}
 ${progressBlock}
-${problem ? `<div class="warnbox" style="white-space:pre-wrap"><b>${t('dash.guild.setupProblem', dl)}</b>
-${esc(problem)}</div>` : ''}
+${problems.length ? `<div class="warnbox"><b>${t('dash.guild.healthTitle', dl)}</b><ul class="hlist">${problems.map((p) => `<li>${p.level === 'block' ? '🚫 ' : '⚠️ '}${esc(p.msg)}</li>`).join('')}</ul></div>` : ''}
 ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 ${setupDone ? '' : `<div class="card" id="setup"><h2>${t('dash.guild.setupTitle', dl)}</h2>${msgAt('setup')}
 ${GF_DEGRADED && verifyOn && !done.gf ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite: workerBeeInvite() || '#' })}</div>` : ''}
@@ -1072,8 +1076,9 @@ ${locked.length ? `<div class="info" style="color:#ff8a7d">${t('dash.gate.cantAc
 
     return layout(t('dash.stats.title', dl), `
 <style>
-  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;margin:.4rem 0 1.2rem}
-  @media(max-width:640px){.stat-row{grid-template-columns:1fr}}
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin:.4rem 0 1.2rem}
+  @media(max-width:760px){.stat-row{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:420px){.stat-row{grid-template-columns:1fr}}
   .stat-tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem}
   .stat-tile .n{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:2.3rem;color:var(--honey);line-height:1}
   .stat-tile .l{color:var(--dim);font-size:.85rem;margin-top:.3rem;text-transform:uppercase;letter-spacing:.06em}

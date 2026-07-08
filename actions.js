@@ -5,6 +5,7 @@ import { PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, Butt
 import { createHash, randomBytes } from 'node:crypto';
 import { renderBanner, DEFAULT_BANNER, creditSuffix } from './banner.js';
 import { resolvedIncidents } from './incident.js';
+import { honeypotMode } from './trap.js';
 import { t } from './i18n.js';
 
 // Randomize the banner's attachment filename on every post. A fixed name like
@@ -274,7 +275,13 @@ export async function gateChannels(guild, cfg, apply = false, sel = null, loc = 
     });
   }
   for (const ch of plan.keep) {
-    await tryEdit(ch, () => ch.permissionOverwrites.edit(everyone, { ViewChannel: true }, { reason: 'MadHoney: verify gateway stays public' }));
+    await tryEdit(ch, async () => {
+      await ch.permissionOverwrites.edit(everyone, { ViewChannel: true }, { reason: 'MadHoney: verify gateway stays public' });
+      // Pin the bot's own access to the verify channel too, so a later @everyone
+      // View change can't lock it out of managing the verify panel (same guard the
+      // gated channels + honeypot get).
+      if (ch.id === cfg.verifyChannelId) await keepBotAccess(ch, 'MadHoney: keep bot able to manage the verify panel');
+    });
   }
   for (const ch of plan.honeypot) {
     await tryEdit(ch, async () => {
@@ -410,17 +417,71 @@ export function explainError(msg, loc) {
 
 // Can the bot actually grant the verified role here? Returns null when
 // everything checks out, or a human-readable problem with the exact fix.
+// Permissions that are dangerous to hand to everyone who verifies (and to
+// mass-grant during grandfathering). Raw bits so the check is pure + testable,
+// independent of discord.js. Administrator is the accidental-server-wide-admin.
+export const DANGEROUS_ROLE_PERMS = {
+  Administrator: 1n << 3n, 'Manage Server': 1n << 5n, 'Ban Members': 1n << 2n,
+  'Kick Members': 1n << 1n, 'Manage Roles': 1n << 28n, 'Manage Channels': 1n << 4n,
+};
+export function dangerousRolePerms(bitfield) {
+  const bits = BigInt(bitfield);
+  return Object.entries(DANGEROUS_ROLE_PERMS).filter(([, b]) => (bits & b) === b).map(([n]) => n);
+}
+// Channels actually gated behind verification, excluding the verify gateway and
+// the honeypot (which live in gatedChannels but aren't "content"). Empty while
+// verification is on = unverified members can still reach everything.
+export function contentGatedChannels(cfg) {
+  return (cfg?.gatedChannels ?? []).filter((id) => id !== cfg?.verifyChannelId && id !== cfg?.honeypotChannelId);
+}
+
+// Health check for a verify-enabled server: returns EVERY problem it finds as
+// { level, msg }, most severe first (empty array = healthy). 'block' issues make
+// core actions fail or cause harm at scale, so grandfather() refuses on them;
+// 'warn' issues are surfaced in the dashboard but don't block. Built from real
+// misconfigurations seen in the wild - a config can look complete while the
+// server is silently broken, so this validates the actual DISCORD state.
 export async function preflight(guild, cfg, loc = cfg?.locale) {
+  const issues = [];
+  const push = (level, key, params) => issues.push({ level, msg: t(key, loc, params) });
   const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
-  if (!role) return t('dash.act.pfRoleMissing', loc);
+  if (!role) { push('block', 'dash.act.pfRoleMissing'); return issues; }
   const me = await guild.members.fetchMe();
-  if (!me.permissions.has(PermissionFlagsBits.ManageRoles)) {
-    return t('dash.act.pfNoManageRoles', loc);
+  if (!me.permissions.has(PermissionFlagsBits.ManageRoles)) push('block', 'dash.act.pfNoManageRoles');
+  else if (me.roles.highest.comparePositionTo(role) <= 0) push('block', 'dash.act.pfBelow', { me: me.roles.highest.name, role: role.name });
+  // Dangerous verified role: everyone who verifies inherits these, and
+  // grandfathering grants them to every existing member at once. Administrator is
+  // catastrophic enough to BLOCK grandfathering; lesser mod perms just warn.
+  const dangerous = dangerousRolePerms(role.permissions.bitfield);
+  if (dangerous.length) push(dangerous.includes('Administrator') ? 'block' : 'warn', 'dash.act.pfVerifiedDangerous', { perms: dangerous.join(', ') });
+  // Inverted honeypot: the trap must be visible to the unverified accounts it's
+  // meant to catch and hidden from verified members (who'd be auto-banned for
+  // posting there). Gated like a normal channel, it's both inert AND a ban risk.
+  if (cfg.honeypotChannelId && honeypotMode(cfg) !== 'disarmed') {
+    const hp = await guild.channels.fetch(cfg.honeypotChannelId).catch(() => null);
+    if (hp) {
+      const everyoneSees = hp.permissionsFor(guild.roles.everyone).has(PermissionFlagsBits.ViewChannel);
+      const verifiedSees = hp.permissionsFor(role).has(PermissionFlagsBits.ViewChannel);
+      if (!everyoneSees || verifiedSees) push('warn', 'dash.act.pfHoneypotInverted');
+    }
   }
-  if (me.roles.highest.comparePositionTo(role) <= 0) {
-    return t('dash.act.pfBelow', loc, { me: me.roles.highest.name, role: role.name });
+  // Verify channel must be postable by the bot AND visible to unverified members,
+  // or nobody can verify - the #1 cause of "I set it up but it's stuck".
+  if (cfg.verifyChannelId) {
+    const vch = await guild.channels.fetch(cfg.verifyChannelId).catch(() => null);
+    if (vch) {
+      if (!vch.permissionsFor(me).has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) push('warn', 'dash.act.pfVerifyBotCantPost');
+      if (!vch.permissionsFor(guild.roles.everyone).has(PermissionFlagsBits.ViewChannel)) push('warn', 'dash.act.pfVerifyHidden');
+    }
   }
-  return null;
+  // Verification on, but nothing real behind it.
+  if (contentGatedChannels(cfg).length === 0) push('warn', 'dash.act.pfNothingGated');
+  return issues.sort((a, b) => Number(a.level !== 'block') - Number(b.level !== 'block'));
+}
+
+// The first blocking issue (if any) - what grandfather()/WorkerBee refuse on.
+export async function preflightBlock(guild, cfg, loc = cfg?.locale) {
+  return (await preflight(guild, cfg, loc)).find((p) => p.level === 'block') || null;
 }
 
 // Pass a `progress` object to watch it live: {total, done, added, skipped,
@@ -442,8 +503,8 @@ async function fetchAllMembers(guild, tries = 5) {
 }
 
 export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) {
-  const problem = await preflight(guild, cfg, loc);
-  if (problem) throw new Error(problem);
+  const block = await preflightBlock(guild, cfg, loc);
+  if (block) throw new Error(block.msg);
   // resumable: mark in-progress so a bot restart mid-run re-runs it on the next
   // boot (see ClientReady). Idempotent - already-verified members are skipped.
   saveGuild(guild.id, { grandfatherPending: true });
@@ -500,6 +561,10 @@ export async function grandfatherViaWorkerBee(guild, cfg, progress = {}, loc = c
   const token = process.env.SIDECAR_TOKEN;
   if (!token) throw new Error('WorkerBee helper is not configured (SIDECAR_TOKEN unset).');
   if (!cfg?.verifiedRoleId) throw new Error('Set a verified role before grandfathering.');
+  // Refuse to mass-grant a role that carries Administrator (or other blocking
+  // issues) - grandfathering it would make every existing member an admin.
+  const block = await preflightBlock(guild, cfg, loc);
+  if (block) throw new Error(block.msg);
   // Two concurrent logins with WorkerBee's single token would fight over the
   // gateway connection - serialize so one server's run finishes before the next.
   if (workerBeeBusy) throw new Error('WorkerBee is grandfathering another server right now — try again in a minute.');

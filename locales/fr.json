@@ -316,7 +316,7 @@
       "bannerNote": "Aperçu en direct - il se régénère à mesure que tu ajustes. Enregistre, puis publie-la depuis Actions ci-dessous.<br><b style=\"color:var(--honey)\">Personnalise-la.</b> Si chaque honeypot MadHoney était identique, les bots pourraient apprendre à le reconnaître et l'éviter. Change le texte, les couleurs, la police ou le logo pour que ta bannière soit unique. (Le fichier est aussi publié sous un nom aléatoire à chaque fois, pour la même raison.)",
       "headline": "Titre",
       "bodyText": "Corps",
-      "accent": "Accent (rayures + titre)",
+      "accent": "Accent",
       "textColor": "Texte",
       "background": "Arrière-plan",
       "mentionHighlight": "Surbrillance des mentions",
@@ -393,7 +393,8 @@
       "compDelete": "Supprimer les messages de spam",
       "compDeleteHint": "Supprimer les messages envoyés en rafale de tous les salons lorsqu'un compte compromis est détecté.",
       "saveCompromised": "Enregistrer les réglages des comptes compromis",
-      "comingSoon": "Bientôt disponible"
+      "comingSoon": "Bientôt disponible",
+      "healthTitle": "Vérification de l'état de MadHoney — problèmes à corriger :"
     },
     "msg": {
       "bannerSaved": "Bannière enregistrée. Publie-la dans le honeypot avec « Publier la bannière ».",
@@ -512,7 +513,12 @@
       "sbOff": "Le partage des bannissements est OFF pour ce serveur - active-le d'abord, puis synchronise.",
       "sbNoBan": "Je n'ai pas la permission Bannir des membres ici.",
       "sbDone": "Synchronisation des bannissements : {added} bannis depuis la liste partagée, {skipped} déjà bannis ici{failedPart}. Taille de la liste : {pool}.",
-      "sbFailed": ", {n} en échec"
+      "sbFailed": ", {n} en échec",
+      "pfHoneypotInverted": "Votre salon piège (honeypot) est configuré à l'envers : les utilisateurs non vérifiés (les bots de spam qu'il est censé attraper) ne peuvent pas le voir, ou les membres vérifiés le peuvent — donc le piège n'attrape rien et pourrait bannir automatiquement vos propres membres. Solution : relancez « Verrouiller les salons » pour réinitialiser ses permissions.",
+      "pfVerifiedDangerous": "Le rôle vérifié accorde des permissions dangereuses ({perms}). Chaque membre qui se vérifie les obtient — et n'importe qui peut se vérifier. Retirez-les dans Paramètres du serveur › Rôles, sauf si c'est vraiment votre intention.",
+      "pfVerifyBotCantPost": "Je ne peux pas publier le panneau de vérification dans le salon de vérification — il me manque la permission Voir le salon ou Envoyer des messages à cet endroit. Accordez-moi les deux (le salon peut rester en lecture seule pour les membres), ou choisissez un salon où je peux publier.",
+      "pfVerifyHidden": "Les membres non vérifiés ne peuvent pas voir le salon de vérification, donc personne ne peut se vérifier. Rendez-le visible pour @everyone (Voir le salon) — je le garde ainsi chaque fois que vous verrouillez des salons.",
+      "pfNothingGated": "La vérification est activée, mais aucun salon de contenu n'est verrouillé — les membres non vérifiés peuvent toujours tout voir et publier partout. Utilisez le Verrouillage des salons pour bloquer vos salons derrière la vérification."
     }
   },
   "landing": {

@@ -316,7 +316,7 @@
       "bannerNote": "Prévia ao vivo - ela é renderizada de novo conforme você ajusta. Salve e depois publique em Ações abaixo.<br><b style=\"color:var(--honey)\">Deixe do seu jeito.</b> Se todo honeypot do MadHoney fosse idêntico, os bots poderiam aprender a reconhecê-lo e pulá-lo. Mude o texto, as cores, a fonte ou o logo para que seu banner seja único. (O arquivo também é publicado com um nome aleatório a cada vez, pelo mesmo motivo.)",
       "headline": "Título",
       "bodyText": "Corpo",
-      "accent": "Destaque (listras + título)",
+      "accent": "Destaque",
       "textColor": "Texto",
       "background": "Fundo",
       "mentionHighlight": "Destaque de menções",
@@ -393,7 +393,8 @@
       "compDelete": "Excluir as mensagens de spam",
       "compDeleteHint": "Remove as mensagens disparadas de todos os canais quando uma conta comprometida é flagrada.",
       "saveCompromised": "Salvar configurações de contas comprometidas",
-      "comingSoon": "Em breve"
+      "comingSoon": "Em breve",
+      "healthTitle": "Verificação de integridade do MadHoney — problemas a corrigir:"
     },
     "msg": {
       "bannerSaved": "Banner salvo. Publique no honeypot com “Publicar banner”.",
@@ -512,7 +513,12 @@
       "sbOff": "O compartilhamento de banimentos está DESLIGADO para este servidor - ative-o primeiro e depois sincronize.",
       "sbNoBan": "Não tenho a permissão Banir Membros aqui.",
       "sbDone": "Sincronização de banimentos: {added} banidos da lista compartilhada, {skipped} já banidos aqui{failedPart}. Tamanho da lista: {pool}.",
-      "sbFailed": ", {n} falharam"
+      "sbFailed": ", {n} falharam",
+      "pfHoneypotInverted": "Seu canal armadilha (honeypot) está configurado ao contrário: usuários não verificados (os bots de spam que ele deveria capturar) não conseguem vê-lo, ou membros verificados conseguem — então a armadilha não pega nada e pode banir automaticamente seus próprios membros. Correção: execute \"Restringir canais\" novamente para redefinir suas permissões.",
+      "pfVerifiedDangerous": "O cargo verificado concede permissões perigosas ({perms}). Todo membro que se verifica as recebe — e qualquer pessoa pode se verificar. Remova-as em Configurações do Servidor › Cargos, a menos que você realmente pretenda isso.",
+      "pfVerifyBotCantPost": "Não consigo publicar o painel de verificação no canal de verificação — falta-me Ver Canal ou Enviar Mensagens ali. Conceda-me ambas (o canal pode continuar somente leitura para os membros) ou escolha um canal em que eu possa publicar.",
+      "pfVerifyHidden": "Membros não verificados não conseguem ver o canal de verificação, então ninguém consegue se verificar. Torne-o visível para @everyone (Ver Canal) — eu o mantenho assim sempre que você bloqueia canais.",
+      "pfNothingGated": "A verificação está ativada, mas nenhum canal de conteúdo está bloqueado — membros não verificados ainda podem ver e publicar em todos os lugares. Use o Bloqueio de Canais para trancar seus canais atrás da verificação."
     }
   },
   "landing": {

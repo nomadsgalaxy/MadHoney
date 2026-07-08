@@ -316,7 +316,7 @@
       "bannerNote": "Živý náhled - překresluje se, jak upravuješ. Ulož, pak ho vyvěs z Akcí níže.<br><b style=\"color:var(--honey)\">Udělej si ho po svém.</b> Kdyby každý honeypot MadHoney vypadal stejně, boti by se ho mohli naučit rozpoznat a přeskočit. Změň text, barvy, font nebo logo, aby byl tvůj banner jedinečný. (Soubor je pokaždé vyvěšen pod náhodným názvem, ze stejného důvodu.)",
       "headline": "Nadpis",
       "bodyText": "Text",
-      "accent": "Zvýraznění (pruhy + nadpis)",
+      "accent": "Zvýraznění",
       "textColor": "Text",
       "background": "Pozadí",
       "mentionHighlight": "Zvýraznění zmínek",
@@ -393,7 +393,8 @@
       "compDelete": "Smazat spamové zprávy",
       "compDeleteHint": "Když je kompromitovaný účet zachycen, odstraní rozeslané zprávy ze všech kanálů.",
       "saveCompromised": "Uložit nastavení pro kompromitované účty",
-      "comingSoon": "Již brzy"
+      "comingSoon": "Již brzy",
+      "healthTitle": "Kontrola stavu MadHoney — problémy k vyřešení:"
     },
     "msg": {
       "bannerSaved": "Banner uložen. Vyvěs ho do honeypotu přes „Vyvěsit banner“.",
@@ -512,7 +513,12 @@
       "sbOff": "Sdílení banů je pro tento server VYPNUTO - nejdřív ho zapni a pak synchronizuj.",
       "sbNoBan": "Nemám tady oprávnění Banovat členy.",
       "sbDone": "Synchronizace banů: {added} zabanováno ze sdíleného seznamu, {skipped} tady již zabanováno{failedPart}. Velikost poolu: {pool}.",
-      "sbFailed": ", {n} selhalo"
+      "sbFailed": ", {n} selhalo",
+      "pfHoneypotInverted": "Váš honeypot kanál (past na spam) je nastavený obráceně: neověření uživatelé (spamovací boti, které má chytat) ho nevidí, nebo ho vidí ověření členové — takže past nic nechytí a mohla by automaticky zabanovat vaše vlastní členy. Oprava: znovu spusťte „Zabezpečit kanály\", aby se obnovila jeho oprávnění.",
+      "pfVerifiedDangerous": "Ověřená role uděluje nebezpečná oprávnění ({perms}). Získá je každý člen, který se ověří — a ověřit se může kdokoli. Odeberte je v Nastavení serveru › Role, pokud to opravdu nezamýšlíte.",
+      "pfVerifyBotCantPost": "Nemůžu odeslat ověřovací panel do ověřovacího kanálu — chybí mi tam oprávnění Zobrazit kanál nebo Posílat zprávy. Udělte mi obě (kanál může pro členy zůstat jen pro čtení), nebo vyberte kanál, do kterého můžu psát.",
+      "pfVerifyHidden": "Neověření členové nevidí ověřovací kanál, takže se nikdo nemůže ověřit. Zpřístupněte ho pro @everyone (Zobrazit kanál) — udržuji ho tak vždy, když uzamykáte kanály.",
+      "pfNothingGated": "Ověřování je zapnuté, ale žádné obsahové kanály nejsou uzamčené — neověření členové stále všude vidí a mohou psát. Pomocí Uzamčení kanálů uzamkněte své kanály za ověřením."
     }
   },
   "landing": {

@@ -316,7 +316,7 @@
       "bannerNote": "Live-Vorschau - sie wird neu gerendert, während du anpasst. Speichere und poste es dann über Aktionen unten.<br><b style=\"color:var(--honey)\">Mach es zu deinem.</b> Wenn jeder MadHoney-Honeypot identisch aussähe, könnten Bots lernen, ihn zu erkennen und zu überspringen. Ändere den Text, die Farben, die Schriftart oder das Logo, damit dein Banner einzigartig ist. (Die Datei wird aus demselben Grund jedes Mal unter einem zufälligen Namen gepostet.)",
       "headline": "Überschrift",
       "bodyText": "Textkörper",
-      "accent": "Akzent (Streifen + Überschrift)",
+      "accent": "Akzent",
       "textColor": "Text",
       "background": "Hintergrund",
       "mentionHighlight": "Erwähnungs-Hervorhebung",
@@ -393,7 +393,8 @@
       "compDelete": "Die Spam-Nachrichten löschen",
       "compDeleteHint": "Entfernt die verteilten Spam-Nachrichten aus allen Channels, sobald ein kompromittierter Account erwischt wird.",
       "saveCompromised": "Einstellungen für kompromittierte Accounts speichern",
-      "comingSoon": "Demnächst"
+      "comingSoon": "Demnächst",
+      "healthTitle": "MadHoney-Systemcheck — zu behebende Probleme:"
     },
     "msg": {
       "bannerSaved": "Banner gespeichert. Poste es mit \"Banner posten\" in den Honeypot.",
@@ -512,7 +513,12 @@
       "sbOff": "Die Bann-Teilung ist für diesen Server AUS - schalte sie zuerst ein, dann synchronisiere.",
       "sbNoBan": "Ich habe hier nicht die Berechtigung Mitglieder bannen.",
       "sbDone": "Bann-Synchronisierung: {added} aus der geteilten Liste gebannt, {skipped} hier bereits gebannt{failedPart}. Poolgröße: {pool}.",
-      "sbFailed": ", {n} fehlgeschlagen"
+      "sbFailed": ", {n} fehlgeschlagen",
+      "pfHoneypotInverted": "Dein Honeypot-Kanal ist falsch herum eingerichtet: Nicht verifizierte Nutzer (die Spam-Bots, die er fangen soll) können ihn nicht sehen, oder verifizierte Mitglieder können ihn sehen — die Falle fängt also nichts und könnte deine eigenen Mitglieder automatisch bannen. Lösung: Führe „Kanäle absichern\" erneut aus, um seine Berechtigungen zurückzusetzen.",
+      "pfVerifiedDangerous": "Die verifizierte Rolle gewährt gefährliche Berechtigungen ({perms}). Jedes Mitglied, das sich verifiziert, erhält sie — und jeder kann sich verifizieren. Entferne sie unter Servereinstellungen › Rollen, sofern du das nicht wirklich beabsichtigst.",
+      "pfVerifyBotCantPost": "Ich kann das Verifizierungspanel nicht im Verifizierungskanal posten — mir fehlt dort die Berechtigung Kanal anzeigen oder Nachrichten senden. Gib mir beide (der Kanal kann für Mitglieder schreibgeschützt bleiben) oder wähle einen Kanal, in dem ich posten kann.",
+      "pfVerifyHidden": "Nicht verifizierte Mitglieder können den Verifizierungskanal nicht sehen, sodass sich niemand verifizieren kann. Mach ihn für @everyone sichtbar (Kanal anzeigen) — ich halte ihn so, sobald du Kanäle sperrst.",
+      "pfNothingGated": "Die Verifizierung ist aktiv, aber es sind keine Inhaltskanäle gesperrt — nicht verifizierte Mitglieder können weiterhin überall alles sehen und posten. Nutze die Kanalsperre, um deine Kanäle hinter der Verifizierung zu sperren."
     }
   },
   "landing": {

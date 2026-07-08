@@ -316,7 +316,7 @@
       "bannerNote": "Live preview - it re-renders as you tweak. Save, then post it from Actions below.<br><b style=\"color:var(--honey)\">Make it yours.</b> If every MadHoney honeypot looked identical, bots could learn to recognize and skip it. Change the text, colors, font or logo so your banner is one of a kind. (The file is also posted under a random name each time, for the same reason.)",
       "headline": "Headline",
       "bodyText": "Body",
-      "accent": "Accent (stripes + headline)",
+      "accent": "Accent",
       "textColor": "Text",
       "background": "Background",
       "mentionHighlight": "Mention highlight",
@@ -393,7 +393,8 @@
       "compDelete": "Delete the spam messages",
       "compDeleteHint": "Remove the blasted messages from every channel when a compromised account is caught.",
       "saveCompromised": "Save compromised-account settings",
-      "comingSoon": "Coming soon"
+      "comingSoon": "Coming soon",
+      "healthTitle": "MadHoney health check — issues to fix:"
     },
     "msg": {
       "bannerSaved": "Banner saved. Post it to the honeypot with “Post banner”.",
@@ -512,7 +513,12 @@
       "sbOff": "Ban sharing is OFF for this server - turn it on first, then sync.",
       "sbNoBan": "I don't have the Ban Members permission here.",
       "sbDone": "Ban sync: {added} banned from the shared list, {skipped} already banned here{failedPart}. Pool size: {pool}.",
-      "sbFailed": ", {n} failed"
+      "sbFailed": ", {n} failed",
+      "pfHoneypotInverted": "Your honeypot channel is set up backwards: unverified users (the spam bots it is meant to catch) cannot see it, or verified members can - so the trap catches nothing and could auto-ban your own members. Fix: re-run \"Gate channels\" to reset its permissions.",
+      "pfVerifiedDangerous": "The verified role grants dangerous permissions ({perms}). Every member who verifies gets them — and anyone can verify. Remove them in Server Settings › Roles unless you truly intend it.",
+      "pfVerifyBotCantPost": "I can't post the verify panel in the verify channel — I'm missing View Channel or Send Messages there. Grant me both (the channel can stay read-only for members), or pick a channel I can post in.",
+      "pfVerifyHidden": "Unverified members can't see the verify channel, so no one can verify. Make it visible to @everyone (View Channel) — I keep it that way whenever you gate channels.",
+      "pfNothingGated": "Verification is on, but no content channels are gated — unverified members can still see and post everywhere. Use Channel Gating to lock your channels behind verification."
     }
   },
   "landing": {

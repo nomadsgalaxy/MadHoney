@@ -316,7 +316,7 @@
       "bannerNote": "Anteprima in tempo reale - si ridisegna man mano che modifichi. Salva, poi pubblicalo da Azioni qui sotto.<br><b style=\"color:var(--honey)\">Rendilo tuo.</b> Se ogni honeypot di MadHoney avesse lo stesso aspetto, i bot potrebbero imparare a riconoscerlo e saltarlo. Cambia il testo, i colori, il font o il logo così il tuo banner è unico. (Anche il file viene pubblicato ogni volta con un nome casuale, per lo stesso motivo.)",
       "headline": "Titolo",
       "bodyText": "Corpo",
-      "accent": "Accento (strisce + titolo)",
+      "accent": "Accento",
       "textColor": "Testo",
       "background": "Sfondo",
       "mentionHighlight": "Evidenziazione menzioni",
@@ -393,7 +393,8 @@
       "compDelete": "Elimina i messaggi di spam",
       "compDeleteHint": "Rimuove i messaggi diffusi in massa da ogni canale quando viene individuato un account compromesso.",
       "saveCompromised": "Salva le impostazioni per gli account compromessi",
-      "comingSoon": "Prossimamente"
+      "comingSoon": "Prossimamente",
+      "healthTitle": "Controllo dello stato di MadHoney — problemi da risolvere:"
     },
     "msg": {
       "bannerSaved": "Banner salvato. Pubblicalo nell'honeypot con \"Pubblica il banner\".",
@@ -512,7 +513,12 @@
       "sbOff": "La condivisione ban è DISATTIVATA per questo server - attivala prima, poi sincronizza.",
       "sbNoBan": "Non ho il permesso Banna membri qui.",
       "sbDone": "Sincronizzazione ban: {added} bannati dalla lista condivisa, {skipped} già bannati qui{failedPart}. Dimensione del pool: {pool}.",
-      "sbFailed": ", {n} falliti"
+      "sbFailed": ", {n} falliti",
+      "pfHoneypotInverted": "Il tuo canale trappola (honeypot) è configurato al contrario: gli utenti non verificati (i bot di spam che dovrebbe catturare) non riescono a vederlo, oppure i membri verificati possono farlo — quindi la trappola non cattura nulla e potrebbe bannare automaticamente i tuoi stessi membri. Soluzione: riesegui «Proteggi i canali» per reimpostare i suoi permessi.",
+      "pfVerifiedDangerous": "Il ruolo verificato concede permessi pericolosi ({perms}). Ogni membro che si verifica li ottiene — e chiunque può verificarsi. Rimuovili in Impostazioni server › Ruoli, a meno che tu non lo voglia davvero.",
+      "pfVerifyBotCantPost": "Non riesco a pubblicare il pannello di verifica nel canale di verifica — mi mancano i permessi Visualizza canale o Invia messaggi in quel canale. Concedimeli entrambi (il canale può restare in sola lettura per i membri) oppure scegli un canale in cui posso scrivere.",
+      "pfVerifyHidden": "I membri non verificati non riescono a vedere il canale di verifica, quindi nessuno può verificarsi. Rendilo visibile a @everyone (Visualizza canale) — lo mantengo così ogni volta che blocchi dei canali.",
+      "pfNothingGated": "La verifica è attiva, ma nessun canale di contenuti è bloccato — i membri non verificati possono ancora vedere e scrivere ovunque. Usa il Blocco dei canali per bloccare i tuoi canali dietro la verifica."
     }
   },
   "landing": {

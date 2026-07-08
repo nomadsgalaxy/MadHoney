@@ -316,7 +316,7 @@
       "bannerNote": "Live-förhandsvisning - den renderas om medan du justerar. Spara, posta den sedan från Åtgärder nedan.<br><b style=\"color:var(--honey)\">Gör den till din egen.</b> Om varje MadHoney-honeypot såg likadan ut kunde bottar lära sig att känna igen och hoppa över den. Ändra texten, färgerna, teckensnittet eller logotypen så att din banner är unik. (Filen postas också under ett slumpmässigt namn varje gång, av samma skäl.)",
       "headline": "Rubrik",
       "bodyText": "Brödtext",
-      "accent": "Accent (ränder + rubrik)",
+      "accent": "Accent",
       "textColor": "Text",
       "background": "Bakgrund",
       "mentionHighlight": "Omnämnandemarkering",
@@ -393,7 +393,8 @@
       "compDelete": "Ta bort spammeddelandena",
       "compDeleteHint": "Ta bort de utspammade meddelandena från alla kanaler när ett komprometterat konto fångas.",
       "saveCompromised": "Spara inställningar för komprometterade konton",
-      "comingSoon": "Kommer snart"
+      "comingSoon": "Kommer snart",
+      "healthTitle": "MadHoney hälsokontroll — problem att åtgärda:"
     },
     "msg": {
       "bannerSaved": "Banner sparad. Posta den i honeypotten med \"Posta banner\".",
@@ -512,7 +513,12 @@
       "sbOff": "Bandelning är AV för den här servern - slå på den först, synka sedan.",
       "sbNoBan": "Jag har inte behörigheten Banna medlemmar här.",
       "sbDone": "Bansynk: {added} bannade från den delade listan, {skipped} redan bannade här{failedPart}. Poolstorlek: {pool}.",
-      "sbFailed": ", {n} misslyckades"
+      "sbFailed": ", {n} misslyckades",
+      "pfHoneypotInverted": "Din honeypot-kanal är uppsatt bakvänt: overifierade användare (spambottarna den är tänkt att fånga) kan inte se den, eller så kan verifierade medlemmar det — så fällan fångar ingenting och kan automatiskt banna dina egna medlemmar. Åtgärd: kör \"Skydda kanaler\" igen för att återställa dess behörigheter.",
+      "pfVerifiedDangerous": "Den verifierade rollen ger farliga behörigheter ({perms}). Alla medlemmar som verifierar sig får dem — och vem som helst kan verifiera sig. Ta bort dem i Serverinställningar › Roller om du inte verkligen menar det.",
+      "pfVerifyBotCantPost": "Jag kan inte lägga upp verifieringspanelen i verifieringskanalen — jag saknar Visa kanal eller Skicka meddelanden där. Ge mig båda (kanalen kan förbli skrivskyddad för medlemmar), eller välj en kanal jag kan skriva i.",
+      "pfVerifyHidden": "Overifierade medlemmar kan inte se verifieringskanalen, så ingen kan verifiera sig. Gör den synlig för @everyone (Visa kanal) — jag håller den så varje gång du spärrar kanaler.",
+      "pfNothingGated": "Verifiering är på, men inga innehållskanaler är spärrade — overifierade medlemmar kan fortfarande se och skriva överallt. Använd Kanalspärr för att låsa dina kanaler bakom verifiering."
     }
   },
   "landing": {

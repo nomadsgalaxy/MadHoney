@@ -316,7 +316,7 @@
       "bannerNote": "Vista previa en vivo - se vuelve a renderizar según lo ajustas. Guarda y luego publícalo desde Acciones abajo.<br><b style=\"color:var(--honey)\">Hazlo tuyo.</b> Si todos los honeypots de MadHoney tuvieran el mismo aspecto, los bots podrían aprender a reconocerlo y evitarlo. Cambia el texto, los colores, la fuente o el logo para que tu banner sea único. (El archivo también se publica con un nombre aleatorio cada vez, por la misma razón.)",
       "headline": "Titular",
       "bodyText": "Cuerpo",
-      "accent": "Acento (rayas + titular)",
+      "accent": "Acento",
       "textColor": "Texto",
       "background": "Fondo",
       "mentionHighlight": "Resaltado de menciones",
@@ -393,7 +393,8 @@
       "compDelete": "Eliminar los mensajes de spam",
       "compDeleteHint": "Elimina los mensajes de spam de todos los canales cuando se detecta una cuenta comprometida.",
       "saveCompromised": "Guardar la configuración de cuentas comprometidas",
-      "comingSoon": "Próximamente"
+      "comingSoon": "Próximamente",
+      "healthTitle": "Revisión de estado de MadHoney — problemas que corregir:"
     },
     "msg": {
       "bannerSaved": "Banner guardado. Publícalo en el honeypot con “Publicar banner”.",
@@ -512,7 +513,12 @@
       "sbOff": "El uso compartido de baneos está DESACTIVADO para este servidor - actívalo primero, luego sincroniza.",
       "sbNoBan": "No tengo el permiso de Banear miembros aquí.",
       "sbDone": "Sincronización de baneos: {added} baneados desde la lista compartida, {skipped} ya baneados aquí{failedPart}. Tamaño de la lista: {pool}.",
-      "sbFailed": ", {n} fallidos"
+      "sbFailed": ", {n} fallidos",
+      "pfHoneypotInverted": "Tu canal trampa (honeypot) está configurado al revés: los usuarios no verificados (los bots de spam que se supone que debe atrapar) no pueden verlo, o los miembros verificados sí pueden — así que la trampa no atrapa nada y podría banear automáticamente a tus propios miembros. Solución: vuelve a ejecutar «Restringir canales» para restablecer sus permisos.",
+      "pfVerifiedDangerous": "El rol verificado otorga permisos peligrosos ({perms}). Todos los miembros que se verifican los reciben — y cualquiera puede verificarse. Quítalos en Configuración del servidor › Roles a menos que de verdad lo quieras así.",
+      "pfVerifyBotCantPost": "No puedo publicar el panel de verificación en el canal de verificación — me falta Ver canal o Enviar mensajes ahí. Concédeme ambos (el canal puede seguir siendo de solo lectura para los miembros) o elige un canal donde sí pueda publicar.",
+      "pfVerifyHidden": "Los miembros no verificados no pueden ver el canal de verificación, así que nadie puede verificarse. Hazlo visible para @everyone (Ver canal) — yo lo mantengo así siempre que restringes canales.",
+      "pfNothingGated": "La verificación está activada, pero no hay canales de contenido restringidos — los miembros no verificados todavía pueden ver y escribir en todas partes. Usa la Restricción de canales para bloquear tus canales detrás de la verificación."
     }
   },
   "landing": {
