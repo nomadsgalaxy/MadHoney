@@ -35,3 +35,6 @@ d1cost.js
 # to document the convention, everything else in it is ignored.
 tools/*
 !tools/README.md
+
+# local scratch archives - never publish
+*.zip

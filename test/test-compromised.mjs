@@ -1,6 +1,6 @@
 // Regression test for compromised-account fan-out detection. Run: node test-compromised.mjs
 import assert from 'node:assert';
-import { compromisedSettings, normalizeContent, messageSignature, recordAndCheck, sweep } from './compromised.js';
+import { compromisedSettings, normalizeContent, messageSignature, recordAndCheck, sweep } from '../src/compromised.js';
 
 // --- settings defaults + clamping ---
 const d = compromisedSettings(undefined);

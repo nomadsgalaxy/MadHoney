@@ -1,7 +1,7 @@
 // Proves the incident model closes the confirmed appeal lockout holes. No infra.
 //   node test-incident.mjs
 import assert from 'node:assert/strict';
-import { makeIncidentId, resolutionRow, isIncidentResolved, incidentOf, reBanSource, resolvedIncidents } from './incident.js';
+import { makeIncidentId, resolutionRow, isIncidentResolved, incidentOf, reBanSource, resolvedIncidents } from '../src/incident.js';
 
 const U = 'user1';
 const inc = makeIncidentId('A', U, 1000);

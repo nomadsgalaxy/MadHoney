@@ -5,11 +5,11 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } fr
 import { pathToFileURL } from 'node:url';
 import * as incident from './incident.js';
 
-// Data lives beside the code by default. Set MADHONEY_DATA_DIR to keep state on
-// a separate volume (e.g. a Docker mount) so it survives image rebuilds.
+// Data lives at the repo root (beside package.json) by default. Set
+// MADHONEY_DATA_DIR to keep state on a separate volume (e.g. a Docker mount).
 const DATA_DIR = process.env.MADHONEY_DATA_DIR
   ? pathToFileURL(process.env.MADHONEY_DATA_DIR.replace(/\/?$/, '/'))
-  : new URL('./', import.meta.url);
+  : new URL('../', import.meta.url); // repo root (beside package.json)
 if (process.env.MADHONEY_DATA_DIR) mkdirSync(process.env.MADHONEY_DATA_DIR, { recursive: true });
 const GUILDS = new URL('guilds.json', DATA_DIR);
 const BANS = new URL('bans.jsonl', DATA_DIR);

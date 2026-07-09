@@ -10,7 +10,7 @@ export const FONTS = ['sans-serif', 'serif', 'monospace', 'DejaVu Sans', 'Libera
 
 // Bundled MadHoney bee - the default banner logo. Set logoUrl to a URL for
 // your own, or 'none' for no logo at all.
-const BUNDLED_LOGO = fileURLToPath(new URL('./logo.png', import.meta.url));
+const BUNDLED_LOGO = fileURLToPath(new URL('../assets/logo.png', import.meta.url));
 
 // The attribution/credit line. On the hosted service it's mandatory (marketing
 // + SWAtt); only self-hosters may hide it. Set SELF_HOSTED=true to allow that.

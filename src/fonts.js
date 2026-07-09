@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 
 const reg = (file, ...families) => {
-  const p = fileURLToPath(new URL(`./fonts/${file}`, import.meta.url));
+  const p = fileURLToPath(new URL(`../fonts/${file}`, import.meta.url));
   if (!existsSync(p)) { console.warn(`[fonts] missing ${file} - text may not render`); return; }
   // Register under each family name (proper name + the generic alias the
   // renderer asks for). Regular and bold share a family; the font's own weight

@@ -2,7 +2,7 @@
 // (preflight() itself hits the Discord API and is covered by manual/integration
 // checks.) Run: node test-preflight.mjs
 import assert from 'node:assert';
-import { dangerousRolePerms, contentGatedChannels, DANGEROUS_ROLE_PERMS } from './actions.js';
+import { dangerousRolePerms, contentGatedChannels, DANGEROUS_ROLE_PERMS } from '../src/actions.js';
 
 // --- dangerousRolePerms: which dangerous bits are literally set on the role ---
 assert.deepEqual(dangerousRolePerms(0n), []);

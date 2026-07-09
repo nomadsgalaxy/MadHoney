@@ -44,7 +44,7 @@ setInterval(() => { const now = Date.now(); for (const [k, v] of pending) if (no
 // Liveness marker for the honeypot catch-up sweep (see ClientReady): stamped
 // only while actually connected, so any window where the bot couldn't see
 // messages - restart, crash, outage - is swept on the next boot.
-const LASTSEEN = new URL('./.lastseen', import.meta.url);
+const LASTSEEN = new URL('../.lastseen', import.meta.url);
 setInterval(() => { if (client.isReady()) { try { writeFileSync(LASTSEEN, String(Date.now())); } catch { /* best effort */ } } }, 60_000).unref?.();
 
 // Per-process fan-out tracker for compromised-account detection (compromised.js).

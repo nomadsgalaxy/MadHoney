@@ -11,7 +11,7 @@ bot.log
 sessions.json
 # deployment-only / non-distributed files
 worker
-store.d1.js
+src/store.d1.js
 d1-pending.jsonl
 failover
 *.failover.*
@@ -21,4 +21,4 @@ costs-history.jsonl
 # dev-only OCR data
 *.traineddata
 # one-off / operational tools (never needed in the runtime image)
-tools
+tools/

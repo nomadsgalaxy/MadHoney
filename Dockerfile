@@ -30,4 +30,4 @@ VOLUME ["/data"]
 # Dashboard port (only matters if you run the dashboard). Override with -e PORT.
 EXPOSE 8300
 
-CMD ["node", "bot.js"]
+CMD ["node", "src/bot.js"]

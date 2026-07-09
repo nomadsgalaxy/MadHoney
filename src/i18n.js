@@ -19,7 +19,7 @@ export const LOCALE_NAMES = {
   'pt-BR': 'Português (BR)', it: 'Italiano', uk: 'Українська', sv: 'Svenska', cs: 'Čeština',
 };
 
-const DIR = new URL('./locales/', import.meta.url);
+const DIR = new URL('../locales/', import.meta.url);
 const cache = new Map(); // code -> catalog object (loaded once; deploy = restart clears it)
 function load(code) {
   if (cache.has(code)) return cache.get(code);

@@ -1,12 +1,12 @@
 // npm test - checks the pure logic. No Discord, no network.
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { shouldTrap, honeypotMode, setupComplete } from './trap.js';
-import { makeCode, answerOk } from './verify.js';
-import { bannedElsewhere, trappedCount, appealableGuildIds, banEpoch } from './store.js';
-import { renderBanner } from './banner.js';
-import { renderCaptcha } from './captcha.js';
-import { t, SUPPORTED, resolveLocale } from './i18n.js';
+import { shouldTrap, honeypotMode, setupComplete } from '../src/trap.js';
+import { makeCode, answerOk } from '../src/verify.js';
+import { bannedElsewhere, trappedCount, appealableGuildIds, banEpoch } from '../src/store.js';
+import { renderBanner } from '../src/banner.js';
+import { renderCaptcha } from '../src/captcha.js';
+import { t, SUPPORTED, resolveLocale } from '../src/i18n.js';
 
 const cfg = { honeypotChannelId: 'HONEY' };
 const base = { channelId: 'HONEY', authorIsBot: false, isOwner: false, isStaff: false };
@@ -108,13 +108,13 @@ assert.ok(t('verify.wrong', 'en', { left: 3 }).includes('(3 left)'), 'interpolat
 assert.equal(t('does.not.exist', 'es'), 'does.not.exist', 'unknown key -> key itself');
 
 // every shipped locale has EXACTLY en's keys, and each string keeps en's {placeholders}
-const enCat = JSON.parse(readFileSync(new URL('./locales/en.json', import.meta.url)));
+const enCat = JSON.parse(readFileSync(new URL('../locales/en.json', import.meta.url)));
 const flat = (o, p = '') => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? flat(v, `${p}${k}.`) : [`${p}${k}`]));
 const phs = (s) => (String(s).match(/\{\w+\}/g) || []).sort();
 const enKeys = flat(enCat).sort();
 for (const code of SUPPORTED) {
   if (code === 'en') continue;
-  const cat = JSON.parse(readFileSync(new URL(`./locales/${code}.json`, import.meta.url)));
+  const cat = JSON.parse(readFileSync(new URL(`../locales/${code}.json`, import.meta.url)));
   assert.deepEqual(flat(cat).sort(), enKeys, `${code}: same keys as en`);
   const walk = (en, tr, p = '') => { for (const [k, v] of Object.entries(en)) { if (v && typeof v === 'object') walk(v, tr[k], `${p}${k}.`); else assert.deepEqual(phs(tr[k]), phs(v), `${code}: ${p}${k} keeps placeholders`); } };
   walk(enCat, cat);

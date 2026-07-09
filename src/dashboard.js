@@ -42,12 +42,12 @@ const WEEK = 7 * 24 * 3600 * 1000;
 
 const sessions = new Map(); // sid -> { user, guilds, at }
 const gfJobs = new Map(); // guildId -> live grandfather progress {total, done, added, skipped, failed, finished, result, at}
-const LANDING = readFileSync(new URL('./landing.html', import.meta.url), 'utf8');
+const LANDING = readFileSync(new URL('../assets/landing.html', import.meta.url), 'utf8');
 
 // Persist login sessions across restarts so deploying the bot doesn't log
 // everyone out. Stores only profile + guild list (no OAuth tokens).
 // ponytail: plain gitignored JSON file, fine at this scale.
-const SESS_FILE = new URL('./sessions.json', import.meta.url);
+const SESS_FILE = new URL('../sessions.json', import.meta.url);
 if (existsSync(SESS_FILE)) {
   try { for (const [k, v] of Object.entries(JSON.parse(readFileSync(SESS_FILE, 'utf8')))) sessions.set(k, v); } catch { /* corrupt file, start fresh */ }
 }
@@ -71,7 +71,7 @@ function dashLocale(req) {
 // banners every dashboard page. Read per request, so writing/removing the file
 // applies instantly - no restart. (echo "..." > notice.txt / rm notice.txt)
 function maintenanceNotice() {
-  try { return readFileSync(new URL('./notice.txt', import.meta.url), 'utf8').trim(); }
+  try { return readFileSync(new URL('../notice.txt', import.meta.url), 'utf8').trim(); }
   catch { return ''; }
 }
 
@@ -126,7 +126,7 @@ function errPage(code, dl, opts = {}) {
 
 function costsWidget(dl) {
   let c;
-  try { c = JSON.parse(readFileSync(new URL('./costs.json', import.meta.url), 'utf8')); } catch { return ''; }
+  try { c = JSON.parse(readFileSync(new URL('../costs.json', import.meta.url), 'utf8')); } catch { return ''; }
   const watts = Math.round((c.serverWatts ?? 0) * (c.share ?? 1));
   const power = (watts / 1000) * 24 * 30.44 * (c.kwhRate ?? 0); // avg hours per month
   // The Cloudflare edge (Workers + D1) is free at this scale but D1 grows with
@@ -145,7 +145,7 @@ function costsWidget(dl) {
   const usd = (v) => `$${v.toFixed(2)}`;
 
   // daily sample of the computed total -> costs-history.jsonl (drives the chart)
-  const HIST = new URL('./costs-history.jsonl', import.meta.url);
+  const HIST = new URL('../costs-history.jsonl', import.meta.url);
   const today = new Date().toISOString().slice(0, 10);
   let hist = [];
   try {
@@ -1214,7 +1214,7 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
       if (url.pathname === '/logo.svg' || url.pathname === '/logo.png' || url.pathname === '/og.png') {
         const type = url.pathname.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
         res.writeHead(200, { 'content-type': type, 'cache-control': 'public, max-age=86400' });
-        return res.end(readFileSync(new URL('.' + url.pathname, import.meta.url)));
+        return res.end(readFileSync(new URL('../assets' + url.pathname, import.meta.url)));
       }
       // sample banner shown on the landing page
       if (url.pathname === '/sample-banner.png') {
