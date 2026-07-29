@@ -613,6 +613,17 @@
     "costChartTitle": "Costo mensile di gestione nel tempo",
     "costFrom": "Dal manutentore",
     "footDiscord": "Discord degli sviluppatori",
-    "statMembers": "membri protetti"
+    "statMembers": "membri protetti",
+    "tourEyebrow": "Uno sguardo dentro",
+    "tourH2": "Tutto passa dalla dashboard.",
+    "tourLede": "Niente file di configurazione, niente archeologia tra i comandi slash. Accedi con Discord, scegli il tuo server, e ogni decisione che MadHoney prende è qualcosa che puoi vedere e cambiare.",
+    "tour1H": "Una configurazione che puoi seguire.",
+    "tour1P": "Cinque passaggi, ognuno con un pulsante e una spiegazione in parole semplici di cosa fa. MadHoney ti dice cosa è fatto, cosa manca e ti avvisa quando qualcosa sul tuo server gli impedirebbe di funzionare.",
+    "tour2H": "Scegli tu cosa nascondere.",
+    "tour2P": "MadHoney classifica ogni canale, poi ti passa la bacheca. Trascina quello che vuoi tra gating, pubblico e lascia stare — e non cambia niente finché non premi Applica.",
+    "tour3H": "Becca un account rubato.",
+    "tour3P": "Quando a un membro fidato rubano l'account, lo stesso messaggio parte in tutti i canali insieme. Imposta quanti canali e in quanto tempo contano come ondata, e cosa deve fare MadHoney quando succede.",
+    "tour4H": "Una trappola che avvisa gli umani.",
+    "tour4P": "Progetta il banner di pericolo che resta fissato nel tuo honeypot — testo, colori, font, logo, distorsione. I membri veri vedono un avviso chiaro; i bot, che non riescono a leggerlo, entrano dritti dentro."
   }
 }

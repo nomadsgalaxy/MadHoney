@@ -613,6 +613,17 @@
     "costStory": "Eu queria brincar com um estimador dinâmico de custos para me ajudar a entender quanto meus projetos me custam. Achei que seria um dado legal para acompanhar e mostrar, por questão de transparência total. Se você quiser ajudar a cobrir esse custo, fique à vontade para doar pelo Ko-fi. O MadHoney sempre será grátis.",
     "costChartTitle": "Custo mensal de operação ao longo do tempo",
     "costFrom": "Do mantenedor",
-    "statMembers": "membros protegidos"
+    "statMembers": "membros protegidos",
+    "tourEyebrow": "Por dentro",
+    "tourH2": "Tudo acontece no painel.",
+    "tourLede": "Sem arquivos de configuração, sem arqueologia de comandos de barra. Entre com o Discord, escolha seu servidor, e toda decisão que o MadHoney toma é algo que você consegue ver e mudar.",
+    "tour1H": "Uma configuração que dá para acompanhar.",
+    "tour1P": "Cinco passos, cada um com um botão e uma explicação em linguagem simples do que ele faz. O MadHoney diz o que já está feito, o que falta e avisa quando algo no seu servidor impediria tudo de funcionar.",
+    "tour2H": "Você escolhe o que fica escondido.",
+    "tour2P": "O MadHoney classifica cada canal e depois entrega o quadro para você. Arraste o que quiser entre restringir, manter público e deixar como está — e nada muda até você clicar em Aplicar.",
+    "tour3H": "Flagre uma conta roubada.",
+    "tour3P": "Quando a conta de um membro de confiança é sequestrada, ela dispara a mesma mensagem em todos os canais de uma vez. Defina quantos canais e em quanto tempo contam como um disparo, e o que o MadHoney deve fazer a respeito.",
+    "tour4H": "Uma armadilha que avisa os humanos.",
+    "tour4P": "Crie o banner de alerta fixado no seu honeypot — texto, cores, fonte, logo, distorção. Membros reais veem um aviso claro; bots que não conseguem lê-lo entram direto."
   }
 }

@@ -1187,6 +1187,13 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
       }
 
       // ---- public assets ----
+      // Landing-page screenshots. Whitelisted by name (never interpolate the
+      // raw path into a file read) and cached hard - they only change on deploy.
+      const shot = /^\/shots\/([a-z]+)\.webp$/.exec(url.pathname);
+      if (shot && ['setup', 'gating', 'honeypot', 'compromised'].includes(shot[1])) {
+        res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'public, max-age=604800' });
+        return res.end(readFileSync(new URL(`../assets/shots/${shot[1]}.webp`, import.meta.url)));
+      }
       if (url.pathname === '/logo.svg' || url.pathname === '/logo.png' || url.pathname === '/og.png') {
         const type = url.pathname.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
         res.writeHead(200, { 'content-type': type, 'cache-control': 'public, max-age=86400' });

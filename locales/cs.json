@@ -613,6 +613,17 @@
     "costChartTitle": "Měsíční provozní náklady v čase",
     "costFrom": "Od správce projektu",
     "footDiscord": "Discord vývojáře",
-    "statMembers": "chráněných členů"
+    "statMembers": "chráněných členů",
+    "tourEyebrow": "Pohled dovnitř",
+    "tourH2": "Celé je to dashboard.",
+    "tourLede": "Žádné konfigurační soubory, žádné hrabání se ve slash příkazech. Přihlas se přes Discord, vyber si server a každé rozhodnutí, které MadHoney udělá, uvidíš a můžeš ho změnit.",
+    "tour1H": "Nastavení, ve kterém se vyznáš.",
+    "tour1P": "Pět kroků, každý s tlačítkem a srozumitelným vysvětlením, co dělá. MadHoney ti řekne, co je hotové a co zbývá, a upozorní tě, když by mu něco na tvém serveru bránilo fungovat.",
+    "tour2H": "Co se skryje, rozhoduješ ty.",
+    "tour2P": "MadHoney roztřídí každý kanál a pak ti předá tabuli. Cokoli si přetáhni mezi zóny Uzamknout, Ponechat veřejné a Ponechat beze změny — a dokud neklepneš na Použít, nic se nezmění.",
+    "tour3H": "Zachyť ukradený účet.",
+    "tour3P": "Když někdo unese účet důvěryhodného člena, rozešle stejnou zprávu naráz do všech kanálů. Nastav, kolik kanálů a jak rychle se počítá jako spamová vlna a co s tím má MadHoney udělat.",
+    "tour4H": "Past, která lidi varuje.",
+    "tour4P": "Navrhni si výstražný banner připnutý v honeypotu — text, barvy, font, logo, zkreslení. Skuteční členové vidí jasné varování; boti, kteří ho nepřečtou, vejdou rovnou dovnitř."
   }
 }

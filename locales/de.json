@@ -613,6 +613,17 @@
     "costChartTitle": "Monatliche Betriebskosten im Zeitverlauf",
     "costFrom": "Vom Maintainer",
     "footDiscord": "Entwickler-Discord",
-    "statMembers": "geschützte Mitglieder"
+    "statMembers": "geschützte Mitglieder",
+    "tourEyebrow": "Ein Blick hinein",
+    "tourH2": "Das Ganze ist ein Dashboard.",
+    "tourLede": "Keine Config-Dateien, keine Slash-Command-Archäologie. Melde dich mit Discord an, wähle deinen Server, und jede Entscheidung, die MadHoney trifft, kannst du sehen und ändern.",
+    "tour1H": "Eine Einrichtung, der du folgen kannst.",
+    "tour1P": "Fünf Schritte, jeder mit einem Button und einer Erklärung in Klartext, was er tut. MadHoney sagt dir, was erledigt ist und was noch fehlt, und warnt dich, wenn etwas auf deinem Server es am Funktionieren hindern würde.",
+    "tour2H": "Du entscheidest, was verborgen wird.",
+    "tour2P": "MadHoney stuft jeden Kanal ein und übergibt dir dann das Board. Zieh alles frei zwischen Sperren, Öffentlich lassen und Unverändert lassen hin und her — und nichts ändert sich, bis du auf Anwenden klickst.",
+    "tour3H": "Fang einen gekaperten Account.",
+    "tour3P": "Wird ein vertrauenswürdiges Mitglied gekapert, feuert der Account dieselbe Nachricht auf einen Schlag in jeden Kanal. Leg fest, ab wie vielen Kanälen und wie schnell hintereinander das als Welle zählt, und was MadHoney dagegen tun soll.",
+    "tour4H": "Eine Falle, die Menschen warnt.",
+    "tour4P": "Gestalte das Warnbanner, das in deinem Honeypot angepinnt ist — Text, Farben, Schrift, Logo, Verzerrung. Echte Mitglieder sehen eine klare Warnung; Bots, die sie nicht lesen können, marschieren direkt hinein."
   }
 }

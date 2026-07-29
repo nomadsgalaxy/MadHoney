@@ -613,6 +613,17 @@
     "costChartTitle": "Monthly running cost over time",
     "costFrom": "From the maintainer",
     "footDiscord": "Developer Discord",
-    "statMembers": "members protected"
+    "statMembers": "members protected",
+    "tourEyebrow": "A look inside",
+    "tourH2": "The whole thing is a dashboard.",
+    "tourLede": "No config files, no slash-command archaeology. Sign in with Discord, pick your server, and every decision MadHoney makes is something you can see and change.",
+    "tour1H": "Setup you can follow.",
+    "tour1P": "Five steps, each with a button and a plain-language explanation of what it does. MadHoney tells you what is done, what is left, and warns you when something on your server would stop it working.",
+    "tour2H": "You choose what gets hidden.",
+    "tour2P": "MadHoney classifies every channel, then hands you the board. Drag anything between gated, public and leave-alone — and nothing changes until you hit Apply.",
+    "tour3H": "Catch a stolen account.",
+    "tour3P": "When a trusted member gets hijacked, it blasts the same message into every channel at once. Set how many channels and how fast counts as a blast, and what MadHoney should do about it.",
+    "tour4H": "A trap that warns humans.",
+    "tour4P": "Design the hazard banner pinned in your honeypot — wording, colours, font, logo, distortion. Real members see a clear warning; bots that cannot read it walk straight in."
   }
 }

@@ -613,6 +613,17 @@
     "costChartTitle": "Månatlig driftskostnad över tid",
     "costFrom": "Från underhållaren",
     "footDiscord": "Utvecklar-Discord",
-    "statMembers": "skyddade medlemmar"
+    "statMembers": "skyddade medlemmar",
+    "tourEyebrow": "En titt inuti",
+    "tourH2": "Alltihop är en panel.",
+    "tourLede": "Inga konfigurationsfiler, ingen arkeologi bland slash-kommandon. Logga in med Discord, välj din server, och varje beslut MadHoney fattar är något du kan se och ändra.",
+    "tour1H": "Konfiguration du kan följa.",
+    "tour1P": "Fem steg, vart och ett med en knapp och en förklaring på vanlig svenska av vad det gör. MadHoney talar om vad som är klart, vad som återstår, och varnar dig när något på din server skulle hindra den från att fungera.",
+    "tour2H": "Du väljer vad som döljs.",
+    "tour2P": "MadHoney klassificerar varje kanal och lämnar sedan över tavlan till dig. Dra vad du vill mellan Spärra, Håll offentlig och Lämna som den är — och ingenting ändras förrän du trycker på Verkställ.",
+    "tour3H": "Fånga ett kapat konto.",
+    "tour3P": "När en betrodd medlems konto kapas spammar det ut samma meddelande i alla kanaler på en gång. Ställ in hur många kanaler och hur snabbt som räknas som en spamvåg, och vad MadHoney ska göra åt det.",
+    "tour4H": "En fälla som varnar människor.",
+    "tour4P": "Designa varningsbannern som sitter fäst i din honeypot — ordval, färger, teckensnitt, logotyp, förvrängning. Riktiga medlemmar ser en tydlig varning; bottar som inte kan läsa den går rakt in."
   }
 }

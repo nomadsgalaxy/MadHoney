@@ -613,6 +613,17 @@
     "costChartTitle": "Évolution du coût mensuel de fonctionnement",
     "costFrom": "Le mot du mainteneur",
     "footDiscord": "Discord du développeur",
-    "statMembers": "membres protégés"
+    "statMembers": "membres protégés",
+    "tourEyebrow": "Un coup d'œil à l'intérieur",
+    "tourH2": "Tout tient dans un tableau de bord.",
+    "tourLede": "Pas de fichiers de config, pas d'archéologie de commandes slash. Connecte-toi avec Discord, choisis ton serveur, et chaque décision que prend MadHoney, tu peux la voir et la changer.",
+    "tour1H": "Une configuration que tu peux suivre.",
+    "tour1P": "Cinq étapes, chacune avec un bouton et une explication en langage clair de ce qu'elle fait. MadHoney te dit ce qui est fait, ce qu'il reste, et te prévient quand quelque chose sur ton serveur l'empêcherait de fonctionner.",
+    "tour2H": "Tu choisis ce qui est masqué.",
+    "tour2P": "MadHoney classe chaque salon, puis te passe le tableau. Fais glisser ce que tu veux entre Filtrer, Garder public et Laisser tel quel — et rien ne change tant que tu n'as pas cliqué sur Appliquer.",
+    "tour3H": "Repère un compte piraté.",
+    "tour3P": "Quand le compte d'un membre de confiance est piraté, il balance le même message dans tous les salons d'un coup. Définis à partir de combien de salons et à quelle vitesse ça compte comme une rafale, et ce que MadHoney doit en faire.",
+    "tour4H": "Un piège qui prévient les humains.",
+    "tour4P": "Conçois la bannière d'avertissement épinglée dans ton honeypot — texte, couleurs, police, logo, distorsion. Les vrais membres sont clairement prévenus ; les bots qui ne savent pas la lire y entrent tout droit."
   }
 }
