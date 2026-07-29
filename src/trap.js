@@ -20,14 +20,17 @@ export function setupComplete(cfg) {
 
 // The honeypot's mode: 'armed' (auto-ban), 'review' (hold each hit for a mod to
 // approve), or 'disarmed' (off). An explicit choice always wins. With no explicit
-// choice, it holds catches for review DURING setup - safe if the honeypot isn't
-// hidden from members yet - and auto-arms once every setup step is done. Falls
-// back to the legacy honeypotEnabled flag for configs saved before modes existed.
+// choice the default is REVIEW - always, even after every setup step is done.
+// Arming is a human decision: auto-arming surprised moderators and armed traps
+// that weren't ready in ways a checklist can't judge (banner phrasing, channel
+// placement), so the trap only goes live when a mod flips it. The checklist's
+// final step points at the mode bar. Falls back to the legacy honeypotEnabled
+// flag for configs saved before modes existed.
 export function honeypotMode(cfg) {
   if (!cfg) return 'disarmed';
   if (['armed', 'review', 'disarmed'].includes(cfg.honeypotMode)) return cfg.honeypotMode;
   if (cfg.honeypotEnabled === false) return 'disarmed';
-  return setupComplete(cfg) ? 'armed' : 'review';
+  return 'review';
 }
 
 // Pure decision: should this message trip the honeypot at all? (The mode then

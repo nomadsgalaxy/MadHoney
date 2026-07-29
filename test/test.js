@@ -23,16 +23,16 @@ assert.equal(shouldTrap(base, { ...cfg, honeypotEnabled: false }), false, 'legac
 assert.equal(shouldTrap(base, { ...cfg, honeypotMode: 'disarmed' }), false, 'disarmed → no');
 assert.equal(shouldTrap(base, { ...cfg, honeypotMode: 'armed' }), true, 'armed → yes');
 assert.equal(shouldTrap(base, { ...cfg, honeypotMode: 'review' }), true, 'review still trips (mode decides action)');
-// default mode: review while mid-setup (safe), auto-arm once every step is done
+// default mode: review ALWAYS until a mod explicitly arms (arming is a human call)
 const setupCfg = { honeypotChannelId: 'H', verifiedRoleId: 'R', verifyChannelId: 'V', verifyPosted: true, bannerPosted: true, grandfatheredAt: 'x', gatedChannels: ['a'] };
 assert.equal(honeypotMode({}), 'review', 'default is review during setup');
 assert.equal(honeypotMode(cfg), 'review', 'honeypot set but setup incomplete → review');
 assert.equal(setupComplete(setupCfg), true, 'setupComplete: all steps done');
-assert.equal(honeypotMode(setupCfg), 'armed', 'auto-arms once setup is complete');
-assert.equal(honeypotMode({ ...setupCfg, honeypotMode: 'review' }), 'review', 'explicit review wins over auto-arm');
+assert.equal(honeypotMode(setupCfg), 'review', 'setup complete but STILL review - arming is explicit');
+assert.equal(honeypotMode({ ...setupCfg, honeypotMode: 'armed' }), 'armed', 'explicit armed wins');
 assert.equal(honeypotMode({ ...cfg, honeypotMode: 'armed' }), 'armed', 'explicit armed wins during setup');
 assert.equal(honeypotMode({ honeypotChannelId: 'H', verificationEnabled: false }), 'review', 'verif-off, no banner yet → review');
-assert.equal(honeypotMode({ honeypotChannelId: 'H', verificationEnabled: false, bannerPosted: true }), 'armed', 'verif-off + banner → armed');
+assert.equal(honeypotMode({ honeypotChannelId: 'H', verificationEnabled: false, bannerPosted: true }), 'review', 'verif-off + banner: still review until armed');
 assert.equal(setupComplete({ ...setupCfg, grandfatheredAt: undefined, grandfatherSkipped: true }), true, 'grandfather-skipped counts as done');
 assert.equal(honeypotMode({ honeypotEnabled: false }), 'disarmed', 'legacy flag maps to disarmed');
 
