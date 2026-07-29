@@ -16,7 +16,7 @@ import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } f
 import { makeCode } from './verify.js';
 import { renderBanner, DEFAULT_BANNER, FONTS, SELF_HOSTED } from './banner.js';
 import { TERMS, PRIVACY } from './legal.js';
-import { SUPPORTED, LOCALE_NAMES, t, resolveLocale } from './i18n.js';
+import { SUPPORTED, PREVIEW_LOCALES, LOCALE_NAMES, t, resolveLocale, intlLocale } from './i18n.js';
 
 const PORT = Number(process.env.PORT || 8300);
 // Bind 127.0.0.1 by default (behind a reverse proxy/tunnel). In a container set
@@ -63,7 +63,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 let curLocale = 'en';
 function dashLocale(req) {
   const c = cookies(req).mh_lang; // explicit picker choice wins
-  if (c && SUPPORTED.includes(c)) return c;
+  if (c && (SUPPORTED.includes(c) || PREVIEW_LOCALES.includes(c))) return c;
   return resolveLocale((req.headers['accept-language'] || '').split(',')[0].trim());
 }
 
@@ -180,7 +180,7 @@ function layout(title, body, opts = {}) {
   const dl = curLocale;
   const notice = maintenanceNotice();
   const invite = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268545044`;
-  const picker = `<select class="langsel" onchange="document.cookie='mh_lang='+this.value+';path=/;max-age=31536000';location.reload()" aria-label="${esc(t('dash.lang', dl))}">${SUPPORTED.map((c) => `<option value="${c}" ${c === dl ? 'selected' : ''}>${esc(LOCALE_NAMES[c])}</option>`).join('')}</select>`;
+  const picker = `<select class="langsel" onchange="document.cookie='mh_lang='+this.value+';path=/;max-age=31536000';location.reload()" aria-label="${esc(t('dash.lang', dl))}">${[...SUPPORTED, ...PREVIEW_LOCALES].map((c) => `<option value="${c}" ${c === dl ? 'selected' : ''}>${esc(LOCALE_NAMES[c])}</option>`).join('')}</select>`;
   const navRight = opts.user
     ? `<a href="/stats">${t('dash.nav.stats', dl)}</a><span class="navuser">${esc(opts.user)}</span><a href="/logout">${t('dash.nav.logout', dl)}</a>${picker}<a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ <span class="lg">${t('dash.nav.addServer', dl)}</span></a>`
     : `<a href="/stats">${t('dash.nav.stats', dl)}</a><a href="/login">${t('dash.nav.login', dl)}</a>${picker}<a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ <span class="lg">${t('dash.nav.addDiscord', dl)}</span></a>`;
@@ -548,7 +548,7 @@ export function startDashboard(client) {
     const step = (isDone, label, hint, ctl) =>
       `<li><span class="tick${isDone ? '' : ' todo'}"${isDone ? ` title="${esc(t('dash.guild.stepDone', dl))}"` : ''}>${isDone ? '✓' : ''}</span><span class="what"><b>${label}</b><small>${hint}</small></span><span class="ctl">${ctl}</span></li>`;
     const gfMins = Math.max(1, Math.ceil((guild.memberCount || 0) / 60));
-    const gfConfirm = esc(t('dash.guild.confirmGf', dl, { members: (guild.memberCount || 0).toLocaleString(dl) }));
+    const gfConfirm = esc(t('dash.guild.confirmGf', dl, { members: (guild.memberCount || 0).toLocaleString(intlLocale(dl)) }));
     // marked-done-manually = the skip flag is set AND a real pass never ran (a real
     // run supersedes and re-enables lazy grandfathering)
     const gfSkippedOnly = Boolean(cfg.grandfatherSkipped) && !cfg.grandfatheredAt;
@@ -560,7 +560,7 @@ export function startDashboard(client) {
         ? `<button form="actform" name="do" value="gf_unskip" class="btn grey sm">${t('dash.guild.gfUnmark', dl)}</button>`
         : `<button form="actform" name="do" value="gf_skip" class="btn grey sm">${t('dash.guild.gfMarkDone', dl)}</button>`;
     const gfCtl = gfRunBtn + gfSkipBtn;
-    const gfHint = gfSkippedOnly ? t('dash.guild.gfSkippedHint', dl) : t('dash.guild.gfEstimate', dl, { members: (guild.memberCount || 0).toLocaleString(dl), mins: gfMins });
+    const gfHint = gfSkippedOnly ? t('dash.guild.gfSkippedHint', dl) : t('dash.guild.gfEstimate', dl, { members: (guild.memberCount || 0).toLocaleString(intlLocale(dl)), mins: gfMins });
     const checklist = `<ul class="check">
       ${step(done.config, t('dash.guild.stepConfigL', dl), t('dash.guild.stepConfigH', dl), `<a class="btn sm ${done.config ? 'grey' : ''}" href="#honeypot">${t('dash.guild.configuration', dl)}</a>`)}
       ${verifyOn ? step(done.gf, t('dash.guild.stepGfL', dl), gfHint, gfCtl) : ''}
@@ -1211,16 +1211,16 @@ ${mine.map((g) => `<tr><td>${esc(g.name)}</td><td>${g.armed ? `<span class="badg
         const sess = session(req);
         if (!sess) {
           const dl = curLocale;
-          const picker = `<select class="langsel" onchange="document.cookie='mh_lang='+this.value+';path=/;max-age=31536000';location.reload()" aria-label="${esc(t('dash.lang', dl))}">${SUPPORTED.map((c) => `<option value="${c}" ${c === dl ? 'selected' : ''}>${esc(LOCALE_NAMES[c])}</option>`).join('')}</select>`;
+          const picker = `<select class="langsel" onchange="document.cookie='mh_lang='+this.value+';path=/;max-age=31536000';location.reload()" aria-label="${esc(t('dash.lang', dl))}">${[...SUPPORTED, ...PREVIEW_LOCALES].map((c) => `<option value="${c}" ${c === dl ? 'selected' : ''}>${esc(LOCALE_NAMES[c])}</option>`).join('')}</select>`;
           return html(LANDING
             .replace(/%%L_([\w.]+)%%/g, (_, k) => t('landing.' + k, dl)) // values carry intentional HTML — do not esc()
-            .replaceAll('%%LANG%%', dl)
+            .replaceAll('%%LANG%%', intlLocale(dl))
             .replaceAll('%%LANGPICKER%%', picker)
             .replaceAll('%%COSTS%%', costsWidget(dl))
             .replaceAll('%%INVITE%%', inviteUrl())
-            .replaceAll('%%GUILDS%%', client.guilds.cache.size.toLocaleString(dl))
-            .replaceAll('%%MEMBERS%%', memberTotal().toLocaleString(dl))
-            .replaceAll('%%BANS%%', trappedCount().toLocaleString(dl)));
+            .replaceAll('%%GUILDS%%', client.guilds.cache.size.toLocaleString(intlLocale(dl)))
+            .replaceAll('%%MEMBERS%%', memberTotal().toLocaleString(intlLocale(dl)))
+            .replaceAll('%%BANS%%', trappedCount().toLocaleString(intlLocale(dl))));
         }
         const manageable = [];
         for (const g of sess.guilds) {

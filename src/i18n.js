@@ -12,11 +12,17 @@ import { readFileSync, existsSync } from 'node:fs';
 
 // Catalog codes we ship. Each needs a locales/<code>.json (except en, the base).
 export const SUPPORTED = ['en', 'es', 'fr', 'de', 'pt-BR', 'it', 'uk', 'sv', 'cs'];
+// Preview catalogs: selectable in the dashboard picker for proofreading, but not
+// offered as a server bot language and exempt from the translation parity test.
+// 737-MaxQ = the landing copy rewritten in ASD-STE100 Simplified Technical
+// English, so the operator can proofread the style in place on the real site.
+export const PREVIEW_LOCALES = ['737-MaxQ'];
 
 // Human names, for the dashboard/command locale picker.
 export const LOCALE_NAMES = {
   en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch',
   'pt-BR': 'Português (BR)', it: 'Italiano', uk: 'Українська', sv: 'Svenska', cs: 'Čeština',
+  '737-MaxQ': '737-MaxQ',
 };
 
 const DIR = new URL('../locales/', import.meta.url);
@@ -37,11 +43,17 @@ function load(code) {
 export function resolveLocale(locale) {
   if (!locale) return 'en';
   const l = String(locale);
-  if (SUPPORTED.includes(l)) return l;
+  if (SUPPORTED.includes(l) || PREVIEW_LOCALES.includes(l)) return l;
   const base = l.split('-')[0];
   return SUPPORTED.find((s) => s === base || s.split('-')[0] === base) || 'en';
 }
 
+
+// A locale code safe to hand to Intl APIs (toLocaleString etc.). Preview
+// catalog codes are not valid BCP-47 tags, so they format numbers as English.
+export function intlLocale(code) {
+  try { new Intl.NumberFormat(code); return code; } catch { return 'en'; }
+}
 const dig = (obj, key) => key.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
 
 // t('verify.success', locale, { guild: 'X' }) -> localized string with {vars}
