@@ -1000,6 +1000,15 @@ async function handleCompromised(member, cfg, comp, blast) {
       if (cfg.verifiedRoleId) await member.roles.remove(cfg.verifiedRoleId, reason).catch(fail);
       else action = 'notify'; // nothing to strip
     }
+    // `blast` records only the newest message per channel, so deleting it leaves
+    // every repeat the account posted. A ban purges natively (deleteMessageSeconds
+    // above); for kick/quarantine/notify nothing else cleans up, so sweep the
+    // account's own recent posts. The window is deliberately short - a blast is
+    // seconds wide, and a quarantined member keeps the history they wrote before
+    // the account was taken.
+    if (comp.deleteMessages && action !== 'ban') {
+      sweepStragglers(guild, id, 2 * 60 * 1000).catch(() => {});
+    }
     console.log(`[${guild.name}] compromised: ${tag} (${id}) blasted ${n} channels -> ${action}`);
     await logSend(guild, cfg, { content: t(`log.compromised_${action}`, cfg.locale, { tag, id, n }) }, 'critical');
   } catch (e) {
@@ -1014,11 +1023,11 @@ async function handleCompromised(member, cfg, comp, blast) {
 // missed. Bounded + best-effort so it can't become a full history scan:
 // ponytail: last ~30 msgs per channel, only messages from the last 15 min, only
 // channels with Manage Messages, pool of 5. A short delay lets Discord settle first.
-async function sweepStragglers(guild, userId) {
+async function sweepStragglers(guild, userId, windowMs = 15 * 60 * 1000) {
   const me = guild.members.me;
-  if (!me) return;
+  if (!me) return 0;
   await new Promise((r) => setTimeout(r, 3000)); // let the ban's own purge + indexer settle
-  const cutoff = Date.now() - 15 * 60 * 1000;
+  const cutoff = Date.now() - windowMs;
   const chans = [...guild.channels.cache.values()].filter((c) => c.isTextBased?.() && !c.isVoiceBased?.()
     && c.permissionsFor(me)?.has(PermissionsBitField.Flags.ManageMessages)
     && c.permissionsFor(me)?.has(PermissionsBitField.Flags.ReadMessageHistory));
@@ -1036,6 +1045,7 @@ async function sweepStragglers(guild, userId) {
   };
   await Promise.all(Array.from({ length: Math.min(5, chans.length || 1) }, worker));
   if (deleted) console.log(`[${guild.name}] straggler sweep removed ${deleted} leftover message(s) from ${userId}`);
+  return deleted;
 }
 
 // ---------- cross-server ban sharing (opt-in) ----------
