@@ -4,12 +4,13 @@ import { compromisedSettings, normalizeContent, messageSignature, recordAndCheck
 
 // --- settings defaults + clamping ---
 const d = compromisedSettings(undefined);
-assert.deepEqual([d.enabled, d.channels, d.windowSec, d.action, d.deleteMessages], [true, 3, 5, 'kick', true]);
+// detection defaults ON, but the ACTION defaults to notify - automated punishment is opt-in
+assert.deepEqual([d.enabled, d.channels, d.windowSec, d.action, d.deleteMessages], [true, 3, 5, 'notify', true]);
 assert.equal(compromisedSettings({ compromised: { enabled: false } }).enabled, false);
 assert.equal(compromisedSettings({ compromised: { channels: 99 } }).channels, 10);   // clamp hi
 assert.equal(compromisedSettings({ compromised: { channels: 1 } }).channels, 2);     // clamp lo
 assert.equal(compromisedSettings({ compromised: { windowSec: 999 } }).windowSec, 60);
-assert.equal(compromisedSettings({ compromised: { action: 'nope' } }).action, 'kick'); // invalid -> default
+assert.equal(compromisedSettings({ compromised: { action: 'nope' } }).action, 'notify'); // invalid -> default
 assert.equal(compromisedSettings({ compromised: { action: 'ban' } }).action, 'ban');
 
 // --- normalization: case / spacing / mentions / links collapse to the same sig ---

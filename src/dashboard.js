@@ -8,7 +8,7 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs';
 import { PermissionsBitField, ChannelType } from 'discord.js';
 const { getGuild, saveGuild, bans, trappedCount } = await import(process.env.MADHONEY_STORE ?? './store.js'); // pluggable store backend
-import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, grandfatherViaWorkerBee, workerBeeInvite, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, gateChannels, ungateChannels, classifyChannels, grandfather, syncBans, preflight, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { honeypotMode, staffRoles, adminRoles } from './trap.js';
 import { compromisedSettings } from './compromised.js';
 import { resolvedIncidents } from './incident.js';
@@ -552,9 +552,7 @@ export function startDashboard(client) {
     // marked-done-manually = the skip flag is set AND a real pass never ran (a real
     // run supersedes and re-enables lazy grandfathering)
     const gfSkippedOnly = Boolean(cfg.grandfatherSkipped) && !cfg.grandfatheredAt;
-    const gfRunBtn = GF_DEGRADED
-      ? `<a class="btn sm ${done.gf ? 'grey' : ''}" href="/g/${guild.id}/grandfather-setup">${cfg.grandfatheredAt ? t('dash.guild.rerun', dl) : t('dash.guild.actGrandfather', dl)}</a>`
-      : `<button form="actform" name="do" value="grandfather" class="btn sm ${done.gf ? 'grey' : ''}" data-confirm="${gfConfirm}">${cfg.grandfatheredAt ? t('dash.guild.rerun', dl) : t('dash.guild.actGrandfather', dl)}</button>`;
+    const gfRunBtn = `<button form="actform" name="do" value="grandfather" class="btn sm ${done.gf ? 'grey' : ''}" data-confirm="${gfConfirm}">${cfg.grandfatheredAt ? t('dash.guild.rerun', dl) : t('dash.guild.actGrandfather', dl)}</button>`;
     // skip control: "Mark as done" when not handled, "Not done" to undo a manual
     // mark. Once a real pass has run, neither is offered (grandfatheredAt wins).
     const gfSkipBtn = cfg.grandfatheredAt ? ''
@@ -615,7 +613,7 @@ ${progressBlock}
 ${problems.length ? `<div class="warnbox"><b>${t('dash.guild.healthTitle', dl)}</b><ul class="hlist">${problems.map((p) => `<li>${p.level === 'block' ? '🚫 ' : '⚠️ '}${esc(p.msg)}</li>`).join('')}</ul></div>` : ''}
 ${msg && at === 'top' ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
 ${setupDone ? '' : `<div class="card" id="setup"><h2>${t('dash.guild.setupTitle', dl)}</h2>${msgAt('setup')}
-${GF_DEGRADED && verifyOn && !done.gf ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite: workerBeeInvite() || '#' })}</div>` : ''}
+${GF_DEGRADED && verifyOn && !done.gf ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl)}</div>` : ''}
 ${checklist}
 ${guideDetails}
 </div>`}
@@ -857,28 +855,6 @@ ${table ? `<div class="tscroll"><table class="btable">${table}</table></div>
 </div>`, { user: sess.user.username });
   }
 
-  // Guided WorkerBee setup — shown when an admin clicks "Grandfather Members"
-  // while MadHoney's Server Members intent is down. Explains the helper bot,
-  // links the invite, and offers a Run button (posts do=grandfather, which the
-  // action handler routes through grandfatherViaWorkerBee). Only reachable while
-  // GF_DEGRADED; otherwise the step is a normal in-place grandfather button.
-  function grandfatherSetupPage(guild, sess) {
-    const dl = curLocale;
-    const invite = workerBeeInvite() || '#';
-    return layout(`MadHoney - ${t('dash.guild.step1Label', dl)}`, `
-<div class="subnav"><a class="backbtn" href="/g/${guild.id}#setup"><span class="chev">‹</span> ${esc(guild.name)}</a></div>
-<div class="ghead"><div class="gtitle"><h1>${t('dash.guild.step1Label', dl)}</h1></div></div>
-<div class="card">
-  <div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite })}</div>
-  <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;align-items:center">
-    <a class="btn grey" href="${invite}" target="_blank" rel="noopener">${t('dash.guild.gfInviteBtn', dl)}</a>
-    <form method="post" action="/g/${guild.id}/action" style="margin:0">
-      <button class="btn" name="do" value="grandfather">${t('dash.guild.gfRunNow', dl)}</button>
-    </form>
-  </div>
-</div>`, { user: sess.user.username });
-  }
-
   // Channel gating picker: classify every channel and let the admin choose
   // exactly which to gate, instead of a blanket "all public".
   async function gatePage(guild, sess, msg = '') {
@@ -927,7 +903,7 @@ ${table ? `<div class="tscroll"><table class="btable">${table}</table></div>
 </div>
 <div class="ghead"><div class="gtitle"><h1>${t('dash.gate.title', dl)}</h1></div></div>
 ${msg ? `<div class="card"><pre>${esc(msg)}</pre></div>` : ''}
-${GF_DEGRADED ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl, { invite: workerBeeInvite() || '#' })}</div>` : ''}
+${GF_DEGRADED ? `<div class="warnbox">${t('dash.guild.gfIntentWarn', dl)}</div>` : ''}
 ${cfg.grandfatherPending
     ? `<div class="warnbox">${t('dash.gate.gfRunningWarn', dl)}</div>`
     : (cfg.verificationEnabled !== false && cfg.verifiedRoleId && !cfg.grandfatheredAt && !cfg.grandfatherSkipped
@@ -1276,7 +1252,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
       }
 
       // ---- per-guild ----
-      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/captcha\.png|\/progress|\/gate|\/grandfather-setup|\/log)?$/);
+      const m = url.pathname.match(/^\/g\/(\d+)(\/save|\/action|\/banner\.png|\/captcha\.png|\/progress|\/gate|\/log)?$/);
       if (m) {
         const sess = session(req);
         if (!sess) {
@@ -1411,10 +1387,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           }
           // Member-by-member jobs (one API call each) run in the background
           // with a polled progress bar; one job at a time per guild.
-          // While MadHoney's Server Members intent is down, route grandfathering
-          // through the WorkerBee helper (MadHoney orchestrates it). Same signature
-          // + progress shape, so the polled job runner is unchanged.
-          const slowJobs = { grandfather: GF_DEGRADED ? grandfatherViaWorkerBee : grandfather, ban_sync: syncBans };
+          const slowJobs = { grandfather, ban_sync: syncBans };
           if (slowJobs[form.get('do')]) {
             if (gfJobs.get(guild.id) && !gfJobs.get(guild.id).finished) {
               return html(await guildPage(guild, sess, t('dash.msg.jobRunning', curLocale), 'top'));
@@ -1457,9 +1430,6 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
             return html(await gatePage(guild, sess, result));
           }
           return html(await gatePage(guild, sess));
-        }
-        if (m[2] === '/grandfather-setup') {
-          return html(grandfatherSetupPage(guild, sess));
         }
         if (m[2] === '/log') {
           return html(logPage(guild, sess));

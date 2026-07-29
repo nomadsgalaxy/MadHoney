@@ -1,7 +1,7 @@
 // Guild actions shared by the slash commands (bot.js) and the dashboard
 // (dashboard.js). Each takes a discord.js Guild + the stored config and
 // returns a human-readable result string.
-import { PermissionFlagsBits, ChannelType, OverwriteType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, Client, GatewayIntentBits, Events } from 'discord.js';
+import { PermissionFlagsBits, ChannelType, OverwriteType, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { renderBanner, DEFAULT_BANNER, creditSuffix } from './banner.js';
 import { resolvedIncidents } from './incident.js';
@@ -710,7 +710,7 @@ export async function preflight(guild, cfg, loc = cfg?.locale) {
   return issues.sort((a, b) => Number(a.level !== 'block') - Number(b.level !== 'block'));
 }
 
-// The first blocking issue (if any) - what grandfather()/WorkerBee refuse on.
+// The first blocking issue (if any) - what grandfather() refuses on.
 export async function preflightBlock(guild, cfg, loc = cfg?.locale) {
   return (await preflight(guild, cfg, loc)).find((p) => p.level === 'block') || null;
 }
@@ -769,82 +769,6 @@ export async function grandfather(guild, cfg, progress = {}, loc = cfg?.locale) 
   // a real pass supersedes any manual "mark as done" and re-enables lazy grandfathering
   saveGuild(guild.id, { grandfatherPending: false, grandfatheredAt: new Date().toISOString(), grandfatherSkipped: false });
   return t('dash.act.gfDone', loc, { role: role.name, added: progress.added, skipped: progress.skipped, failedPart: failures.length ? t('dash.act.gfFailed', loc, { n: failures.length, role: role.name, list: failures.slice(0, 5).join(', ') }) : '' });
-}
-
-// WorkerBee app id, derived from its token (a bot token's first segment is the
-// base64 bot user id) so the invite link needs no extra config.
-export function workerBeeInvite() {
-  const tok = process.env.SIDECAR_TOKEN;
-  if (!tok) return null;
-  let id; try { id = Buffer.from(tok.split('.')[0], 'base64').toString('utf8'); } catch { return null; }
-  return `https://discord.com/oauth2/authorize?client_id=${id}&scope=bot&permissions=268435456`; // Manage Roles
-}
-
-// Bulk grandfathering while MadHoney's own Server Members intent is unavailable
-// (pending Discord review). MadHoney orchestrates WorkerBee - a separate helper
-// app that DOES hold the intent: it logs WorkerBee in, has it fetch the member
-// list and grant the verified role, then WorkerBee LEAVES the server. Same
-// signature + progress shape as grandfather(), so it drops straight into the
-// dashboard's slow-job runner. Security: the grandfatheredAt cutoff means anyone
-// who joined AFTER grandfathering still has to verify - never auto-granted.
-let workerBeeBusy = false; // one WorkerBee gateway login at a time (shared token)
-export async function grandfatherViaWorkerBee(guild, cfg, progress = {}, loc = cfg?.locale) {
-  const token = process.env.SIDECAR_TOKEN;
-  if (!token) throw new Error('WorkerBee helper is not configured (SIDECAR_TOKEN unset).');
-  if (!cfg?.verifiedRoleId) throw new Error('Set a verified role before grandfathering.');
-  // Refuse to mass-grant a role that carries Administrator (or other blocking
-  // issues) - grandfathering it would make every existing member an admin.
-  const block = await preflightBlock(guild, cfg, loc);
-  if (block) throw new Error(block.msg);
-  // Two concurrent logins with WorkerBee's single token would fight over the
-  // gateway connection - serialize so one server's run finishes before the next.
-  if (workerBeeBusy) throw new Error('WorkerBee is grandfathering another server right now — try again in a minute.');
-  workerBeeBusy = true;
-  const invite = workerBeeInvite();
-  const wb = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
-  try {
-    await new Promise((res, rej) => {
-      const timer = setTimeout(() => rej(new Error('WorkerBee took too long to connect.')), 30_000);
-      wb.once(Events.ClientReady, () => { clearTimeout(timer); res(); });
-      wb.login(token).catch((e) => { clearTimeout(timer); rej(new Error(`WorkerBee could not log in: ${e.message}`)); });
-    });
-    const wbGuild = await wb.guilds.fetch(guild.id).then((g) => g.fetch()).catch(() => null);
-    if (!wbGuild) throw new Error(`WorkerBee isn't in this server yet. Invite it first: ${invite}`);
-    const role = await wbGuild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
-    if (!role) throw new Error('The verified role no longer exists.');
-    const me = await wbGuild.members.fetchMe();
-    if (me.roles.highest.comparePositionTo(role) <= 0) {
-      throw new Error(`WorkerBee's role must sit ABOVE "${role.name}". In Server Settings › Roles, drag WorkerBee's role above it, then run this again.`);
-    }
-    const cutoffMs = cfg.grandfatheredAt ? Date.parse(cfg.grandfatheredAt) : null;
-    const members = await wbGuild.members.fetch(); // needs the Server Members intent - WorkerBee has it
-    const targets = [];
-    let skipped = 0;
-    for (const m of members.values()) {
-      if (m.user.bot || m.roles.cache.has(role.id)) { skipped++; continue; }
-      if (cutoffMs !== null && m.joinedTimestamp >= cutoffMs) { skipped++; continue; } // joined after verification - must verify
-      targets.push(m);
-    }
-    Object.assign(progress, { label: 'Grandfathering via WorkerBee', total: targets.length, done: 0, added: 0, skipped, failed: 0 });
-    const failures = [];
-    let i = 0;
-    const worker = async () => {
-      while (i < targets.length) {
-        const m = targets[i++];
-        await m.roles.add(role, 'MadHoney via WorkerBee: grandfathered existing member')
-          .then(() => progress.added++)
-          .catch((e) => { progress.failed++; if (failures.length < 5) failures.push(`${m.user.tag}: ${e.message}`); });
-        progress.done++;
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(10, targets.length || 1) }, worker));
-    if (!cfg.grandfatheredAt) saveGuild(guild.id, { grandfatherPending: false, grandfatheredAt: new Date().toISOString(), grandfatherSkipped: false });
-    await wbGuild.leave().catch(() => { /* admin can kick it manually */ });
-    return t('dash.act.gfDone', loc, { role: role.name, added: progress.added, skipped: progress.skipped, failedPart: failures.length ? t('dash.act.gfFailed', loc, { n: failures.length, role: role.name, list: failures.slice(0, 5).join(', ') }) : '' }) + ' 🐝';
-  } finally {
-    await wb.destroy().catch(() => {});
-    workerBeeBusy = false;
-  }
 }
 
 // Ban from List: proactively ban every user on the active shared list (bans

@@ -15,7 +15,10 @@
 // positive is near-impossible: identical content in 3+ channels within 5s.
 export function compromisedSettings(cfg) {
   const c = cfg?.compromised ?? {};
-  const action = ['kick', 'ban', 'quarantine', 'notify'].includes(c.action) ? c.action : 'kick';
+  // Default action is NOTIFY, not kick: detection is on everywhere, but taking
+  // an automated action on a real member is the moderator's call (same stance as
+  // the honeypot defaulting to Review). Admins pick kick/quarantine/ban per server.
+  const action = ['kick', 'ban', 'quarantine', 'notify'].includes(c.action) ? c.action : 'notify';
   const channels = Math.max(2, Math.min(10, Number(c.channels) || 3));
   const windowSec = Math.max(1, Math.min(60, Number(c.windowSec) || 5));
   return {
