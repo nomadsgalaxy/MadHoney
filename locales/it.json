@@ -518,7 +518,11 @@
       "pfVerifiedDangerous": "Il ruolo verificato concede permessi pericolosi ({perms}). Ogni membro che si verifica li ottiene — e chiunque può verificarsi. Rimuovili in Impostazioni server › Ruoli, a meno che tu non lo voglia davvero.",
       "pfVerifyBotCantPost": "Non riesco a pubblicare il pannello di verifica nel canale di verifica — mi mancano i permessi Visualizza canale o Invia messaggi in quel canale. Concedimeli entrambi (il canale può restare in sola lettura per i membri) oppure scegli un canale in cui posso scrivere.",
       "pfVerifyHidden": "I membri non verificati non riescono a vedere il canale di verifica, quindi nessuno può verificarsi. Rendilo visibile a @everyone (Visualizza canale) — lo mantengo così ogni volta che blocchi dei canali.",
-      "pfNothingGated": "La verifica è attiva, ma nessun canale di contenuti è bloccato — i membri non verificati possono ancora vedere e scrivere ovunque. Usa il Blocco dei canali per bloccare i tuoi canali dietro la verifica."
+      "pfNothingGated": "La verifica è attiva, ma nessun canale di contenuti è bloccato — i membri non verificati possono ancora vedere e scrivere ovunque. Usa il Blocco dei canali per bloccare i tuoi canali dietro la verifica.",
+      "gLineSynced": "GATE APPLICATO TRAMITE LA LORO CATEGORIA ({n} canali sincronizzati, permessi invariati): {list}",
+      "gLineCustom": "NON TOCCATI - regole di visibilità personalizzate ({n}): {list}. Questi canali sono nascosti a ruoli specifici; applicare il gate li renderebbe visibili a quei membri una volta completata la verifica. Se vuoi comunque applicare il gate, selezionali dal pannello del gate.",
+      "anCustom": "Il nuovo canale #{channel} NON è stato aggiunto automaticamente al gate: ha regole di visibilità personalizzate (è nascosto a ruoli specifici), quindi applicargli il gate potrebbe esporlo a membri a cui lo avevi nascosto. Se vuoi comunque applicare il gate, fallo dalla dashboard.",
+      "pfArmedNoBanner": "Il tuo canale trappola (honeypot) è ARMATO ma il banner di avviso non è pubblicato. Una trappola non segnalata sembra un canale normale — un membro reale che ci scrive viene bannato all'istante. Pubblica il banner dalla scheda Honeypot, oppure metti la trappola in modalità Revisione."
     }
   },
   "landing": {

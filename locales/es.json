@@ -518,7 +518,11 @@
       "pfVerifiedDangerous": "El rol verificado otorga permisos peligrosos ({perms}). Todos los miembros que se verifican los reciben — y cualquiera puede verificarse. Quítalos en Configuración del servidor › Roles a menos que de verdad lo quieras así.",
       "pfVerifyBotCantPost": "No puedo publicar el panel de verificación en el canal de verificación — me falta Ver canal o Enviar mensajes ahí. Concédeme ambos (el canal puede seguir siendo de solo lectura para los miembros) o elige un canal donde sí pueda publicar.",
       "pfVerifyHidden": "Los miembros no verificados no pueden ver el canal de verificación, así que nadie puede verificarse. Hazlo visible para @everyone (Ver canal) — yo lo mantengo así siempre que restringes canales.",
-      "pfNothingGated": "La verificación está activada, pero no hay canales de contenido restringidos — los miembros no verificados todavía pueden ver y escribir en todas partes. Usa la Restricción de canales para bloquear tus canales detrás de la verificación."
+      "pfNothingGated": "La verificación está activada, pero no hay canales de contenido restringidos — los miembros no verificados todavía pueden ver y escribir en todas partes. Usa la Restricción de canales para bloquear tus canales detrás de la verificación.",
+      "gLineSynced": "RESTRINGIDOS A TRAVÉS DE SU CATEGORÍA ({n} canales sincronizados, permisos intactos): {list}",
+      "gLineCustom": "SIN TOCAR - reglas de visibilidad personalizadas ({n}): {list}. Estos canales están ocultos para roles específicos; restringirlos los haría visibles para esos miembros una vez verificados. Selecciónalos en el panel de restricción si aun así quieres restringirlos.",
+      "anCustom": "El nuevo canal #{channel} NO se restringió automáticamente: tiene reglas de visibilidad personalizadas (oculto para roles específicos), por lo que restringirlo podría exponerlo a miembros a los que se lo habías ocultado. Restríngelo desde el panel si quieres que quede restringido.",
+      "pfArmedNoBanner": "Tu canal trampa (honeypot) está ARMADO pero su banner de advertencia no está publicado. Una trampa sin señalizar parece un canal normal — un miembro real que publique ahí será baneado al instante. Publica el banner desde la tarjeta Honeypot o cambia la trampa al modo Revisión."
     }
   },
   "landing": {

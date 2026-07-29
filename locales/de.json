@@ -518,7 +518,11 @@
       "pfVerifiedDangerous": "Die verifizierte Rolle gewährt gefährliche Berechtigungen ({perms}). Jedes Mitglied, das sich verifiziert, erhält sie — und jeder kann sich verifizieren. Entferne sie unter Servereinstellungen › Rollen, sofern du das nicht wirklich beabsichtigst.",
       "pfVerifyBotCantPost": "Ich kann das Verifizierungspanel nicht im Verifizierungskanal posten — mir fehlt dort die Berechtigung Kanal anzeigen oder Nachrichten senden. Gib mir beide (der Kanal kann für Mitglieder schreibgeschützt bleiben) oder wähle einen Kanal, in dem ich posten kann.",
       "pfVerifyHidden": "Nicht verifizierte Mitglieder können den Verifizierungskanal nicht sehen, sodass sich niemand verifizieren kann. Mach ihn für @everyone sichtbar (Kanal anzeigen) — ich halte ihn so, sobald du Kanäle sperrst.",
-      "pfNothingGated": "Die Verifizierung ist aktiv, aber es sind keine Inhaltskanäle gesperrt — nicht verifizierte Mitglieder können weiterhin überall alles sehen und posten. Nutze die Kanalsperre, um deine Kanäle hinter der Verifizierung zu sperren."
+      "pfNothingGated": "Die Verifizierung ist aktiv, aber es sind keine Inhaltskanäle gesperrt — nicht verifizierte Mitglieder können weiterhin überall alles sehen und posten. Nutze die Kanalsperre, um deine Kanäle hinter der Verifizierung zu sperren.",
+      "gLineSynced": "ÜBER IHRE KATEGORIE GESPERRT ({n} synchronisierte Kanäle, Berechtigungen unangetastet): {list}",
+      "gLineCustom": "NICHT ANGETASTET - eigene Sichtbarkeitsregeln ({n}): {list}. Diese Kanäle sind vor bestimmten Rollen verborgen; die Sperrung würde sie für genau diese Mitglieder sichtbar machen, sobald diese verifiziert sind. Wähle sie in der Kanalauswahl aus, wenn du sie trotzdem sperren willst.",
+      "anCustom": "Der neue Kanal #{channel} wurde NICHT automatisch gesperrt: Er hat eigene Sichtbarkeitsregeln (vor bestimmten Rollen verborgen), daher könnte die Sperrung ihn für Mitglieder sichtbar machen, vor denen du ihn verborgen hast. Sperre ihn über das Dashboard, wenn du das trotzdem willst.",
+      "pfArmedNoBanner": "Dein Honeypot-Kanal ist SCHARF, aber sein Warnbanner ist nicht gepostet. Eine unmarkierte Falle sieht aus wie ein normaler Kanal — ein echtes Mitglied, das dort postet, wird sofort gebannt. Poste das Banner über die Honeypot-Karte oder stelle den Honeypot auf den Prüfmodus um."
     }
   },
   "landing": {

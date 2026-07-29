@@ -518,7 +518,11 @@
       "pfVerifiedDangerous": "Le rôle vérifié accorde des permissions dangereuses ({perms}). Chaque membre qui se vérifie les obtient — et n'importe qui peut se vérifier. Retirez-les dans Paramètres du serveur › Rôles, sauf si c'est vraiment votre intention.",
       "pfVerifyBotCantPost": "Je ne peux pas publier le panneau de vérification dans le salon de vérification — il me manque la permission Voir le salon ou Envoyer des messages à cet endroit. Accordez-moi les deux (le salon peut rester en lecture seule pour les membres), ou choisissez un salon où je peux publier.",
       "pfVerifyHidden": "Les membres non vérifiés ne peuvent pas voir le salon de vérification, donc personne ne peut se vérifier. Rendez-le visible pour @everyone (Voir le salon) — je le garde ainsi chaque fois que vous verrouillez des salons.",
-      "pfNothingGated": "La vérification est activée, mais aucun salon de contenu n'est verrouillé — les membres non vérifiés peuvent toujours tout voir et publier partout. Utilisez le Verrouillage des salons pour bloquer vos salons derrière la vérification."
+      "pfNothingGated": "La vérification est activée, mais aucun salon de contenu n'est verrouillé — les membres non vérifiés peuvent toujours tout voir et publier partout. Utilisez le Verrouillage des salons pour bloquer vos salons derrière la vérification.",
+      "gLineSynced": "VERROUILLÉS VIA LEUR CATÉGORIE ({n} salons synchronisés, permissions intactes) : {list}",
+      "gLineCustom": "LAISSÉS TELS QUELS - règles de visibilité personnalisées ({n}) : {list}. Ces salons sont masqués pour certains rôles ; les verrouiller les rendrait visibles à ces membres une fois vérifiés. Sélectionnez-les sur le tableau de verrouillage si vous voulez quand même les verrouiller.",
+      "anCustom": "Le nouveau salon #{channel} n'a PAS été verrouillé automatiquement : il possède des règles de visibilité personnalisées (masqué pour certains rôles), donc le verrouiller pourrait l'exposer aux membres à qui vous l'aviez caché. Verrouillez-le depuis le tableau de bord si vous souhaitez le verrouiller malgré tout.",
+      "pfArmedNoBanner": "Votre salon piège (honeypot) est ARMÉ mais sa bannière d'avertissement n'est pas publiée. Un piège non signalé ressemble à un salon normal — un membre réel qui y publie est banni instantanément. Publiez la bannière depuis la carte Honeypot, ou passez le piège en mode Révision."
     }
   },
   "landing": {

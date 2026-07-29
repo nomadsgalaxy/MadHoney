@@ -518,7 +518,11 @@
       "pfVerifiedDangerous": "Ověřená role uděluje nebezpečná oprávnění ({perms}). Získá je každý člen, který se ověří — a ověřit se může kdokoli. Odeberte je v Nastavení serveru › Role, pokud to opravdu nezamýšlíte.",
       "pfVerifyBotCantPost": "Nemůžu odeslat ověřovací panel do ověřovacího kanálu — chybí mi tam oprávnění Zobrazit kanál nebo Posílat zprávy. Udělte mi obě (kanál může pro členy zůstat jen pro čtení), nebo vyberte kanál, do kterého můžu psát.",
       "pfVerifyHidden": "Neověření členové nevidí ověřovací kanál, takže se nikdo nemůže ověřit. Zpřístupněte ho pro @everyone (Zobrazit kanál) — udržuji ho tak vždy, když uzamykáte kanály.",
-      "pfNothingGated": "Ověřování je zapnuté, ale žádné obsahové kanály nejsou uzamčené — neověření členové stále všude vidí a mohou psát. Pomocí Uzamčení kanálů uzamkněte své kanály za ověřením."
+      "pfNothingGated": "Ověřování je zapnuté, ale žádné obsahové kanály nejsou uzamčené — neověření členové stále všude vidí a mohou psát. Pomocí Uzamčení kanálů uzamkněte své kanály za ověřením.",
+      "gLineSynced": "UZAMČENO PŘES NADŘAZENOU KATEGORII (synchronizovaných kanálů: {n}, oprávnění nedotčena): {list}",
+      "gLineCustom": "PONECHÁNO BEZE ZMĚNY - vlastní pravidla viditelnosti ({n}): {list}. Tyto kanály jsou skryté před konkrétními rolemi; jejich uzamčením by se po ověření zobrazily i těmto členům. Pokud je přesto chcete uzamknout, vyberte je na panelu brány.",
+      "anCustom": "Nový kanál #{channel} NEBYL automaticky uzamčen: má vlastní pravidla viditelnosti (je skrytý před konkrétními rolemi), takže jeho uzamčení by ho mohlo zpřístupnit členům, před kterými jste ho skryli. Pokud ho přesto chcete uzamknout, udělejte to z ovládacího panelu.",
+      "pfArmedNoBanner": "Váš honeypot kanál (past na spam) je OZBROJENÝ, ale varovný banner není zveřejněn. Neoznačená past vypadá jako běžný kanál — skutečný člen, který tam napíše, je okamžitě zabanován. Zveřejněte banner z karty Honeypot, nebo past přepněte do režimu kontroly."
     }
   },
   "landing": {

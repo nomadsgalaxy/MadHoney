@@ -518,7 +518,11 @@
       "pfVerifiedDangerous": "The verified role grants dangerous permissions ({perms}). Every member who verifies gets them — and anyone can verify. Remove them in Server Settings › Roles unless you truly intend it.",
       "pfVerifyBotCantPost": "I can't post the verify panel in the verify channel — I'm missing View Channel or Send Messages there. Grant me both (the channel can stay read-only for members), or pick a channel I can post in.",
       "pfVerifyHidden": "Unverified members can't see the verify channel, so no one can verify. Make it visible to @everyone (View Channel) — I keep it that way whenever you gate channels.",
-      "pfNothingGated": "Verification is on, but no content channels are gated — unverified members can still see and post everywhere. Use Channel Gating to lock your channels behind verification."
+      "pfNothingGated": "Verification is on, but no content channels are gated — unverified members can still see and post everywhere. Use Channel Gating to lock your channels behind verification.",
+      "gLineSynced": "GATED VIA THEIR CATEGORY ({n} synced channels, permissions untouched): {list}",
+      "gLineCustom": "LEFT ALONE - custom visibility rules ({n}): {list}. These channels are hidden from specific roles; gating them would make them visible to those members once verified. Pick them on the gate board if you want them gated anyway.",
+      "anCustom": "New channel #{channel} was NOT auto-gated: it has custom visibility rules (hidden from specific roles), so gating it could expose it to members you hid it from. Gate it from the dashboard if you want it gated.",
+      "pfArmedNoBanner": "Your honeypot is ARMED but its warning banner is not posted. An unmarked trap looks like a normal channel — a real member who posts there gets banned instantly. Post the banner from the Honeypot card, or switch the honeypot to Review mode."
     }
   },
   "landing": {
