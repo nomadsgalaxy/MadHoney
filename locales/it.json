@@ -392,7 +392,9 @@
       "compDeleteHint": "Rimuove i messaggi diffusi in massa da ogni canale quando viene individuato un account compromesso.",
       "saveCompromised": "Salva le impostazioni per gli account compromessi",
       "comingSoon": "Prossimamente",
-      "healthTitle": "Controllo dello stato di MadHoney — problemi da risolvere:"
+      "healthTitle": "Controllo dello stato di MadHoney — problemi da risolvere:",
+      "setupByLine": "Configurato da {who} il {when}",
+      "lastChangeLine": "ultima modifica di {who} il {when}"
     },
     "msg": {
       "bannerSaved": "Banner salvato. Pubblicalo nell'honeypot con \"Pubblica il banner\".",
@@ -487,7 +489,7 @@
       "gNone": "(nessuno)",
       "gNoAccess": "⚠️ IMPOSSIBILE ACCEDERE ({n}) - non riesco a vederli, quindi non posso applicare il gating: {list}\n   Soluzione: assegna temporaneamente al ruolo MadHoney il permesso Amministratore (Impostazioni server → Ruoli), esegui di nuovo il gating, poi rimuovilo - oppure concedi al ruolo MadHoney Visualizza canale su ciascuno.",
       "gDryRun": "PROVA A VUOTO - nulla è cambiato.\n{lines}\nEsegui \"Applica il gating ai canali (APPLICA)\" per renderlo reale.",
-      "gDone": "Gating applicato. {ok} canali aggiornati, {failed} falliti{unreachable}.{failedList}\n{lines}",
+      "gDone": "Gating applicato. {ok} canali aggiornati, {failed} falliti{unreachable}.{failedList}\n{lines}{repaired}",
       "gUnreachable": ", {n} irraggiungibili",
       "gFailedList": "\nFalliti: {list}",
       "roleNotFound": "Ruolo verificato non trovato - riesegui la configurazione.",
@@ -520,7 +522,13 @@
       "gLineSynced": "GATE APPLICATO TRAMITE LA LORO CATEGORIA ({n} canali sincronizzati, permessi invariati): {list}",
       "gLineCustom": "NON TOCCATI - regole di visibilità personalizzate ({n}): {list}. Questi canali sono nascosti a ruoli specifici; applicare il gate li renderebbe visibili a quei membri una volta completata la verifica. Se vuoi comunque applicare il gate, selezionali dal pannello del gate.",
       "anCustom": "Il nuovo canale #{channel} NON è stato aggiunto automaticamente al gate: ha regole di visibilità personalizzate (è nascosto a ruoli specifici), quindi applicargli il gate potrebbe esporlo a membri a cui lo avevi nascosto. Se vuoi comunque applicare il gate, fallo dalla dashboard.",
-      "pfArmedNoBanner": "Il tuo canale trappola (honeypot) è ARMATO ma il banner di avviso non è pubblicato. Una trappola non segnalata sembra un canale normale — un membro reale che ci scrive viene bannato all'istante. Pubblica il banner dalla scheda Honeypot, oppure metti la trappola in modalità Revisione."
+      "pfArmedNoBanner": "Il tuo canale trappola (honeypot) è ARMATO ma il banner di avviso non è pubblicato. Una trappola non segnalata sembra un canale normale — un membro reale che ci scrive viene bannato all'istante. Pubblica il banner dalla scheda Honeypot, oppure metti la trappola in modalità Revisione.",
+      "pfCompActionPerm": "Il rilevamento degli account compromessi è impostato su «{action}», ma qui non ho il permesso {perm}. Se viene individuato un account compromesso posso solo segnalarlo. Concedi {perm} al mio ruolo, oppure cambia l'azione nella scheda «Account compromessi».",
+      "pfCompBlind": "Non riesco a vedere {n} dei {total} canali in cui i tuoi membri possono scrivere ({list}), quindi un account compromesso potrebbe inondarli di spam senza essere individuato. Riesegui «Applica il gating ai canali» — ripristina automaticamente il mio accesso.",
+      "pfCompNoDelete": "Posso vedere ma non ripulire {n} dei {total} canali in cui i tuoi membri possono scrivere ({list}): lì mi manca il permesso Gestisci messaggi. Lo spam individuato resterà visibile. Concedi Gestisci messaggi al mio ruolo, oppure disattiva «Elimina i messaggi di spam».",
+      "raNone": "L'accesso del bot è già corretto su ogni canale con gating.",
+      "raDone": "Ho ripristinato il mio accesso a {fixed} dei {found} canali con gating che non riuscivo più a vedere.{failedPart}",
+      "raFailed": " Non sono riuscito a sistemarne {n}: {list}"
     }
   },
   "landing": {

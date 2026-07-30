@@ -50,6 +50,15 @@ setInterval(() => { if (client.isReady()) { try { writeFileSync(LASTSEEN, String
 // Per-process fan-out tracker for compromised-account detection (compromised.js).
 // Swept every 5 min so one-off posters don't linger; per-message pruning does the
 // tight in-window work.
+// Setup attribution for the slash-command path, mirroring the dashboard's
+// stampActor: record who configured this server and who changed it last.
+function actorPatch(i, what) {
+  if (!i?.user?.id) return {};
+  const who = { id: i.user.id, tag: i.user.username ?? i.user.tag, at: new Date().toISOString(), what };
+  const cur = getGuild(i.guildId) ?? {};
+  return { ...(cur.setupBy ? {} : { setupBy: who }), lastChangeBy: who };
+}
+
 const compromisedStore = new Map();
 setInterval(() => sweepCompromised(compromisedStore, Date.now(), 5 * 60 * 1000), 5 * 60 * 1000).unref?.();
 // Detection ships as "Coming soon": stays fully off (dashboard shows a preview)
@@ -529,7 +538,7 @@ client.on(Events.InteractionCreate, async (i) => {
       }
       if (sub === 'banshare') {
         const shared = i.options.getString('mode') === 'shared';
-        saveGuild(i.guildId, { banShare: shared });
+        saveGuild(i.guildId, { banShare: shared, ...actorPatch(i, 'banShare') });
         return i.reply({ content: t(shared ? 'reply.banshareOn' : 'reply.banshareOff', getGuild(i.guildId)?.locale), ...EPH });
       }
       if (sub === 'bansync') {
@@ -552,7 +561,7 @@ client.on(Events.InteractionCreate, async (i) => {
         if (mode !== 'disarmed' && !cfgNow.honeypotChannelId) {
           return i.reply({ content: t('reply.noHoneypotYet', loc), ...EPH });
         }
-        saveGuild(i.guildId, { honeypotMode: mode });
+        saveGuild(i.guildId, { honeypotMode: mode, ...actorPatch(i, `mode:${mode}`) });
         const msg = { armed: 'reply.modeArmed', review: 'reply.modeReview', disarmed: 'reply.modeDisarmed' }[mode];
         const warn = mode === 'review' && !cfgNow.logChannelId ? '\n' + t('reply.modeReviewNoLog', loc) : '';
         return i.reply({ content: t(msg, loc) + warn, ...EPH });
@@ -585,16 +594,16 @@ client.on(Events.InteractionCreate, async (i) => {
 
     // setup selects - save immediately, refresh the panel
     if (i.isRoleSelectMenu() && i.customId === 'mh_role') {
-      saveGuild(i.guildId, { verifiedRoleId: i.values[0] });
+      saveGuild(i.guildId, { verifiedRoleId: i.values[0], ...actorPatch(i, 'verifiedRole') });
       return i.update({ content: setupContent(i.guild), components: setupComponents(getGuild(i.guildId)) });
     }
     if (i.isRoleSelectMenu() && i.customId === 'mh_staffrole') {
-      saveGuild(i.guildId, { staffRoleIds: i.values, staffRoleId: '' });
+      saveGuild(i.guildId, { staffRoleIds: i.values, staffRoleId: '', ...actorPatch(i, 'staffRoles') });
       return i.update(morePanel(i.guild));
     }
     if (i.isButton() && i.customId === 'mh_more') return i.reply(morePanel(i.guild));
     if (i.isChannelSelectMenu() && i.customId === 'mh_logch') {
-      saveGuild(i.guildId, { logChannelId: i.values[0] });
+      saveGuild(i.guildId, { logChannelId: i.values[0], ...actorPatch(i, 'logChannel') });
       return i.update(morePanel(i.guild));
     }
     if (i.isChannelSelectMenu() && ['mh_verifych', 'mh_honeych'].includes(i.customId)) {
@@ -604,7 +613,7 @@ client.on(Events.InteractionCreate, async (i) => {
       if (clash) {
         return i.update({ content: setupContent(i.guild) + '\n\n' + t('setup.clash', cfg.locale), components: setupComponents(cfg) });
       }
-      saveGuild(i.guildId, { [key]: i.values[0] });
+      saveGuild(i.guildId, { [key]: i.values[0], ...actorPatch(i, key) });
       return i.update({ content: setupContent(i.guild), components: setupComponents(getGuild(i.guildId)) });
     }
 
@@ -1241,7 +1250,7 @@ client.once(Events.ClientReady, async (c) => {
   // Message History. If gating a specific channel fails with Missing Access,
   // the bot can't see it - grant the MadHoney role View there (or temporarily
   // give it Administrator, gate, then remove).
-  console.log(`Invite: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot+applications.commands&permissions=268545044`);
+  console.log(`Invite: https://discord.com/oauth2/authorize?client_id=${c.user.id}&scope=bot+applications.commands&permissions=268545046`);
   // Run bulk/canvas jobs the edge verify-worker delegates via the D1 `jobs`
   // table (grandfather, bansync, gating, banner render) — no-op without CF_D1
   // creds, so a plain self-host is unaffected.

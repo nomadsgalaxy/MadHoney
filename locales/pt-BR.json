@@ -392,7 +392,9 @@
       "compDeleteHint": "Remove as mensagens disparadas de todos os canais quando uma conta comprometida é flagrada.",
       "saveCompromised": "Salvar configurações de contas comprometidas",
       "comingSoon": "Em breve",
-      "healthTitle": "Verificação de integridade do MadHoney — problemas a corrigir:"
+      "healthTitle": "Verificação de integridade do MadHoney — problemas a corrigir:",
+      "setupByLine": "Configurado por {who} em {when}",
+      "lastChangeLine": "última alteração por {who} em {when}"
     },
     "msg": {
       "bannerSaved": "Banner salvo. Publique no honeypot com “Publicar banner”.",
@@ -487,7 +489,7 @@
       "gNone": "(nenhum)",
       "gNoAccess": "⚠️ NÃO CONSIGO ACESSAR ({n}) - não consigo ver estes, então não posso restringi-los: {list}\n   Correção: dê temporariamente ao cargo do MadHoney a permissão Administrador (Configurações do Servidor → Cargos), execute a restrição de novo e depois remova-a - ou conceda ao cargo do MadHoney a permissão Ver Canal em cada um.",
       "gDryRun": "SIMULAÇÃO - nada foi alterado.\n{lines}\nExecute \"Restringir canais (APLICAR)\" para valer.",
-      "gDone": "Restringido. {ok} canais atualizados, {failed} falharam{unreachable}.{failedList}\n{lines}",
+      "gDone": "Restringido. {ok} canais atualizados, {failed} falharam{unreachable}.{failedList}\n{lines}{repaired}",
       "gUnreachable": ", {n} inacessíveis",
       "gFailedList": "\nFalharam: {list}",
       "roleNotFound": "Cargo de verificado não encontrado - execute a configuração de novo.",
@@ -520,7 +522,13 @@
       "gLineSynced": "ATRÁS DO PORTÃO PELA CATEGORIA ({n} canais sincronizados, permissões intactas): {list}",
       "gLineCustom": "NÃO ALTERADOS - regras de visibilidade personalizadas ({n}): {list}. Esses canais estão ocultos de cargos específicos; colocá-los atrás do portão faria com que ficassem visíveis para esses membros após a verificação. Selecione-os no painel do portão se quiser que fiquem atrás dele mesmo assim.",
       "anCustom": "O novo canal #{channel} NÃO foi colocado atrás do portão automaticamente: ele tem regras de visibilidade personalizadas (oculto de cargos específicos), então colocá-lo atrás do portão poderia expô-lo a membros de quem você o ocultou. Se quiser colocá-lo atrás do portão, faça isso pelo painel.",
-      "pfArmedNoBanner": "Seu canal armadilha (honeypot) está ARMADO, mas o banner de aviso não foi publicado. Uma armadilha sem aviso parece um canal normal — um membro real que postar ali é banido na hora. Publique o banner no cartão Honeypot ou mude a armadilha para o modo Revisão."
+      "pfArmedNoBanner": "Seu canal armadilha (honeypot) está ARMADO, mas o banner de aviso não foi publicado. Uma armadilha sem aviso parece um canal normal — um membro real que postar ali é banido na hora. Publique o banner no cartão Honeypot ou mude a armadilha para o modo Revisão.",
+      "pfCompActionPerm": "A detecção de contas comprometidas está definida como \"{action}\", mas não tenho a permissão {perm} aqui. Se uma conta sequestrada for flagrada, só poderei reportá-la. Conceda {perm} ao meu cargo ou altere a ação no card \"Contas comprometidas\".",
+      "pfCompBlind": "Não consigo ver {n} de {total} canais em que seus membros podem postar ({list}), então uma conta comprometida poderia enviar spam neles sem ser detectada. Execute \"Restringir canais\" novamente — isso restaura meu acesso automaticamente.",
+      "pfCompNoDelete": "Consigo ver, mas não limpar, {n} de {total} canais em que seus membros podem postar ({list}): falta a permissão Gerenciar Mensagens neles. O spam flagrado vai continuar lá. Conceda Gerenciar Mensagens ao meu cargo ou desative \"Excluir as mensagens de spam\".",
+      "raNone": "O acesso do bot já está correto em todos os canais restringidos.",
+      "raDone": "Restaurei meu acesso a {fixed} de {found} canais restringidos que eu não conseguia mais ver.{failedPart}",
+      "raFailed": " Não consegui corrigir {n}: {list}"
     }
   },
   "landing": {

@@ -392,7 +392,9 @@
       "compDeleteHint": "Elimina los mensajes de spam de todos los canales cuando se detecta una cuenta comprometida.",
       "saveCompromised": "Guardar la configuración de cuentas comprometidas",
       "comingSoon": "Próximamente",
-      "healthTitle": "Revisión de estado de MadHoney — problemas que corregir:"
+      "healthTitle": "Revisión de estado de MadHoney — problemas que corregir:",
+      "setupByLine": "Configurado por {who} el {when}",
+      "lastChangeLine": "último cambio por {who} el {when}"
     },
     "msg": {
       "bannerSaved": "Banner guardado. Publícalo en el honeypot con “Publicar banner”.",
@@ -487,7 +489,7 @@
       "gNone": "(ninguno)",
       "gNoAccess": "⚠️ NO PUEDO ACCEDER ({n}) - no puedo ver estos, así que no puedo restringirlos: {list}\n   Solución: da temporalmente al rol de MadHoney Administrador (Configuración del servidor → Roles), ejecuta la restricción de nuevo, luego quítalo - o otorga al rol de MadHoney Ver canal en cada uno.",
       "gDryRun": "SIMULACIÓN - no se cambió nada.\n{lines}\nEjecuta \"Restringir canales (APLICAR)\" para hacerlo real.",
-      "gDone": "Restringido. {ok} canales actualizados, {failed} fallidos{unreachable}.{failedList}\n{lines}",
+      "gDone": "Restringido. {ok} canales actualizados, {failed} fallidos{unreachable}.{failedList}\n{lines}{repaired}",
       "gUnreachable": ", {n} inalcanzables",
       "gFailedList": "\nFallidos: {list}",
       "roleNotFound": "Rol de verificado no encontrado - vuelve a ejecutar la configuración.",
@@ -520,7 +522,13 @@
       "gLineSynced": "RESTRINGIDOS A TRAVÉS DE SU CATEGORÍA ({n} canales sincronizados, permisos intactos): {list}",
       "gLineCustom": "SIN TOCAR - reglas de visibilidad personalizadas ({n}): {list}. Estos canales están ocultos para roles específicos; restringirlos los haría visibles para esos miembros una vez verificados. Selecciónalos en el panel de restricción si aun así quieres restringirlos.",
       "anCustom": "El nuevo canal #{channel} NO se restringió automáticamente: tiene reglas de visibilidad personalizadas (oculto para roles específicos), por lo que restringirlo podría exponerlo a miembros a los que se lo habías ocultado. Restríngelo desde el panel si quieres que quede restringido.",
-      "pfArmedNoBanner": "Tu canal trampa (honeypot) está ARMADO pero su banner de advertencia no está publicado. Una trampa sin señalizar parece un canal normal — un miembro real que publique ahí será baneado al instante. Publica el banner desde la tarjeta Honeypot o cambia la trampa al modo Revisión."
+      "pfArmedNoBanner": "Tu canal trampa (honeypot) está ARMADO pero su banner de advertencia no está publicado. Una trampa sin señalizar parece un canal normal — un miembro real que publique ahí será baneado al instante. Publica el banner desde la tarjeta Honeypot o cambia la trampa al modo Revisión.",
+      "pfCompActionPerm": "La detección de cuentas comprometidas está configurada en «{action}», pero no tengo el permiso {perm} aquí. Si se detecta una cuenta secuestrada, solo puedo informar de ella. Concede {perm} a mi rol o cambia la acción en la tarjeta Cuentas comprometidas.",
+      "pfCompBlind": "No puedo ver {n} de {total} canales en los que tus miembros pueden publicar ({list}), así que una cuenta comprometida podría inundarlos de spam sin ser detectada. Vuelve a ejecutar «Restringir canales» — restaura mi acceso automáticamente.",
+      "pfCompNoDelete": "Puedo ver, pero no limpiar, {n} de {total} canales en los que tus miembros pueden publicar ({list}): me falta Gestionar mensajes ahí. El spam atrapado seguirá visible. Concede Gestionar mensajes a mi rol o desactiva «Eliminar los mensajes de spam».",
+      "raNone": "El acceso del bot ya es correcto en todos los canales restringidos.",
+      "raDone": "He restaurado mi acceso a {fixed} de {found} canales restringidos en los que me había quedado a ciegas.{failedPart}",
+      "raFailed": " No pude corregir {n}: {list}"
     }
   },
   "landing": {

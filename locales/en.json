@@ -392,7 +392,9 @@
       "compDeleteHint": "Remove the blasted messages from every channel when a compromised account is caught.",
       "saveCompromised": "Save compromised-account settings",
       "comingSoon": "Coming soon",
-      "healthTitle": "MadHoney health check — issues to fix:"
+      "healthTitle": "MadHoney health check — issues to fix:",
+      "setupByLine": "Set up by {who} on {when}",
+      "lastChangeLine": "last change by {who} on {when}"
     },
     "msg": {
       "bannerSaved": "Banner saved. Post it to the honeypot with “Post banner”.",
@@ -487,7 +489,7 @@
       "gNone": "(none)",
       "gNoAccess": "⚠️ CAN'T ACCESS ({n}) - I can't see these, so I can't gate them: {list}\n   Fix: temporarily give the MadHoney role Administrator (Server Settings → Roles), run gate again, then remove it - or grant the MadHoney role View Channel on each.",
       "gDryRun": "DRY RUN - nothing changed.\n{lines}\nRun \"Gate channels (APPLY)\" to make it real.",
-      "gDone": "Gated. {ok} channels updated, {failed} failed{unreachable}.{failedList}\n{lines}",
+      "gDone": "Gated. {ok} channels updated, {failed} failed{unreachable}.{failedList}\n{lines}{repaired}",
       "gUnreachable": ", {n} unreachable",
       "gFailedList": "\nFailed: {list}",
       "roleNotFound": "Verified role not found - re-run setup.",
@@ -520,7 +522,13 @@
       "gLineSynced": "GATED VIA THEIR CATEGORY ({n} synced channels, permissions untouched): {list}",
       "gLineCustom": "LEFT ALONE - custom visibility rules ({n}): {list}. These channels are hidden from specific roles; gating them would make them visible to those members once verified. Pick them on the gate board if you want them gated anyway.",
       "anCustom": "New channel #{channel} was NOT auto-gated: it has custom visibility rules (hidden from specific roles), so gating it could expose it to members you hid it from. Gate it from the dashboard if you want it gated.",
-      "pfArmedNoBanner": "Your honeypot is ARMED but its warning banner is not posted. An unmarked trap looks like a normal channel — a real member who posts there gets banned instantly. Post the banner from the Honeypot card, or switch the honeypot to Review mode."
+      "pfArmedNoBanner": "Your honeypot is ARMED but its warning banner is not posted. An unmarked trap looks like a normal channel — a real member who posts there gets banned instantly. Post the banner from the Honeypot card, or switch the honeypot to Review mode.",
+      "pfCompActionPerm": "Compromised-account detection is set to \"{action}\", but I do not have the {perm} permission here. If a hijacked account is caught I can only report it. Grant {perm} to my role, or change the action in the Compromised accounts card.",
+      "pfCompBlind": "I cannot see {n} of {total} channels your members can post in ({list}), so a compromised account could spam them without being detected. Re-run Gate channels — it restores my access automatically.",
+      "pfCompNoDelete": "I can see but not clean up {n} of {total} channels your members can post in ({list}): I am missing Manage Messages there. Caught spam will stay up. Grant Manage Messages to my role, or turn off \"Delete the spam messages\".",
+      "raNone": "Bot access is already correct on every gated channel.",
+      "raDone": "Restored my access to {fixed} of {found} gated channels I had gone blind on.{failedPart}",
+      "raFailed": " Could not fix {n}: {list}"
     }
   },
   "landing": {

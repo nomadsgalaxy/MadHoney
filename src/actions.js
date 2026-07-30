@@ -6,6 +6,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { renderBanner, DEFAULT_BANNER, creditSuffix } from './banner.js';
 import { resolvedIncidents } from './incident.js';
 import { honeypotMode } from './trap.js';
+import { compromisedSettings } from './compromised.js';
 import { t } from './i18n.js';
 
 // Randomize the banner's attachment filename on every post. A fixed name like
@@ -454,11 +455,75 @@ export async function gateChannels(guild, cfg, apply = false, sel = null, loc = 
     channelTreatment: treatment,
     gateBackup: backup,
   });
+  // Self-heal: an applied gate also restores bot access on anything it had
+  // previously gated but gone blind on (see repairBotAccess).
+  const repaired = await repairBotAccess(guild, getGuild(guild.id) ?? cfg, loc).catch(() => null);
   return t('dash.act.gDone', loc, {
+    repaired: repaired && !repaired.startsWith(t('dash.act.raNone', loc)) ? `\n${repaired}` : '',
     ok, failed: failed.length,
     unreachable: plan.noaccess.length ? t('dash.act.gUnreachable', loc, { n: plan.noaccess.length }) : '',
     failedList: failed.length ? t('dash.act.gFailedList', loc, { list: failed.join(', ') }) : '',
     lines: lines.join('\n'),
+  });
+}
+
+
+// Back-fill the bot's own access on channels MadHoney already gated.
+//
+// Servers gated before the bot-access pin existed denied @everyone View without
+// granting the bot anything, so MadHoney went blind on exactly the channels it
+// is supposed to watch - compromised-account detection cannot see a blast there.
+// A normal re-gate does not fix it: an already-gated channel no longer looks
+// public, so the planner skips it.
+//
+// The catch is that the bot cannot edit permissions on a channel it cannot see
+// (Discord returns Missing Access). The verified role CAN see gated channels -
+// that is the gate - so the bot briefly grants itself that role, pins its
+// access, and drops the role again. try/finally guarantees the role comes back
+// off even if an edit throws.
+export async function repairBotAccess(guild, cfg, loc = cfg?.locale) {
+  const me = await guild.members.fetchMe();
+  const botTarget = me.roles.botRole ?? me;
+  const ids = new Set([...(cfg.gatedChannels ?? []), ...memberPostableChannels(guild, cfg).map((c) => c.id)]);
+  const blind = [];
+  for (const id of ids) {
+    const ch = guild.channels.cache.get(id);
+    if (!ch || ch.id === cfg.verifyChannelId) continue;
+    if (!ch.permissionsFor(me)?.has(PermissionFlagsBits.ViewChannel)) blind.push(ch);
+  }
+  if (!blind.length) return t('dash.act.raNone', loc);
+
+  const role = cfg.verifiedRoleId ? await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null) : null;
+  // Only borrow the role when we actually need to and are allowed to.
+  const canBorrow = role && me.permissions.has(PermissionFlagsBits.ManageRoles)
+    && me.roles.highest.comparePositionTo(role) > 0 && !me.roles.cache.has(role.id);
+  let borrowed = false;
+  let fixed = 0; const failed = [];
+  try {
+    if (canBorrow) {
+      await me.roles.add(role, 'MadHoney: temporary self-verify to restore bot access').then(() => { borrowed = true; }).catch(() => {});
+      if (borrowed) await new Promise((r) => setTimeout(r, 2500)); // let the grant propagate
+    }
+    for (const ch of blind) {
+      try {
+        await ch.permissionOverwrites.edit(botTarget, { ViewChannel: true, ReadMessageHistory: true, ManageMessages: true },
+          { reason: 'MadHoney: restore bot access to a gated channel' });
+        fixed++;
+      } catch {
+        // ManageMessages cannot always be self-granted; View alone still restores detection
+        try {
+          await ch.permissionOverwrites.edit(botTarget, { ViewChannel: true, ReadMessageHistory: true },
+            { reason: 'MadHoney: restore bot access to a gated channel' });
+          fixed++;
+        } catch (e) { failed.push(`#${ch.name} (${e.message})`); }
+      }
+    }
+  } finally {
+    if (borrowed) await me.roles.remove(role, 'MadHoney: remove temporary verify role').catch(() => {});
+  }
+  return t('dash.act.raDone', loc, {
+    fixed, found: blind.length,
+    failedPart: failed.length ? t('dash.act.raFailed', loc, { n: failed.length, list: failed.slice(0, 5).join(', ') }) : '',
   });
 }
 
@@ -659,6 +724,25 @@ export function contentGatedChannels(cfg) {
   return (cfg?.gatedChannels ?? []).filter((id) => id !== cfg?.verifyChannelId && id !== cfg?.honeypotChannelId);
 }
 
+
+// Channels a REGULAR member can post in - the actual attack surface for a
+// compromised account. Staff are exempt from detection and read-only or
+// mod-only channels cannot be blasted, so neither needs bot coverage.
+export function memberPostableChannels(guild, cfg) {
+  const everyone = guild.roles.everyone;
+  const verified = cfg?.verifiedRoleId ? guild.roles.cache.get(cfg.verifiedRoleId) : null;
+  const out = [];
+  for (const ch of guild.channels.cache.values()) {
+    if (!ch || ch.type === ChannelType.GuildCategory) continue;
+    if (!ch.isTextBased?.() && !ch.isVoiceBased?.()) continue;
+    if (ch.id === cfg?.honeypotChannelId) continue; // the trap has its own rules
+    const post = ch.isVoiceBased?.() ? PermissionFlagsBits.Connect : PermissionFlagsBits.SendMessages;
+    const open = (role) => { const p = ch.permissionsFor(role); return !!p && p.has(PermissionFlagsBits.ViewChannel) && p.has(post); };
+    if (open(everyone) || (verified && open(verified))) out.push(ch);
+  }
+  return out;
+}
+
 // Health check for a verify-enabled server: returns EVERY problem it finds as
 // { level, msg }, most severe first (empty array = healthy). 'block' issues make
 // core actions fail or cause harm at scale, so grandfather() refuses on them;
@@ -707,6 +791,25 @@ export async function preflight(guild, cfg, loc = cfg?.locale) {
   }
   // Verification on, but nothing real behind it.
   if (contentGatedChannels(cfg).length === 0) push('warn', 'dash.act.pfNothingGated');
+  // Compromised-account detection has its own requirements, and they differ by
+  // the action the server chose. Silent failure is the danger here: without
+  // View the blast is never seen, and without Manage Messages the spam stays up.
+  const comp = compromisedSettings(cfg);
+  if (comp.enabled) {
+    const NEED = { kick: [PermissionFlagsBits.KickMembers, 'Kick Members'], ban: [PermissionFlagsBits.BanMembers, 'Ban Members'] };
+    const need = NEED[comp.action];
+    if (need && !me.permissions.has(need[0])) push('warn', 'dash.act.pfCompActionPerm', { perm: need[1], action: comp.action });
+    if (comp.action === 'quarantine' && !me.permissions.has(PermissionFlagsBits.ManageRoles)) {
+      push('warn', 'dash.act.pfCompActionPerm', { perm: 'Manage Roles', action: comp.action });
+    }
+    const postable = memberPostableChannels(guild, cfg);
+    const blind = postable.filter((ch) => !ch.permissionsFor(me)?.has(PermissionFlagsBits.ViewChannel));
+    if (blind.length) push('warn', 'dash.act.pfCompBlind', { n: blind.length, total: postable.length, list: blind.slice(0, 5).map((c) => '#' + c.name).join(', ') });
+    if (comp.deleteMessages) {
+      const noDel = postable.filter((ch) => { const p = ch.permissionsFor(me); return p?.has(PermissionFlagsBits.ViewChannel) && !p.has(PermissionFlagsBits.ManageMessages); });
+      if (noDel.length) push('warn', 'dash.act.pfCompNoDelete', { n: noDel.length, total: postable.length, list: noDel.slice(0, 5).map((c) => '#' + c.name).join(', ') });
+    }
+  }
   return issues.sort((a, b) => Number(a.level !== 'block') - Number(b.level !== 'block'));
 }
 

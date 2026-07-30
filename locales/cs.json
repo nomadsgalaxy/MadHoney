@@ -392,7 +392,9 @@
       "compDeleteHint": "Když je kompromitovaný účet zachycen, odstraní rozeslané zprávy ze všech kanálů.",
       "saveCompromised": "Uložit nastavení pro kompromitované účty",
       "comingSoon": "Již brzy",
-      "healthTitle": "Kontrola stavu MadHoney — problémy k vyřešení:"
+      "healthTitle": "Kontrola stavu MadHoney — problémy k vyřešení:",
+      "setupByLine": "Nastavil {who} dne {when}",
+      "lastChangeLine": "poslední změnu provedl {who} dne {when}"
     },
     "msg": {
       "bannerSaved": "Banner uložen. Vyvěs ho do honeypotu přes „Vyvěsit banner“.",
@@ -487,7 +489,7 @@
       "gNone": "(žádné)",
       "gNoAccess": "⚠️ NEMÁM PŘÍSTUP ({n}) - tyto nevidím, takže je nemohu uzamknout: {list}\n   Řešení: dočasně dej roli MadHoney Administrátora (Nastavení serveru → Role), spusť uzamykání znovu a pak ho odeber - nebo uděl roli MadHoney oprávnění Zobrazit kanál u každého.",
       "gDryRun": "NANEČISTO - nic se nezměnilo.\n{lines}\nSpusť „Uzamknout kanály (POUŽÍT)“, aby to bylo doopravdy.",
-      "gDone": "Uzamčeno. {ok} kanálů aktualizováno, {failed} selhalo{unreachable}.{failedList}\n{lines}",
+      "gDone": "Uzamčeno. {ok} kanálů aktualizováno, {failed} selhalo{unreachable}.{failedList}\n{lines}{repaired}",
       "gUnreachable": ", {n} nedostupných",
       "gFailedList": "\nSelhalo: {list}",
       "roleNotFound": "Role ověřeného nenalezena - spusť nastavení znovu.",
@@ -520,7 +522,13 @@
       "gLineSynced": "UZAMČENO PŘES NADŘAZENOU KATEGORII (synchronizovaných kanálů: {n}, oprávnění nedotčena): {list}",
       "gLineCustom": "PONECHÁNO BEZE ZMĚNY - vlastní pravidla viditelnosti ({n}): {list}. Tyto kanály jsou skryté před konkrétními rolemi; jejich uzamčením by se po ověření zobrazily i těmto členům. Pokud je přesto chcete uzamknout, vyberte je na panelu brány.",
       "anCustom": "Nový kanál #{channel} NEBYL automaticky uzamčen: má vlastní pravidla viditelnosti (je skrytý před konkrétními rolemi), takže jeho uzamčení by ho mohlo zpřístupnit členům, před kterými jste ho skryli. Pokud ho přesto chcete uzamknout, udělejte to z ovládacího panelu.",
-      "pfArmedNoBanner": "Váš honeypot kanál (past na spam) je OZBROJENÝ, ale varovný banner není zveřejněn. Neoznačená past vypadá jako běžný kanál — skutečný člen, který tam napíše, je okamžitě zabanován. Zveřejněte banner z karty Honeypot, nebo past přepněte do režimu kontroly."
+      "pfArmedNoBanner": "Váš honeypot kanál (past na spam) je OZBROJENÝ, ale varovný banner není zveřejněn. Neoznačená past vypadá jako běžný kanál — skutečný člen, který tam napíše, je okamžitě zabanován. Zveřejněte banner z karty Honeypot, nebo past přepněte do režimu kontroly.",
+      "pfCompActionPerm": "Detekce kompromitovaných účtů je nastavena na „{action}“, ale nemám tady oprávnění {perm}. Když zachytím unesený účet, můžu ho jen nahlásit. Udělte oprávnění {perm} mé roli, nebo změňte akci na kartě Kompromitované účty.",
+      "pfCompBlind": "Nevidím {n} z {total} kanálů, kam můžou vaši členové psát ({list}), takže by je kompromitovaný účet mohl spamovat, aniž bych si toho všiml. Spusťte znovu „Uzamknout kanály“ — automaticky mi to obnoví přístup.",
+      "pfCompNoDelete": "{n} z {total} kanálů, kam můžou vaši členové psát ({list}), vidím, ale nemůžu v nich uklízet: chybí mi tam oprávnění Spravovat zprávy. Zachycený spam tam zůstane viset. Udělte oprávnění Spravovat zprávy mé roli, nebo vypněte „Smazat spamové zprávy“.",
+      "raNone": "Přístup bota je už ve všech uzamčených kanálech v pořádku.",
+      "raDone": "Obnovil jsem si přístup k {fixed} z {found} uzamčených kanálů, které jsem přestal vidět.{failedPart}",
+      "raFailed": " Nepodařilo se opravit {n}: {list}"
     }
   },
   "landing": {

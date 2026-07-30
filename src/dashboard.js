@@ -179,7 +179,7 @@ function costsWidget(dl) {
 function layout(title, body, opts = {}) {
   const dl = curLocale;
   const notice = maintenanceNotice();
-  const invite = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268545044`;
+  const invite = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268545046`;
   const picker = `<select class="langsel" onchange="document.cookie='mh_lang='+this.value+';path=/;max-age=31536000';location.reload()" aria-label="${esc(t('dash.lang', dl))}">${[...SUPPORTED, ...PREVIEW_LOCALES].map((c) => `<option value="${c}" ${c === dl ? 'selected' : ''}>${esc(LOCALE_NAMES[c])}</option>`).join('')}</select>`;
   const navRight = opts.user
     ? `<a href="/stats">${t('dash.nav.stats', dl)}</a><span class="navuser">${esc(opts.user)}</span><a href="/logout">${t('dash.nav.logout', dl)}</a>${picker}<a class="btn sm" href="${invite}" target="_blank" rel="noopener">＋ <span class="lg">${t('dash.nav.addServer', dl)}</span></a>`
@@ -383,6 +383,7 @@ function layout(title, body, opts = {}) {
   .warnbox{background:rgba(214,69,69,.1);border:1px solid rgba(214,69,69,.45);border-radius:8px;padding:.6rem .85rem;margin:.3rem 0 .2rem;font-size:.9rem;line-height:1.5;color:#ffb3aa}
   .warnbox b{color:#fff}
   .hlist{margin:.4rem 0 0;padding-left:.2rem;list-style:none}
+  .whoby{color:var(--dim);font-size:.85rem;margin:-.2rem 0 .6rem}
   .hlist li{margin:.35rem 0;padding-left:0}
   .armbar{display:flex;align-items:center;gap:1rem;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:.9rem 1.2rem;margin:0 0 1rem}
   .armbar.on{border-color:rgba(255,179,26,.5);background:rgba(255,179,26,.06)}
@@ -413,6 +414,21 @@ function session(req) {
   const s = sessions.get(cookies(req).sid);
   if (!s || Date.now() - s.at > WEEK) return null;
   return s;
+}
+
+
+// Record WHO changed a server's configuration. `setupBy` is the first admin who
+// ever configured this server through the dashboard and is never overwritten -
+// it answers "who installed this?" months later, which the Discord audit log
+// often cannot (audit entries expire, and whoever clicked the invite is
+// frequently not the person who set it up). `lastChangeBy` always reflects the
+// most recent change. Stored per guild: Discord id, the username shown at the
+// time, and an ISO timestamp.
+function stampActor(guildId, sess, what) {
+  if (!sess?.user?.id) return {};
+  const who = { id: sess.user.id, tag: sess.user.username, at: new Date().toISOString(), what };
+  const cur = getGuild(guildId) ?? {};
+  return { ...(cur.setupBy ? {} : { setupBy: who }), lastChangeBy: who };
 }
 
 // Server admins (owner / Manage Server) always have access, from the OAuth
@@ -452,7 +468,7 @@ export function startDashboard(client) {
 
   // Minimum viable permission set - see the note in bot.js.
   const inviteUrl = () =>
-    `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268545044`;
+    `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot+applications.commands&permissions=268545046`;
 
   async function canManage(sess, guildId) {
     if (isAdmin(sess, guildId)) return true;
@@ -701,6 +717,10 @@ ${recent ? `<div class="tscroll"><table class="btable">${recent}</table></div>
 </form></div>
 <div class="card" id="deploy"><h2>${t('dash.guild.deployStatus', dl)}</h2>
 <p class="cardsub">${t('dash.guild.deployStatusSub', dl)}</p>
+${cfg.setupBy || cfg.lastChangeBy ? `<p class="whoby">${[
+  cfg.setupBy ? t('dash.guild.setupByLine', dl, { who: esc('@' + (cfg.setupBy.tag || cfg.setupBy.id)), when: (cfg.setupBy.at || '').slice(0, 10) }) : '',
+  cfg.lastChangeBy && cfg.lastChangeBy.at !== cfg.setupBy?.at ? t('dash.guild.lastChangeLine', dl, { who: esc('@' + (cfg.lastChangeBy.tag || cfg.lastChangeBy.id)), when: (cfg.lastChangeBy.at || '').slice(0, 10) }) : '',
+].filter(Boolean).join(' · ')}</p>` : ''}
 ${setupDone ? checklist : `<small><a href="#setup">${t('dash.guild.setupTitle', dl)} ↑</a></small>`}
 ${gatedCount ? `<details class="more"><summary>${t('dash.guild.ungateLabel', dl)}</summary><div class="mb">${t('dash.guild.ungateDesc', dl)}<br>
   <button form="actform" name="do" value="ungate" class="btn danger sm" style="margin-top:.5rem" data-confirm="${esc(t('dash.guild.confirmRestore', dl, { n: gatedCount }))}">${t('dash.guild.actRestore', dl)}</button></div></details>` : ''}
@@ -1363,7 +1383,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           if (effVerify && effVerify === effHoney) {
             return html(await guildPage(guild, sess, t('dash.msg.channelClash', curLocale), back));
           }
-          saveGuild(guild.id, patch);
+          saveGuild(guild.id, { ...patch, ...stampActor(guild.id, sess, `save:${back}`) });
           return html(await guildPage(guild, sess, patch.banner ? t('dash.msg.bannerSaved', curLocale) : t('dash.msg.saved', curLocale), back));
         }
         if (m[2] === '/action' && req.method === 'POST') {
@@ -1373,7 +1393,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           const modeMap = { mode_armed: 'armed', mode_review: 'review', mode_disarmed: 'disarmed' };
           if (modeMap[form.get('do')]) {
             const m = modeMap[form.get('do')];
-            saveGuild(guild.id, { honeypotMode: m });
+            saveGuild(guild.id, { honeypotMode: m, ...stampActor(guild.id, sess, `mode:${m}`) });
             const note = {
               armed: t('dash.msg.noteArmed', curLocale),
               review: t('dash.msg.noteReview', curLocale) + (getGuild(guild.id)?.logChannelId ? '' : t('dash.msg.noteReviewNoLog', curLocale)),
@@ -1386,7 +1406,7 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           // NOT set grandfatheredAt, so lazy grandfathering stays off. Reversible.
           if (form.get('do') === 'gf_skip' || form.get('do') === 'gf_unskip') {
             const skip = form.get('do') === 'gf_skip';
-            saveGuild(guild.id, { grandfatherSkipped: skip });
+            saveGuild(guild.id, { grandfatherSkipped: skip, ...stampActor(guild.id, sess, skip ? 'gf:marked' : 'gf:unmarked') });
             return html(await guildPage(guild, sess, t(skip ? 'dash.guild.gfMarkedMsg' : 'dash.guild.gfUnmarkedMsg', curLocale), 'setup'));
           }
           if (!cfg?.verifiedRoleId || !cfg?.verifyChannelId || !cfg?.honeypotChannelId) {
@@ -1423,11 +1443,11 @@ ${!manageable.length ? `<div class="card"><p>${t('dash.home.noServers', curLocal
           if (req.method === 'POST') {
             const form = await body(req);
             if (form.get('do') === 'reset') {
-              saveGuild(guild.id, { channelTreatment: {} });
+              saveGuild(guild.id, { channelTreatment: {}, ...stampActor(guild.id, sess, 'gate:reset') });
               return html(await gatePage(guild, sess, t('dash.msg.gateReset', curLocale)));
             }
             if (form.get('do') === 'autogate') {
-              saveGuild(guild.id, { autoGate: form.get('autoGate') === 'on' }); // default on; false = don't auto-gate new/offline channels
+              saveGuild(guild.id, { autoGate: form.get('autoGate') === 'on', ...stampActor(guild.id, sess, 'autogate') }); // default on; false = don't auto-gate new/offline channels
               // background toggle: acknowledge without re-rendering so the board's
               // unsaved drags survive. Full re-render only for a no-JS form post.
               if (form.get('ajax') === '1') { res.writeHead(204); return res.end(); }

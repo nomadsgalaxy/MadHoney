@@ -392,7 +392,9 @@
       "compDeleteHint": "Ta bort de utspammade meddelandena från alla kanaler när ett komprometterat konto fångas.",
       "saveCompromised": "Spara inställningar för komprometterade konton",
       "comingSoon": "Kommer snart",
-      "healthTitle": "MadHoney hälsokontroll — problem att åtgärda:"
+      "healthTitle": "MadHoney hälsokontroll — problem att åtgärda:",
+      "setupByLine": "Konfigurerad av {who} den {when}",
+      "lastChangeLine": "senaste ändring av {who} den {when}"
     },
     "msg": {
       "bannerSaved": "Banner sparad. Posta den i honeypotten med \"Posta banner\".",
@@ -487,7 +489,7 @@
       "gNone": "(inga)",
       "gNoAccess": "⚠️ KAN INTE KOMMA ÅT ({n}) - jag kan inte se dessa, så jag kan inte spärra dem: {list}\n   Åtgärd: ge tillfälligt MadHoney-rollen Administratör (Serverinställningar → Roller), kör spärrning igen och ta sedan bort den - eller ge MadHoney-rollen Visa kanal på var och en.",
       "gDryRun": "TESTKÖRNING - ingenting ändrades.\n{lines}\nKör \"Spärra kanaler (VERKSTÄLL)\" för att göra det på riktigt.",
-      "gDone": "Spärrat. {ok} kanaler uppdaterade, {failed} misslyckades{unreachable}.{failedList}\n{lines}",
+      "gDone": "Spärrat. {ok} kanaler uppdaterade, {failed} misslyckades{unreachable}.{failedList}\n{lines}{repaired}",
       "gUnreachable": ", {n} onåbara",
       "gFailedList": "\nMisslyckades: {list}",
       "roleNotFound": "Verifierad roll hittades inte - kör inställningarna igen.",
@@ -520,7 +522,13 @@
       "gLineSynced": "LÅSTA VIA SIN KATEGORI ({n} synkroniserade kanaler, behörigheterna orörda): {list}",
       "gLineCustom": "LÄMNADE ORÖRDA - egna synlighetsregler ({n}): {list}. De här kanalerna är dolda för vissa roller; att låsa dem bakom grinden skulle göra dem synliga för de medlemmarna så snart de verifierat sig. Välj dem på grindpanelen om du ändå vill låsa dem.",
       "anCustom": "Den nya kanalen #{channel} låstes INTE automatiskt bakom grinden: den har egna synlighetsregler (dold för vissa roller), så att låsa den skulle kunna exponera den för medlemmar du har dolt den för. Lås den via instrumentpanelen om du vill ha den bakom grinden.",
-      "pfArmedNoBanner": "Din honeypot-kanal är AKTIVERAD men varningsbannern är inte publicerad. En omarkerad fälla ser ut som en vanlig kanal — en riktig medlem som skriver där bannas direkt. Publicera bannern från Honeypot-kortet, eller växla fällan till granskningsläge."
+      "pfArmedNoBanner": "Din honeypot-kanal är AKTIVERAD men varningsbannern är inte publicerad. En omarkerad fälla ser ut som en vanlig kanal — en riktig medlem som skriver där bannas direkt. Publicera bannern från Honeypot-kortet, eller växla fällan till granskningsläge.",
+      "pfCompActionPerm": "Detektering av komprometterade konton är inställd på \"{action}\", men jag har inte behörigheten {perm} här. Om ett kapat konto fångas kan jag bara rapportera det. Ge {perm} till min roll, eller ändra åtgärden på kortet Komprometterade konton.",
+      "pfCompBlind": "Jag kan inte se {n} av {total} kanaler som dina medlemmar kan posta i ({list}), så ett komprometterat konto skulle kunna spamma dem utan att upptäckas. Kör Spärra kanaler igen — det återställer min åtkomst automatiskt.",
+      "pfCompNoDelete": "Jag kan se men inte städa upp {n} av {total} kanaler som dina medlemmar kan posta i ({list}): jag saknar Hantera meddelanden där. Fångat spam blir kvar. Ge Hantera meddelanden till min roll, eller stäng av \"Ta bort spammeddelandena\".",
+      "raNone": "Bottens åtkomst är redan korrekt på alla spärrade kanaler.",
+      "raDone": "Återställde min åtkomst till {fixed} av {found} spärrade kanaler som jag inte längre kunde se.{failedPart}",
+      "raFailed": " Kunde inte åtgärda {n}: {list}"
     }
   },
   "landing": {

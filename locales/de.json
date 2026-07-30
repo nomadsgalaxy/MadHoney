@@ -392,7 +392,9 @@
       "compDeleteHint": "Entfernt die verteilten Spam-Nachrichten aus allen Channels, sobald ein kompromittierter Account erwischt wird.",
       "saveCompromised": "Einstellungen für kompromittierte Accounts speichern",
       "comingSoon": "Demnächst",
-      "healthTitle": "MadHoney-Systemcheck — zu behebende Probleme:"
+      "healthTitle": "MadHoney-Systemcheck — zu behebende Probleme:",
+      "setupByLine": "Eingerichtet von {who} am {when}",
+      "lastChangeLine": "letzte Änderung von {who} am {when}"
     },
     "msg": {
       "bannerSaved": "Banner gespeichert. Poste es mit \"Banner posten\" in den Honeypot.",
@@ -487,7 +489,7 @@
       "gNone": "(keine)",
       "gNoAccess": "⚠️ KEIN ZUGRIFF ({n}) - ich kann diese nicht sehen und daher nicht sperren: {list}\n   Lösung: gib der MadHoney-Rolle vorübergehend Administrator (Servereinstellungen → Rollen), führe das Sperren erneut aus und entferne es dann - oder gib der MadHoney-Rolle bei jedem einzelnen Kanal ansehen.",
       "gDryRun": "PROBELAUF - nichts wurde geändert.\n{lines}\nFühre \"Kanäle sperren (ANWENDEN)\" aus, um es wirksam zu machen.",
-      "gDone": "Gesperrt. {ok} Kanäle aktualisiert, {failed} fehlgeschlagen{unreachable}.{failedList}\n{lines}",
+      "gDone": "Gesperrt. {ok} Kanäle aktualisiert, {failed} fehlgeschlagen{unreachable}.{failedList}\n{lines}{repaired}",
       "gUnreachable": ", {n} nicht erreichbar",
       "gFailedList": "\nFehlgeschlagen: {list}",
       "roleNotFound": "Verifiziert-Rolle nicht gefunden - führe die Einrichtung erneut aus.",
@@ -520,7 +522,13 @@
       "gLineSynced": "ÜBER IHRE KATEGORIE GESPERRT ({n} synchronisierte Kanäle, Berechtigungen unangetastet): {list}",
       "gLineCustom": "NICHT ANGETASTET - eigene Sichtbarkeitsregeln ({n}): {list}. Diese Kanäle sind vor bestimmten Rollen verborgen; die Sperrung würde sie für genau diese Mitglieder sichtbar machen, sobald diese verifiziert sind. Wähle sie in der Kanalauswahl aus, wenn du sie trotzdem sperren willst.",
       "anCustom": "Der neue Kanal #{channel} wurde NICHT automatisch gesperrt: Er hat eigene Sichtbarkeitsregeln (vor bestimmten Rollen verborgen), daher könnte die Sperrung ihn für Mitglieder sichtbar machen, vor denen du ihn verborgen hast. Sperre ihn über das Dashboard, wenn du das trotzdem willst.",
-      "pfArmedNoBanner": "Dein Honeypot-Kanal ist SCHARF, aber sein Warnbanner ist nicht gepostet. Eine unmarkierte Falle sieht aus wie ein normaler Kanal — ein echtes Mitglied, das dort postet, wird sofort gebannt. Poste das Banner über die Honeypot-Karte oder stelle den Honeypot auf den Prüfmodus um."
+      "pfArmedNoBanner": "Dein Honeypot-Kanal ist SCHARF, aber sein Warnbanner ist nicht gepostet. Eine unmarkierte Falle sieht aus wie ein normaler Kanal — ein echtes Mitglied, das dort postet, wird sofort gebannt. Poste das Banner über die Honeypot-Karte oder stelle den Honeypot auf den Prüfmodus um.",
+      "pfCompActionPerm": "Die Erkennung kompromittierter Accounts ist auf \"{action}\" eingestellt, aber ich habe hier nicht die Berechtigung {perm}. Wenn ein gekaperter Account erwischt wird, kann ich ihn nur melden. Gib meiner Rolle {perm} oder ändere die Aktion in der Karte \"Kompromittierte Accounts\".",
+      "pfCompBlind": "Ich kann {n} von {total} Kanälen, in denen deine Mitglieder posten können, nicht sehen ({list}) — ein kompromittierter Account könnte dort also unbemerkt spammen. Führe \"Kanäle sperren\" erneut aus — das stellt meinen Zugriff automatisch wieder her.",
+      "pfCompNoDelete": "Ich kann {n} von {total} Kanälen, in denen deine Mitglieder posten können, zwar sehen, aber nicht aufräumen ({list}): Mir fehlt dort die Berechtigung Nachrichten verwalten. Erwischter Spam bleibt stehen. Gib meiner Rolle die Berechtigung Nachrichten verwalten oder schalte \"Die Spam-Nachrichten löschen\" aus.",
+      "raNone": "Der Bot-Zugriff ist bereits auf jedem gesperrten Kanal korrekt.",
+      "raDone": "Meinen Zugriff auf {fixed} von {found} gesperrten Kanälen wiederhergestellt, die ich nicht mehr sehen konnte.{failedPart}",
+      "raFailed": " Bei {n} konnte ich den Zugriff nicht wiederherstellen: {list}"
     }
   },
   "landing": {

@@ -392,7 +392,9 @@
       "compDeleteHint": "Supprimer les messages envoyés en rafale de tous les salons lorsqu'un compte compromis est détecté.",
       "saveCompromised": "Enregistrer les réglages des comptes compromis",
       "comingSoon": "Bientôt disponible",
-      "healthTitle": "Vérification de l'état de MadHoney — problèmes à corriger :"
+      "healthTitle": "Vérification de l'état de MadHoney — problèmes à corriger :",
+      "setupByLine": "Configuré par {who} le {when}",
+      "lastChangeLine": "dernière modification par {who} le {when}"
     },
     "msg": {
       "bannerSaved": "Bannière enregistrée. Publie-la dans le honeypot avec « Publier la bannière ».",
@@ -487,7 +489,7 @@
       "gNone": "(aucun)",
       "gNoAccess": "⚠️ IMPOSSIBLE D'ACCÉDER ({n}) - je ne peux pas les voir, je ne peux donc pas les filtrer : {list}\n   Solution : donne temporairement au rôle MadHoney la permission Administrateur (Paramètres du serveur → Rôles), relance le filtrage, puis retire-la - ou accorde au rôle MadHoney la permission Voir les salons sur chacun.",
       "gDryRun": "TEST À BLANC - rien n'a changé.\n{lines}\nLance « Filtrer les salons (APPLIQUER) » pour l'appliquer réellement.",
-      "gDone": "Filtrés. {ok} salons mis à jour, {failed} en échec{unreachable}.{failedList}\n{lines}",
+      "gDone": "Filtrés. {ok} salons mis à jour, {failed} en échec{unreachable}.{failedList}\n{lines}{repaired}",
       "gUnreachable": ", {n} inaccessibles",
       "gFailedList": "\nÉchecs : {list}",
       "roleNotFound": "Rôle vérifié introuvable - relance la configuration.",
@@ -520,7 +522,13 @@
       "gLineSynced": "VERROUILLÉS VIA LEUR CATÉGORIE ({n} salons synchronisés, permissions intactes) : {list}",
       "gLineCustom": "LAISSÉS TELS QUELS - règles de visibilité personnalisées ({n}) : {list}. Ces salons sont masqués pour certains rôles ; les verrouiller les rendrait visibles à ces membres une fois vérifiés. Sélectionnez-les sur le tableau de verrouillage si vous voulez quand même les verrouiller.",
       "anCustom": "Le nouveau salon #{channel} n'a PAS été verrouillé automatiquement : il possède des règles de visibilité personnalisées (masqué pour certains rôles), donc le verrouiller pourrait l'exposer aux membres à qui vous l'aviez caché. Verrouillez-le depuis le tableau de bord si vous souhaitez le verrouiller malgré tout.",
-      "pfArmedNoBanner": "Votre salon piège (honeypot) est ARMÉ mais sa bannière d'avertissement n'est pas publiée. Un piège non signalé ressemble à un salon normal — un membre réel qui y publie est banni instantanément. Publiez la bannière depuis la carte Honeypot, ou passez le piège en mode Révision."
+      "pfArmedNoBanner": "Votre salon piège (honeypot) est ARMÉ mais sa bannière d'avertissement n'est pas publiée. Un piège non signalé ressemble à un salon normal — un membre réel qui y publie est banni instantanément. Publiez la bannière depuis la carte Honeypot, ou passez le piège en mode Révision.",
+      "pfCompActionPerm": "La détection des comptes compromis est réglée sur « {action} », mais je n'ai pas la permission {perm} ici. Si un compte piraté est détecté, je ne peux que le signaler. Accordez la permission {perm} à mon rôle, ou changez l'action dans la carte Comptes compromis.",
+      "pfCompBlind": "Je ne vois pas {n} des {total} salons où vos membres peuvent publier ({list}) : un compte compromis pourrait donc y spammer sans être détecté. Relancez « Filtrer les salons » — cela rétablit automatiquement mon accès.",
+      "pfCompNoDelete": "Je vois {n} des {total} salons où vos membres peuvent publier ({list}), mais je ne peux pas les nettoyer : il me manque la permission Gérer les messages dans ces salons. Le spam détecté restera en place. Accordez la permission Gérer les messages à mon rôle, ou désactivez « Supprimer les messages de spam ».",
+      "raNone": "L'accès du bot est déjà correct sur tous les salons filtrés.",
+      "raDone": "J'ai rétabli mon accès à {fixed} des {found} salons filtrés que je ne voyais plus.{failedPart}",
+      "raFailed": " Impossible d'en corriger {n} : {list}"
     }
   },
   "landing": {
