@@ -18,14 +18,17 @@ time.</p>
 
 <h2>Your responsibilities</h2>
 <p>You need the Manage Server permission in a Discord server to configure
-MadHoney there. What the bot does in your server, it does on your
-instruction: bans, kicks and quarantines issued through the honeypot or
-automated spam / compromised-account detection, channel gating, and role
-changes are your moderation decisions, and the Undo button exists for a
-reason. Automatic safeguards - raid mode downgrading a burst to a kick, or a
-health check refusing to run something unsafe - reduce the damage a
-misconfiguration can do, but they do not make the configuration ours. Review
-what your server catches. You are responsible for complying with
+MadHoney there. You control MadHoney's configuration in your server. This
+configuration controls bans, kicks, quarantines, honeypot actions,
+compromised-account detection, channel gating, and role changes. These are
+your moderation decisions. Review the moderation actions regularly. Use the
+Undo button to reverse an incorrect action.</p>
+<p>MadHoney includes automatic safeguards. During raid mode, it changes a
+burst of bans to kicks. The health check refuses to mass-assign the verified
+role when your configuration would make that unsafe; it reports other problems
+in the dashboard but does not block them. These safeguards reduce the effects
+of a configuration error, but you remain responsible for your configuration.
+You are also responsible for complying with
 <a href="https://discord.com/terms" target="_blank" rel="noopener">Discord's Terms of Service</a> and
 Community Guidelines.</p>
 <p>If your community includes members who rely on text-to-speech or screen
@@ -34,18 +37,23 @@ honeypot is a visual trap; do not deploy one where it can catch people who
 cannot see the warning.</p>
 
 <h2>The universal ban list</h2>
-<p>Every honeypot ban is recorded on a universal ban list (Discord user IDs).
-Whether that list <i>applies to your server</i> is your choice and off by
-default: opt in and users on the list are banned when they join (or all at
-once with Ban from List); stay opted out and your server acts only on its
-own honeypot catches, which remain yours either way. Unbanning a user
-through the log channel removes them from the list's effect.</p>
+<p>A honeypot ban is normally added to a universal ban list (Discord user IDs).
+There are two exceptions: MadHoney withholds a burst of catches until one of
+your moderators confirms it, and a server that has not finished setup does not
+contribute to the list at all.</p>
+<p>Whether the list <i>applies to</i> your server is a separate choice, and it
+is off by default. If you opt in, MadHoney bans listed users when they join
+your server. You can also use Ban from List to ban all listed users at once.
+If you stay opted out, MadHoney acts only on your server's own honeypot
+catches. Unbanning a user through the log channel stops the list from applying
+to that user on every server; the log keeps both the original entry and the
+unban, so the record stays auditable.</p>
 
 <h2>Fair use</h2>
-<p>Don't abuse the service: no attempting to overload the bot or dashboard,
-no using the shared ban pool to target people who were never spamming, no
-scraping. We can remove a server from the hosted service if it's being used
-to harass people.</p>
+<p>Do not attempt to overload the bot or dashboard. Do not use the universal
+ban list to target people who were not spamming. Do not scrape the service.
+We can remove a server from the hosted service if its members use MadHoney to
+harass people.</p>
 
 <h2>Self-hosting</h2>
 <p>The source is available at
@@ -76,49 +84,53 @@ export const PRIVACY = `
 dashboard at madhoney.nomadsgalaxy.com, operated by <a href="https://nomadsgalaxy.com" target="_blank" rel="noopener">Nomads Galaxy</a>.</small></p>
 
 <h2>What we store</h2>
-<p>Three tables, and that's the whole database:</p>
+<p>The database holds three kinds of record about people:</p>
 <p><b>Server configuration</b> - for each server: the chosen role and channel
 IDs, your verify message, banner design settings, your per-channel gating
 choices, whether ban sharing is on, and your compromised-account and raid-mode
-settings. So that your own staff can see who changed what, we also record the
-Discord ID, username and timestamp of the dashboard user who first set the
-server up and of whoever last changed a setting.</p>
+settings. We also record who first configured the server and who last changed
+a setting. For each person, we record the Discord ID, username, and timestamp.
+Your staff can use this information to see who changed the configuration.</p>
 <p><b>Ban log</b> - when MadHoney acts on an account (or an admin undoes it):
 the Discord user ID, username, server ID, channel name, and timestamp. Kicks
-and quarantines are recorded here too, not only bans. Each entry also carries
-an incident ID, so the several messages of one spam blast are grouped as one
-event rather than looking like several offenders; a count of how many times
-that account has been caught in that server; and flags noting whether the entry
-was held back from the shared ban list or happened during a detected burst.
-Ban entries are what powers the log channel, the dashboard's ban list, and
-(only for opted-in servers) cross-server ban sharing.</p>
+and quarantines are also recorded. Each entry has an incident ID that groups
+the messages from one spam event. It also has the account's catch count for
+that server. Flags show whether MadHoney withheld the entry from the universal
+ban list or detected it during a burst. Ban entries provide the data for the
+log channel and the dashboard's ban list. For opted-in servers, they also
+provide the data for cross-server ban sharing.</p>
 <p><b>Appeals</b> - if a server turns appeals on: that a given user appealed a
-given ban, and when. Not the text of the appeal.</p>
+given ban, and when. We do not store the text of the appeal.</p>
+<p>The database also holds operational state that is not about people:
+dashboard actions queued for the bot to run, and failover status. Neither
+contains message content.</p>
 
-<h2>Where it lives</h2>
+<h2>Data storage</h2>
 <p>The database is <b>Cloudflare D1</b>, so Cloudflare stores the above on our
 behalf and <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">their privacy policy</a>
-covers that. The bot keeps a mirror copy on its own machine so it can keep
-working if D1 is unreachable. Nothing goes anywhere else - there is no
-third-party analytics, logging or moderation service in the path.</p>
+covers that storage. The bot keeps a mirror copy on its own machine. This copy
+lets the bot continue to work if D1 is unavailable. We do not send this data
+to a third-party analytics, logging, or moderation service.</p>
 
 <h2>Message content</h2>
-<p>The spam trap fires on <i>where</i> a message is posted - a decoy honeypot
-channel - not on what it says. Beyond that, we process message content for two
-narrow moderation purposes: when the honeypot catches a spam account, the
-offending message's text and any image are included in the ban report sent to
-your server's private moderator-log channel, so your moderators can see what
-was posted; and to catch compromised (hijacked) accounts, the bot compares a
-member's own messages across channels to flag near-identical messages posted at
-superhuman speed - within about a second - for moderator review. This happens in
-the moment: message content is never written to our database (the ban log stores
-only IDs, usernames, timestamps and channel names, never message text), never
-stored off Discord, and never used to train any model.</p>
+<p>The honeypot acts because of <i>where</i> a message is posted, not because of
+what the message says. MadHoney processes message content for two moderation
+purposes. First, a ban report can include the text and images from the message
+that triggered the honeypot. MadHoney sends this report to your private
+moderator-log channel so your moderators can review it. Second, MadHoney
+compares a member's messages across channels to detect a compromised account.
+It flags near-identical messages that the account posts in three or more
+channels inside a short window. The default window is five seconds; a server
+can set it between one and sixty seconds.</p>
+<p>MadHoney processes message content in memory. It does not write message
+content to the database. The ban log stores only IDs, usernames, timestamps,
+and channel names. MadHoney does not store message content outside Discord and
+does not use it to train a model.</p>
 
 <h2>What we don't do</h2>
-<p>No analytics, no tracking pixels, no advertising, and we don't sell or share
-data with anyone. The captcha is generated by the bot itself; no third-party
-captcha service ever sees your members.</p>
+<p>We do not use analytics, tracking pixels, or advertising. We do not sell or
+share data with anyone. The bot generates the captcha. No third-party captcha
+service receives information about your members.</p>
 
 <h2>The dashboard</h2>
 <p>Logging in uses Discord OAuth with the <b>identify</b> and <b>guilds</b>
@@ -132,16 +144,17 @@ and loads fonts from Google Fonts.</p>
 
 <h2>The universal ban list and your data</h2>
 <p>If a MadHoney honeypot bans you in any server, the record (your Discord
-user ID) lands on the universal ban list. Servers that opted in to the list
+user ID) goes to the universal ban list. Servers that opted in to the list
 may ban you when you join them. An admin unbanning you removes that effect
 everywhere.</p>
 <p>Two things deliberately keep entries <i>off</i> that list. If a server's
 honeypot fires many times in a few minutes, MadHoney treats the burst as
-unexplained: it kicks rather than bans, and adds nobody to the shared list
-until one of that server's moderators confirms it - so a single
-misconfigured server cannot ban you everywhere. Servers that have not
-finished setting up don't contribute to the list at all. If you believe
-you're on the list wrongly, ask the server that banned you to undo it, or
+unexplained. It kicks the accounts instead of banning them. It does not add
+the accounts to the universal ban list until a moderator confirms the
+incidents. Thus, one misconfigured server cannot ban you everywhere. Servers
+that have not finished setup do not add accounts to the list. If you believe
+MadHoney added you to the list in error, ask the server that banned you to
+undo the ban, or
 <a href="https://github.com/nomadsgalaxy/MadHoney/issues" target="_blank" rel="noopener">open a GitHub issue</a>
 and we'll look at the record.</p>
 
