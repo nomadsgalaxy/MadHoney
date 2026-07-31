@@ -1,0 +1,145 @@
+// Regression test for raid-mode burst detection.
+// This exists because of KORWiN Gaming (2026-07-31): the honeypot removed 33
+// accounts in six minutes and never questioned it. Raid mode trips early and
+// switches to the reversible action instead of guessing why the burst happened.
+// Run: node test/test-raid.mjs
+import assert from 'node:assert';
+import { raidSettings, recordCatch, inRaid, sweep, priorOffenses, chooseAction } from '../src/raid.js';
+
+// --- settings: sane defaults, clamped ---
+const d = raidSettings(undefined);
+assert.deepEqual([d.enabled, d.threshold, d.windowSec, d.cooldownSec, d.escalate], [true, 5, 60, 600, true]);
+// settings now live under compromised (raid is an extension of that feature)
+assert.equal(raidSettings({ compromised: { raid: { threshold: 9 } } }).threshold, 9);
+assert.equal(raidSettings({ raid: { threshold: 7 } }).threshold, 7, 'legacy top-level raid config still honoured');
+assert.equal(raidSettings({ raid: { enabled: false } }).enabled, false);
+assert.equal(raidSettings({ raid: { threshold: 1 } }).threshold, 2);      // clamp low
+assert.equal(raidSettings({ raid: { threshold: 999 } }).threshold, 50);   // clamp high
+assert.equal(raidSettings({ raid: { windowSec: 1 } }).windowSec, 5);
+assert.equal(raidSettings({ raid: { cooldownSec: 99999 } }).cooldownSec, 3600);
+
+const O = { threshold: 5, windowSec: 60, cooldownSec: 600 };
+const G = 'guild1';
+
+// --- THE KORWIN CASE: 33 catches ~11s apart should trip at the 5th, not the 33rd ---
+{
+  const s = new Map();
+  let engagedAt = null;
+  for (let i = 0; i < 33; i++) {
+    const r = recordCatch(s, G, i * 11000, O);
+    if (r.engaged) engagedAt = i + 1;
+  }
+  assert.equal(engagedAt, 5, 'raid mode engages on the 5th catch');
+  assert.ok(inRaid(s, G, 33 * 11000, O), 'still in raid mode during the burst');
+}
+
+// --- engaged fires exactly ONCE, so mods get one alert, not 29 ---
+{
+  const s = new Map();
+  const flags = [];
+  for (let i = 0; i < 10; i++) flags.push(recordCatch(s, G, i * 1000, O).engaged);
+  assert.equal(flags.filter(Boolean).length, 1, 'engaged is true exactly once per burst');
+}
+
+// --- a slow trickle never trips it: 4 catches spread beyond the window ---
+{
+  const s = new Map();
+  let any = false;
+  for (let i = 0; i < 8; i++) any = recordCatch(s, G, i * 30000, O).raid || any; // 30s apart
+  assert.equal(any, false, 'two catches per window is normal, not a raid');
+}
+
+// --- exactly at the threshold trips; one below does not ---
+{
+  const s = new Map();
+  for (let i = 0; i < 4; i++) assert.equal(recordCatch(s, G, i * 1000, O).raid, false);
+  assert.equal(recordCatch(s, G, 4000, O).raid, true, '5th catch in-window trips it');
+}
+
+// --- stands down after the cooldown, and a later burst re-engages ---
+{
+  const s = new Map();
+  for (let i = 0; i < 5; i++) recordCatch(s, G, i * 1000, O);
+  assert.ok(inRaid(s, G, 5000, O));
+  const quiet = 5000 + O.cooldownSec * 1000 + 1000;
+  assert.equal(inRaid(s, G, quiet, O), false, 'stands down once quiet');
+  // a fresh burst much later must engage again (not be swallowed by stale state)
+  let re = null;
+  for (let i = 0; i < 5; i++) { const r = recordCatch(s, G, quiet + i * 1000, O); if (r.engaged) re = i + 1; }
+  assert.equal(re, 5, 'a later burst engages again');
+}
+
+// --- per-guild isolation: one server raiding must not flag another ---
+{
+  const s = new Map();
+  for (let i = 0; i < 6; i++) recordCatch(s, 'raided', i * 1000, O);
+  assert.ok(inRaid(s, 'raided', 6000, O));
+  assert.equal(inRaid(s, 'calm', 6000, O), false);
+  assert.equal(recordCatch(s, 'calm', 6000, O).raid, false, 'a single catch elsewhere is not a raid');
+}
+
+// --- sweep drops quiet guilds ---
+{
+  const s = new Map();
+  recordCatch(s, G, 1000, O);
+  sweep(s, 1000 + O.cooldownSec * 2000 + 1, O);
+  assert.equal(s.size, 0, 'quiet guild pruned');
+  recordCatch(s, G, 5_000_000, O);
+  sweep(s, 5_000_000, O);
+  assert.equal(s.size, 1, 'active guild kept');
+}
+
+// ---- the offence ladder: never ban or share on a first offence ----
+const row = (id, guildId, extra = {}) => ({ id, guildId, ...extra });
+
+// no history at all
+assert.equal(priorOffenses([], 'g', 'u'), 0);
+// one prior catch in this guild
+assert.equal(priorOffenses([row('u', 'g')], 'g', 'u'), 1);
+// catches in OTHER guilds do not count toward this guild's ladder
+assert.equal(priorOffenses([row('u', 'other'), row('u', 'other')], 'g', 'u'), 0);
+// a moderator reversal forgives the history - being unbanned must not make the
+// next mistake harsher
+assert.equal(priorOffenses([row('u', 'g'), row('u', 'g', { unbanned: true })], 'g', 'u'), 0);
+// ...and offences after a reversal start counting again
+assert.equal(priorOffenses([row('u', 'g'), row('u', 'g', { unbanned: true }), row('u', 'g')], 'g', 'u'), 1);
+
+// THE RULE THE OPERATOR ASKED FOR: first offence never bans, never syncs
+assert.deepEqual(chooseAction({ prior: 0 }), { action: 'kick', share: false, reason: 'first offence' });
+// a spam bot proves itself by returning: second offence bans AND feeds the list
+assert.deepEqual(chooseAction({ prior: 1 }), { action: 'ban', share: true, reason: 'offence 2' });
+assert.equal(chooseAction({ prior: 5 }).action, 'ban');
+// a raid never upgrades the action, and keeps even repeats off the shared list
+assert.deepEqual(chooseAction({ prior: 0, raid: true }), { action: 'kick', share: false, reason: 'first offence' });
+assert.equal(chooseAction({ prior: 3, raid: true }).share, false, 'a burst never feeds the network');
+// escalation can be turned off for a server that wants the old instant ban
+assert.deepEqual(chooseAction({ prior: 0, escalate: false }), { action: 'ban', share: true, reason: 'escalation disabled' });
+assert.equal(chooseAction({ prior: 0, escalate: false, raid: true }).share, false);
+
+// KORWIN REPLAY: 33 distinct accounts, one catch each -> all kicked, none shared
+{
+  const ledger = [];
+  let bans = 0, shared = 0;
+  for (let i = 0; i < 33; i++) {
+    const uid = 'member' + i;
+    const v = chooseAction({ prior: priorOffenses(ledger, 'korwin', uid), raid: true, escalate: true });
+    if (v.action === 'ban') bans++;
+    if (v.share) shared++;
+    ledger.push(row(uid, 'korwin'));
+  }
+  assert.equal(bans, 0, 'not one of the 33 would have been banned');
+  assert.equal(shared, 0, 'not one would have reached the shared ban list');
+}
+
+// A REAL SPAM BOT: same account trips the trap twice -> kicked, then banned+shared
+{
+  const ledger = [];
+  const first = chooseAction({ prior: priorOffenses(ledger, 'g', 'bot'), escalate: true });
+  ledger.push(row('bot', 'g'));
+  const second = chooseAction({ prior: priorOffenses(ledger, 'g', 'bot'), escalate: true });
+  assert.equal(first.action, 'kick');
+  assert.equal(second.action, 'ban');
+  assert.equal(second.share, true, 'the confirmed catch is what protects the network');
+}
+
+console.log('ok');

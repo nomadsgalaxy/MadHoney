@@ -78,7 +78,9 @@
     "compromised_kick": "🚨 **Komprometterat konto kickat.** <@{id}> (`{id}`) spammade ut samma meddelande i **{n} kanaler** inom loppet av några sekunder — kännetecknet för ett kapat konto. De kan gå med igen när de har säkrat sitt konto.",
     "compromised_ban": "🚨 **Komprometterat konto bannat.** <@{id}> (`{id}`) spammade ut samma meddelande i **{n} kanaler** inom loppet av några sekunder — kännetecknet för ett kapat konto.",
     "compromised_quarantine": "🚨 **Komprometterat konto satt i karantän.** <@{id}> (`{id}`) spammade ut samma meddelande i **{n} kanaler** inom loppet av några sekunder — kännetecknet för ett kapat konto. Deras verifierade roll togs bort; de måste verifiera sig på nytt för att komma tillbaka.",
-    "compromised_notify": "⚠️ **Möjligt komprometterat konto.** <@{id}> (`{id}`) spammade ut samma meddelande i **{n} kanaler** inom loppet av några sekunder. Flaggat för granskning — vidta åtgärd manuellt."
+    "compromised_notify": "⚠️ **Möjligt komprometterat konto.** <@{id}> (`{id}`) spammade ut samma meddelande i **{n} kanaler** inom loppet av några sekunder. Flaggat för granskning — vidta åtgärd manuellt.",
+    "reportKicked": "🥾 **Kickad (första förseelsen).** {tag} (`{id}`) postade i honeypotten (<#{channel}>). En kick går att ångra - en riktig medlem kan gå med igen och verifiera sig. Är det en spambot går den i fällan igen och blir bannad.",
+    "raidEngaged": "⚠️ **Raidläge aktiverat** - {n} honeypot-fångster på {secs} sekunder. Fångsterna kickas i stället för att bannas, och läggs INTE till på den universella banlistan förrän en moderator bekräftar dem. Om det här är dina egna medlemmar har någon troligen bett dem skriva något i honeypotten."
   },
   "setup": {
     "title": "## MadHoney-inställningar",
@@ -523,7 +525,6 @@
       "gLineCustom": "LÄMNADE ORÖRDA - egna synlighetsregler ({n}): {list}. De här kanalerna är dolda för vissa roller; att låsa dem bakom grinden skulle göra dem synliga för de medlemmarna så snart de verifierat sig. Välj dem på grindpanelen om du ändå vill låsa dem.",
       "anCustom": "Den nya kanalen #{channel} låstes INTE automatiskt bakom grinden: den har egna synlighetsregler (dold för vissa roller), så att låsa den skulle kunna exponera den för medlemmar du har dolt den för. Lås den via instrumentpanelen om du vill ha den bakom grinden.",
       "pfArmedNoBanner": "Din honeypot-kanal är AKTIVERAD men varningsbannern är inte publicerad. En omarkerad fälla ser ut som en vanlig kanal — en riktig medlem som skriver där bannas direkt. Publicera bannern från Honeypot-kortet, eller växla fällan till granskningsläge.",
-      "pfCompActionPerm": "Detektering av komprometterade konton är inställd på \"{action}\", men jag har inte behörigheten {perm} här. Om ett kapat konto fångas kan jag bara rapportera det. Ge {perm} till min roll, eller ändra åtgärden på kortet Komprometterade konton.",
       "pfCompBlind": "Jag kan inte se {n} av {total} kanaler som dina medlemmar kan posta i ({list}), så ett komprometterat konto skulle kunna spamma dem utan att upptäckas. Kör Spärra kanaler igen — det återställer min åtkomst automatiskt.",
       "pfCompNoDelete": "Jag kan se men inte städa upp {n} av {total} kanaler som dina medlemmar kan posta i ({list}): jag saknar Hantera meddelanden där. Fångat spam blir kvar. Ge Hantera meddelanden till min roll, eller stäng av \"Ta bort spammeddelandena\".",
       "raNone": "Bottens åtkomst är redan korrekt på alla spärrade kanaler.",
@@ -533,7 +534,8 @@
       "svBlocked": "Jag bär den verifierade rollen, vilket gör mig blind för min egen honeypot, men jag kunde inte säkra min åtkomst till {n} kanaler först ({list}) - så jag lät rollen sitta kvar hellre än att tappa sikten över dem.",
       "pfBotHasVerified": "Jag har rollen \"{role}\". En korrekt uppsatt honeypot döljer sig för den rollen, så när jag bär den blir jag blind för min egen fälla - den förblir aktiverad och fångar ingenting. Jag tar bort den automatiskt vid omstart; om den hela tiden kommer tillbaka är det något som tilldelar mig den.",
       "pfCategoryLocked": "Jag kan inte se {n} kategori(er) ({list}), så jag kan inte hantera någon av kanalerna där. Discord kräver åtkomst till en kategori innan dess kanaler kan ändras, och det kan jag inte ge mig själv. Ge min roll Visa kanal på den kategorin i Serverinställningar.",
-      "svCantRemove": "Jag bär rollen \"{role}\" som gör mig blind för min egen honeypot, men jag kan inte ta bort den själv: {err}. En admin behöver ta bort den från mig."
+      "svCantRemove": "Jag bär rollen \"{role}\" som gör mig blind för min egen honeypot, men jag kan inte ta bort den själv: {err}. En admin behöver ta bort den från mig.",
+      "pfFeaturePerms": "Några funktioner är påslagna men kan inte fungera - jag saknar behörigheten var och en behöver: {list}. Ge dem till min roll under Serverinställningar › Roller."
     }
   },
   "landing": {

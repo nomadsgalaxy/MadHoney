@@ -78,7 +78,9 @@
     "compromised_kick": "🚨 **Kompromittierter Account gekickt.** <@{id}> (`{id}`) hat dieselbe Nachricht innerhalb von Sekunden in **{n} Channels** verbreitet — das Kennzeichen eines gekaperten Accounts. Sie können erneut beitreten, sobald sie ihren Account abgesichert haben.",
     "compromised_ban": "🚨 **Kompromittierter Account gebannt.** <@{id}> (`{id}`) hat dieselbe Nachricht innerhalb von Sekunden in **{n} Channels** verbreitet — das Kennzeichen eines gekaperten Accounts.",
     "compromised_quarantine": "🚨 **Kompromittierter Account unter Quarantäne gestellt.** <@{id}> (`{id}`) hat dieselbe Nachricht innerhalb von Sekunden in **{n} Channels** verbreitet — das Kennzeichen eines gekaperten Accounts. Die verifizierte Rolle wurde entfernt; sie müssen sich erneut verifizieren, um zurückzukehren.",
-    "compromised_notify": "⚠️ **Möglicherweise kompromittierter Account.** <@{id}> (`{id}`) hat dieselbe Nachricht innerhalb von Sekunden in **{n} Channels** verbreitet. Zur Prüfung markiert — bitte manuell eingreifen."
+    "compromised_notify": "⚠️ **Möglicherweise kompromittierter Account.** <@{id}> (`{id}`) hat dieselbe Nachricht innerhalb von Sekunden in **{n} Channels** verbreitet. Zur Prüfung markiert — bitte manuell eingreifen.",
+    "reportKicked": "🥾 **Gekickt (erster Verstoß).** {tag} (`{id}`) hat im Honeypot gepostet (<#{channel}>). Ein Kick lässt sich rückgängig machen - ein echtes Mitglied kann erneut beitreten und sich verifizieren. Ist es ein Spam-Bot, tappt er erneut in die Falle und wird gebannt.",
+    "raidEngaged": "⚠️ **Raid-Modus aktiviert** - {n} Honeypot-Fänge in {secs} Sekunden. Gefangene Accounts werden gekickt statt gebannt und kommen NICHT auf die geteilte Bannliste, bis ein Mod sie bestätigt. Wenn das deine eigenen Mitglieder sind, hat man ihnen wahrscheinlich gesagt, sie sollen etwas in den Honeypot schreiben."
   },
   "setup": {
     "title": "## MadHoney-Einrichtung",
@@ -523,7 +525,6 @@
       "gLineCustom": "NICHT ANGETASTET - eigene Sichtbarkeitsregeln ({n}): {list}. Diese Kanäle sind vor bestimmten Rollen verborgen; die Sperrung würde sie für genau diese Mitglieder sichtbar machen, sobald diese verifiziert sind. Wähle sie in der Kanalauswahl aus, wenn du sie trotzdem sperren willst.",
       "anCustom": "Der neue Kanal #{channel} wurde NICHT automatisch gesperrt: Er hat eigene Sichtbarkeitsregeln (vor bestimmten Rollen verborgen), daher könnte die Sperrung ihn für Mitglieder sichtbar machen, vor denen du ihn verborgen hast. Sperre ihn über das Dashboard, wenn du das trotzdem willst.",
       "pfArmedNoBanner": "Dein Honeypot-Kanal ist SCHARF, aber sein Warnbanner ist nicht gepostet. Eine unmarkierte Falle sieht aus wie ein normaler Kanal — ein echtes Mitglied, das dort postet, wird sofort gebannt. Poste das Banner über die Honeypot-Karte oder stelle den Honeypot auf den Prüfmodus um.",
-      "pfCompActionPerm": "Die Erkennung kompromittierter Accounts ist auf \"{action}\" eingestellt, aber ich habe hier nicht die Berechtigung {perm}. Wenn ein gekaperter Account erwischt wird, kann ich ihn nur melden. Gib meiner Rolle {perm} oder ändere die Aktion in der Karte \"Kompromittierte Accounts\".",
       "pfCompBlind": "Ich kann {n} von {total} Kanälen, in denen deine Mitglieder posten können, nicht sehen ({list}) — ein kompromittierter Account könnte dort also unbemerkt spammen. Führe \"Kanäle sperren\" erneut aus — das stellt meinen Zugriff automatisch wieder her.",
       "pfCompNoDelete": "Ich kann {n} von {total} Kanälen, in denen deine Mitglieder posten können, zwar sehen, aber nicht aufräumen ({list}): Mir fehlt dort die Berechtigung Nachrichten verwalten. Erwischter Spam bleibt stehen. Gib meiner Rolle die Berechtigung Nachrichten verwalten oder schalte \"Die Spam-Nachrichten löschen\" aus.",
       "raNone": "Der Bot-Zugriff ist bereits auf jedem gesperrten Kanal korrekt.",
@@ -533,7 +534,8 @@
       "svBlocked": "Ich trage die Verifiziert-Rolle, die mich für meinen eigenen Honeypot blind macht, aber ich konnte meinen Zugriff auf {n} Kanäle ({list}) nicht zuerst absichern - deshalb habe ich die Rolle behalten, statt diese Kanäle aus dem Blick zu verlieren.",
       "pfBotHasVerified": "Ich habe die Rolle \"{role}\". Ein korrekt eingerichteter Honeypot verbirgt sich vor dieser Rolle - solange ich sie trage, bin ich blind für meine eigene Falle: Sie bleibt scharf und fängt nichts. Beim Neustart entferne ich sie mir automatisch; wenn sie immer wieder auftaucht, wird sie mir von irgendetwas erneut zugewiesen.",
       "pfCategoryLocked": "Ich kann {n} Kategorie(n) nicht sehen ({list}) und kann deshalb keinen Kanal darin verwalten. Discord verlangt Zugriff auf eine Kategorie, bevor deren Kanäle geändert werden können, und den kann ich mir nicht selbst geben. Gib meiner Rolle in den Servereinstellungen die Berechtigung Kanal ansehen für diese Kategorie.",
-      "svCantRemove": "Ich trage die Rolle \"{role}\", die mich für meinen eigenen Honeypot blind macht, kann sie mir aber nicht selbst entziehen: {err}. Ein Admin muss sie mir abnehmen."
+      "svCantRemove": "Ich trage die Rolle \"{role}\", die mich für meinen eigenen Honeypot blind macht, kann sie mir aber nicht selbst entziehen: {err}. Ein Admin muss sie mir abnehmen.",
+      "pfFeaturePerms": "Einige Funktionen sind aktiviert, können aber nicht arbeiten - mir fehlt die jeweils nötige Berechtigung: {list}. Gib sie meiner Rolle unter Servereinstellungen › Rollen."
     }
   },
   "landing": {

@@ -12,6 +12,7 @@ import {
 } from 'discord.js';
 import { shouldTrap, honeypotMode, staffRoles } from './trap.js';
 import { compromisedSettings, messageSignature, recordAndCheck, sweep as sweepCompromised } from './compromised.js';
+import { raidSettings, recordCatch, sweep as sweepRaid, priorOffenses, chooseAction } from './raid.js';
 import { makeCode, answerOk } from './verify.js';
 import { renderCaptcha, captchaLength, renderPositionCaptcha, POSITION_SLOTS } from './captcha.js';
 import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
@@ -58,6 +59,10 @@ function actorPatch(i, what) {
   const cur = getGuild(i.guildId) ?? {};
   return { ...(cur.setupBy ? {} : { setupBy: who }), lastChangeBy: who };
 }
+
+// Per-process honeypot burst tracker for raid mode (see raid.js).
+const raidStore = new Map();
+setInterval(() => sweepRaid(raidStore, Date.now(), raidSettings(null)), 10 * 60 * 1000).unref?.();
 
 const compromisedStore = new Map();
 setInterval(() => sweepCompromised(compromisedStore, Date.now(), 5 * 60 * 1000), 5 * 60 * 1000).unref?.();
@@ -938,8 +943,26 @@ client.on(Events.MessageCreate, async (msg) => {
   // with verification off has a wide-open honeypot a real member can wander into,
   // so its catches stay LOCAL (noShare): it still bans here + still CONSUMES the
   // shared list, but its bans don't propagate. Keeps false positives off the network.
-  const noShare = !((cfg.gatedChannels?.length ?? 0) > 0 || (cfg.verificationEnabled !== false && !!cfg.verifiedRoleId));
-  logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date(now).toISOString(), incidentId, ...(noShare ? { noShare: true } : {}) });
+  let noShare = !((cfg.gatedChannels?.length ?? 0) > 0 || (cfg.verificationEnabled !== false && !!cfg.verifiedRoleId));
+  // Raid mode: a burst of catches is either a raid or a misconfiguration walking
+  // the server's own members into the trap, and the rate cannot tell them apart.
+  // Rather than guess, switch to the action that is safe either way - kick, not
+  // ban - and keep the whole burst off the shared list. See raid.js.
+  const rset = raidSettings(cfg);
+  const burst = rset.enabled
+    ? recordCatch(raidStore, msg.guildId, now, rset)
+    : { raid: false, engaged: false, count: 1 };
+  // The offence ladder decides what happens. A first catch is never a ban and
+  // never reaches the shared list - it kicks, and a real spam bot proves itself
+  // by coming straight back. See raid.js.
+  const prior = priorOffenses(bans(msg.guildId), msg.guildId, msg.author.id);
+  const verdict = chooseAction({ prior, raid: burst.raid, escalate: rset.escalate });
+  if (!verdict.share) noShare = true;
+  logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date(now).toISOString(), incidentId, ...(noShare ? { noShare: true } : {}), ...(burst.raid ? { raid: true } : {}), offense: prior + 1 });
+  if (burst.engaged) {
+    console.log(`[${msg.guild.name}] RAID MODE engaged (${burst.count} honeypot catches in ${rset.windowSec}s) - switching to kick, catches stay local`);
+    await logSend(msg.guild, cfg, { content: t('log.raidEngaged', cfg.locale, { n: burst.count, secs: rset.windowSec }) }, 'critical').catch(() => {});
+  }
 
   // Appeal DM (opt-in): a real human who tripped the trap can ask for review.
   // Sent BEFORE the ban so they're still reachable, and only lists servers they
@@ -950,26 +973,41 @@ client.on(Events.MessageCreate, async (msg) => {
   // How much of their recent message history to wipe with the ban (0-7 days).
   const deleteDays = Math.min(7, Math.max(0, cfg.banDeleteDays ?? 7));
   try {
-    await msg.guild.bans.create(msg.author.id, {
-      reason: `MadHoney honeypot: posted in #${msg.channel.name}`,
-      deleteMessageSeconds: deleteDays * 24 * 60 * 60,
-    });
+    // A kick needs Kick Members, which plenty of servers were invited without.
+    // If we cannot kick we must still remove the account - leaving a spam bot in
+    // place would be worse than the old behaviour - so fall back to a ban. The
+    // catch still stays OFF the shared list, so a mistake cannot spread, and the
+    // mod log keeps its Undo button.
+    const canKick = msg.member && (msg.guild.members.me?.permissions.has(PermissionsBitField.Flags.KickMembers) ?? false);
+    if (verdict.action === 'kick' && canKick) {
+      // Reversible on purpose: a real member can rejoin and verify, while a spam
+      // bot trips the trap again and gets banned on the second offence.
+      await msg.member.kick(`MadHoney honeypot: posted in #${msg.channel.name} (${verdict.reason})`);
+      console.log(`[${msg.guild.name}] KICKED ${msg.author.tag} (${msg.author.id}) - ${verdict.reason}${burst.raid ? ', raid mode' : ''}`);
+    } else {
+      if (verdict.action === 'kick') { verdict.action = 'ban'; verdict.reason += ' (no Kick Members - banned instead, still not shared)'; }
+      await msg.guild.bans.create(msg.author.id, {
+        reason: `MadHoney honeypot: posted in #${msg.channel.name}`,
+        deleteMessageSeconds: deleteDays * 24 * 60 * 60,
+      });
+      console.log(`[${msg.guild.name}] banned ${msg.author.tag} (${msg.author.id})`);
+    }
     banned = true;
-    console.log(`[${msg.guild.name}] banned ${msg.author.tag} (${msg.author.id})`);
   } catch (err) {
-    console.error(`[${msg.guild.name}] ban FAILED for ${msg.author.id} (logged anyway):`, err.message);
+    console.error(`[${msg.guild.name}] ${verdict.action} FAILED for ${msg.author.id} (logged anyway):`, err.message);
   }
 
   // Report to the log channel (if configured) with an Unban escape hatch.
   await logSend(msg.guild, cfg, {
     content: [
-      t(banned ? 'log.reportBanned' : 'log.reportFailed', cfg.locale, { channel: cfg.honeypotChannelId }),
+      t(banned ? (verdict.action === 'kick' ? 'log.reportKicked' : 'log.reportBanned') : 'log.reportFailed', cfg.locale, { channel: cfg.honeypotChannelId }),
       t('log.user', cfg.locale, { tag: msg.author.tag, id: msg.author.id }),
       quoted,
       attachments ? t('log.attach', cfg.locale, { names: attachments }) : null,
     ].filter(Boolean).join('\n'),
     files: spamFiles.length ? spamFiles : undefined,
-    components: banned ? [new ActionRowBuilder().addComponents(
+    // a kick needs no Undo - they can simply rejoin
+    components: banned && verdict.action === 'ban' ? [new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId(`mh_unban_${msg.author.id}`).setLabel(t('log.undoBtn', cfg.locale)).setStyle(ButtonStyle.Danger),
     )] : [],
   }, 'critical');
@@ -981,7 +1019,9 @@ client.on(Events.MessageCreate, async (msg) => {
   await msg.delete().catch(() => {});
   // ...then sweep any stragglers the ban's purge raced past in other channels.
   if (banned) sweepStragglers(msg.guild, msg.author.id).catch(() => {});
-  if (banned) notifyTrap(msg.guild, msg.author, msg.channel.name).catch(() => {}); // network-wide trap feed
+  // Network-wide trap feed: skip during a burst. 33 near-identical posts is
+  // noise, and the catches are unconfirmed until a moderator has looked.
+  if (banned && !burst.raid) notifyTrap(msg.guild, msg.author, msg.channel.name).catch(() => {});
 });
 
 // Act on a detected compromised-account blast (compromised.js). Deletes the

@@ -78,7 +78,9 @@
     "compromised_kick": "🚨 **Account compromesso espulso.** <@{id}> (`{id}`) ha diffuso lo stesso messaggio in **{n} canali** nel giro di pochi secondi — il segno di un account compromesso. Potrà rientrare una volta messo in sicurezza il proprio account.",
     "compromised_ban": "🚨 **Account compromesso bannato.** <@{id}> (`{id}`) ha diffuso lo stesso messaggio in **{n} canali** nel giro di pochi secondi — il segno di un account compromesso.",
     "compromised_quarantine": "🚨 **Account compromesso messo in quarantena.** <@{id}> (`{id}`) ha diffuso lo stesso messaggio in **{n} canali** nel giro di pochi secondi — il segno di un account compromesso. Il suo ruolo verificato è stato rimosso; dovrà riverificarsi per tornare.",
-    "compromised_notify": "⚠️ **Possibile account compromesso.** <@{id}> (`{id}`) ha diffuso lo stesso messaggio in **{n} canali** nel giro di pochi secondi. Segnalato per la tua revisione — intervieni manualmente."
+    "compromised_notify": "⚠️ **Possibile account compromesso.** <@{id}> (`{id}`) ha diffuso lo stesso messaggio in **{n} canali** nel giro di pochi secondi. Segnalato per la tua revisione — intervieni manualmente.",
+    "reportKicked": "🥾 **Espulso (prima infrazione).** {tag} (`{id}`) ha pubblicato nell'honeypot (<#{channel}>). L'espulsione è reversibile - un membro reale può rientrare e verificarsi. Se è un bot di spam farà scattare di nuovo la trappola e verrà bannato.",
+    "raidEngaged": "⚠️ **Modalità raid attivata** - {n} catture dell'honeypot in {secs}s. Le catture vengono espulse invece di essere bannate e NON vengono aggiunte alla lista di ban universale finché un moderatore non le conferma. Se si tratta dei tuoi stessi membri, probabilmente qualcuno ha detto loro di scrivere qualcosa nell'honeypot."
   },
   "setup": {
     "title": "## Configurazione di MadHoney",
@@ -523,7 +525,6 @@
       "gLineCustom": "NON TOCCATI - regole di visibilità personalizzate ({n}): {list}. Questi canali sono nascosti a ruoli specifici; applicare il gate li renderebbe visibili a quei membri una volta completata la verifica. Se vuoi comunque applicare il gate, selezionali dal pannello del gate.",
       "anCustom": "Il nuovo canale #{channel} NON è stato aggiunto automaticamente al gate: ha regole di visibilità personalizzate (è nascosto a ruoli specifici), quindi applicargli il gate potrebbe esporlo a membri a cui lo avevi nascosto. Se vuoi comunque applicare il gate, fallo dalla dashboard.",
       "pfArmedNoBanner": "Il tuo canale trappola (honeypot) è ARMATO ma il banner di avviso non è pubblicato. Una trappola non segnalata sembra un canale normale — un membro reale che ci scrive viene bannato all'istante. Pubblica il banner dalla scheda Honeypot, oppure metti la trappola in modalità Revisione.",
-      "pfCompActionPerm": "Il rilevamento degli account compromessi è impostato su «{action}», ma qui non ho il permesso {perm}. Se viene individuato un account compromesso posso solo segnalarlo. Concedi {perm} al mio ruolo, oppure cambia l'azione nella scheda «Account compromessi».",
       "pfCompBlind": "Non riesco a vedere {n} dei {total} canali in cui i tuoi membri possono scrivere ({list}), quindi un account compromesso potrebbe inondarli di spam senza essere individuato. Riesegui «Applica il gating ai canali» — ripristina automaticamente il mio accesso.",
       "pfCompNoDelete": "Posso vedere ma non ripulire {n} dei {total} canali in cui i tuoi membri possono scrivere ({list}): lì mi manca il permesso Gestisci messaggi. Lo spam individuato resterà visibile. Concedi Gestisci messaggi al mio ruolo, oppure disattiva «Elimina i messaggi di spam».",
       "raNone": "L'accesso del bot è già corretto su ogni canale con gating.",
@@ -533,7 +534,8 @@
       "svBlocked": "Ho il ruolo verificato, che mi impedisce di vedere il mio stesso canale trappola (honeypot), ma prima non sono riuscito a mettere al sicuro il mio accesso a {n} canali ({list}) - quindi l'ho lasciato dov'è, invece di perdere di vista quei canali.",
       "pfBotHasVerified": "Ho il ruolo \"{role}\". Un canale trappola (honeypot) configurato correttamente si nasconde a quel ruolo, quindi averlo mi impedisce di vedere la mia stessa trappola - resta armata e non cattura nulla. Lo rimuovo automaticamente a ogni riavvio; se continua a tornare, vuol dire che qualcosa me lo sta assegnando.",
       "pfCategoryLocked": "Non riesco a vedere {n} categoria/e ({list}), quindi non posso gestire nessun canale che ne fa parte. Discord richiede l'accesso a una categoria prima che i suoi canali possano essere modificati, e non posso concedermelo da solo. In Impostazioni server, concedi al mio ruolo Visualizza canale su ogni categoria elencata.",
-      "svCantRemove": "Ho il ruolo \"{role}\", che mi impedisce di vedere il mio stesso honeypot, ma non riesco a togliermelo: {err}. Serve che un amministratore me lo rimuova."
+      "svCantRemove": "Ho il ruolo \"{role}\", che mi impedisce di vedere il mio stesso honeypot, ma non riesco a togliermelo: {err}. Serve che un amministratore me lo rimuova.",
+      "pfFeaturePerms": "Alcune funzioni sono attive ma non possono funzionare: mi manca il permesso che ciascuna richiede: {list}. Concedili al mio ruolo in Impostazioni server › Ruoli."
     }
   },
   "landing": {

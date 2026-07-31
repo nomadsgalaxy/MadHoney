@@ -78,7 +78,9 @@
     "compromised_kick": "🚨 **Compte compromis expulsé.** <@{id}> (`{id}`) a diffusé en rafale le même message dans **{n} salons** en quelques secondes — la marque d'un compte piraté. Il pourra revenir une fois son compte sécurisé.",
     "compromised_ban": "🚨 **Compte compromis banni.** <@{id}> (`{id}`) a diffusé en rafale le même message dans **{n} salons** en quelques secondes — la marque d'un compte piraté.",
     "compromised_quarantine": "🚨 **Compte compromis mis en quarantaine.** <@{id}> (`{id}`) a diffusé en rafale le même message dans **{n} salons** en quelques secondes — la marque d'un compte piraté. Son rôle vérifié a été retiré ; il doit se revérifier pour revenir.",
-    "compromised_notify": "⚠️ **Compte potentiellement compromis.** <@{id}> (`{id}`) a diffusé en rafale le même message dans **{n} salons** en quelques secondes. Signalé à votre attention — intervenez manuellement."
+    "compromised_notify": "⚠️ **Compte potentiellement compromis.** <@{id}> (`{id}`) a diffusé en rafale le même message dans **{n} salons** en quelques secondes. Signalé à votre attention — intervenez manuellement.",
+    "reportKicked": "🥾 **Expulsé (première infraction).** {tag} (`{id}`) a publié dans le honeypot (<#{channel}>). Une expulsion est réversible - un vrai membre peut revenir et se vérifier. S'il s'agit d'un bot de spam, il déclenchera le piège une seconde fois et sera banni.",
+    "raidEngaged": "⚠️ **Mode raid activé** - {n} captures honeypot en {secs} s. Les comptes attrapés sont expulsés plutôt que bannis, et ils ne sont PAS ajoutés à la liste de bannissement partagée tant qu'un modérateur ne les a pas confirmés. S'il s'agit de tes propres membres, on leur a probablement demandé d'écrire quelque chose dans le honeypot."
   },
   "setup": {
     "title": "## Configuration de MadHoney",
@@ -523,7 +525,6 @@
       "gLineCustom": "LAISSÉS TELS QUELS - règles de visibilité personnalisées ({n}) : {list}. Ces salons sont masqués pour certains rôles ; les verrouiller les rendrait visibles à ces membres une fois vérifiés. Sélectionnez-les sur le tableau de verrouillage si vous voulez quand même les verrouiller.",
       "anCustom": "Le nouveau salon #{channel} n'a PAS été verrouillé automatiquement : il possède des règles de visibilité personnalisées (masqué pour certains rôles), donc le verrouiller pourrait l'exposer aux membres à qui vous l'aviez caché. Verrouillez-le depuis le tableau de bord si vous souhaitez le verrouiller malgré tout.",
       "pfArmedNoBanner": "Votre salon piège (honeypot) est ARMÉ mais sa bannière d'avertissement n'est pas publiée. Un piège non signalé ressemble à un salon normal — un membre réel qui y publie est banni instantanément. Publiez la bannière depuis la carte Honeypot, ou passez le piège en mode Révision.",
-      "pfCompActionPerm": "La détection des comptes compromis est réglée sur « {action} », mais je n'ai pas la permission {perm} ici. Si un compte piraté est détecté, je ne peux que le signaler. Accordez la permission {perm} à mon rôle, ou changez l'action dans la carte Comptes compromis.",
       "pfCompBlind": "Je ne vois pas {n} des {total} salons où vos membres peuvent publier ({list}) : un compte compromis pourrait donc y spammer sans être détecté. Relancez « Filtrer les salons » — cela rétablit automatiquement mon accès.",
       "pfCompNoDelete": "Je vois {n} des {total} salons où vos membres peuvent publier ({list}), mais je ne peux pas les nettoyer : il me manque la permission Gérer les messages dans ces salons. Le spam détecté restera en place. Accordez la permission Gérer les messages à mon rôle, ou désactivez « Supprimer les messages de spam ».",
       "raNone": "L'accès du bot est déjà correct sur tous les salons filtrés.",
@@ -533,7 +534,8 @@
       "svBlocked": "Je porte le rôle vérifié, ce qui me rend aveugle à mon propre honeypot, mais je n'ai pas pu sécuriser au préalable mon accès à {n} salons ({list}) — je n'y ai donc pas touché plutôt que de perdre ces salons de vue.",
       "pfBotHasVerified": "Je porte le rôle « {role} ». Un honeypot correctement configuré se masque à ce rôle : le porter me rend donc aveugle à mon propre piège — il reste armé et n'attrape rien. Je le retire automatiquement au redémarrage ; s'il revient sans cesse, c'est que quelque chose me l'attribue.",
       "pfCategoryLocked": "Je ne vois pas {n} catégorie({list}), je ne peux donc gérer aucun salon qui s'y trouve. Discord exige l'accès à une catégorie avant de pouvoir modifier ses salons, et je ne peux pas me l'accorder moi-même. Accordez à mon rôle la permission « Voir les salons » sur cette catégorie dans les Paramètres du serveur.",
-      "svCantRemove": "Je porte le rôle « {role} », qui me rend aveugle à mon propre honeypot, mais je ne peux pas me le retirer : {err}. Un administrateur doit me l'enlever."
+      "svCantRemove": "Je porte le rôle « {role} », qui me rend aveugle à mon propre honeypot, mais je ne peux pas me le retirer : {err}. Un administrateur doit me l'enlever.",
+      "pfFeaturePerms": "Certaines fonctions sont activées mais ne peuvent pas fonctionner - il me manque la permission dont chacune a besoin : {list}. Accordez-les à mon rôle dans Paramètres du serveur › Rôles."
     }
   },
   "landing": {

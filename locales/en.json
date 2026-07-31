@@ -78,7 +78,9 @@
     "compromised_kick": "🚨 **Compromised account kicked.** <@{id}> (`{id}`) blasted the same message across **{n} channels** within seconds — the mark of a hijacked account. They can rejoin once they secure their account.",
     "compromised_ban": "🚨 **Compromised account banned.** <@{id}> (`{id}`) blasted the same message across **{n} channels** within seconds — the mark of a hijacked account.",
     "compromised_quarantine": "🚨 **Compromised account quarantined.** <@{id}> (`{id}`) blasted the same message across **{n} channels** within seconds — the mark of a hijacked account. Their verified role was removed; they must re-verify to return.",
-    "compromised_notify": "⚠️ **Possible compromised account.** <@{id}> (`{id}`) blasted the same message across **{n} channels** within seconds. Flagged for your review — take action manually."
+    "compromised_notify": "⚠️ **Possible compromised account.** <@{id}> (`{id}`) blasted the same message across **{n} channels** within seconds. Flagged for your review — take action manually.",
+    "reportKicked": "🥾 **Kicked (first offence).** {tag} (`{id}`) posted in the honeypot (<#{channel}>). A kick is reversible - a real member can rejoin and verify. If it is a spam bot it will trip the trap again and be banned.",
+    "raidEngaged": "⚠️ **Raid mode engaged** - {n} honeypot catches in {secs}s. Catches are being kicked rather than banned and are NOT being added to the shared ban list until a moderator confirms them. If these are your own members, they were probably told to type something in the honeypot."
   },
   "setup": {
     "title": "## MadHoney setup",
@@ -523,7 +525,6 @@
       "gLineCustom": "LEFT ALONE - custom visibility rules ({n}): {list}. These channels are hidden from specific roles; gating them would make them visible to those members once verified. Pick them on the gate board if you want them gated anyway.",
       "anCustom": "New channel #{channel} was NOT auto-gated: it has custom visibility rules (hidden from specific roles), so gating it could expose it to members you hid it from. Gate it from the dashboard if you want it gated.",
       "pfArmedNoBanner": "Your honeypot is ARMED but its warning banner is not posted. An unmarked trap looks like a normal channel — a real member who posts there gets banned instantly. Post the banner from the Honeypot card, or switch the honeypot to Review mode.",
-      "pfCompActionPerm": "Compromised-account detection is set to \"{action}\", but I do not have the {perm} permission here. If a hijacked account is caught I can only report it. Grant {perm} to my role, or change the action in the Compromised accounts card.",
       "pfCompBlind": "I cannot see {n} of {total} channels your members can post in ({list}), so a compromised account could spam them without being detected. Re-run Gate channels — it restores my access automatically.",
       "pfCompNoDelete": "I can see but not clean up {n} of {total} channels your members can post in ({list}): I am missing Manage Messages there. Caught spam will stay up. Grant Manage Messages to my role, or turn off \"Delete the spam messages\".",
       "raNone": "Bot access is already correct on every gated channel.",
@@ -533,7 +534,8 @@
       "svBlocked": "I am wearing the verified role, which blinds me to my own honeypot, but I could not secure my access to {n} channels first ({list}) - so I left it alone rather than lose sight of them.",
       "pfBotHasVerified": "I am holding the \"{role}\" role. A correctly set up honeypot hides itself from that role, so wearing it makes me blind to my own trap - it stays armed and catches nothing. I remove this automatically on restart; if it keeps coming back, something is granting it to me.",
       "pfCategoryLocked": "I cannot see {n} category({list}), so I cannot manage any channel inside it. Discord requires access to a category before its channels can be changed, and I cannot grant myself that. Give my role View Channel on that category in Server Settings.",
-      "svCantRemove": "I am wearing the \"{role}\" role, which blinds me to my own honeypot, but I cannot remove it from myself: {err}. An admin needs to take it off me."
+      "svCantRemove": "I am wearing the \"{role}\" role, which blinds me to my own honeypot, but I cannot remove it from myself: {err}. An admin needs to take it off me.",
+      "pfFeaturePerms": "Some features are switched on but cannot work - I am missing the permission each one needs: {list}. Grant them to my role in Server Settings › Roles."
     }
   },
   "landing": {

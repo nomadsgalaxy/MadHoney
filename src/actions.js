@@ -7,6 +7,7 @@ import { renderBanner, DEFAULT_BANNER, creditSuffix } from './banner.js';
 import { resolvedIncidents } from './incident.js';
 import { honeypotMode } from './trap.js';
 import { compromisedSettings } from './compromised.js';
+import { raidSettings } from './raid.js';
 import { t } from './i18n.js';
 
 // Randomize the banner's attachment filename on every post. A fixed name like
@@ -845,6 +846,60 @@ export function lockedCategories(guild, cfg, me) {
   return [...out.values()];
 }
 
+
+// ---- what each feature needs to actually work ----
+// Declarative on purpose: every feature MadHoney can be asked to do declares the
+// guild-level permissions it needs, and whether the server has turned it on.
+// One table means enabling a feature can never quietly do nothing because a
+// permission is missing - the health check reads this and reports the gap.
+// Channel-scoped requirements (View/Manage Messages per channel) are checked
+// separately, because a permission can be present guild-wide and denied in one
+// channel. `label` is an i18n key so the warning names the card to go fix it in.
+export const FEATURE_REQUIREMENTS = [
+  { key: 'verification', label: 'dash.guild.cardVerification',
+    on: (cfg) => cfg.verificationEnabled !== false && Boolean(cfg.verifiedRoleId),
+    perms: [['ManageRoles', 'Manage Roles']] },
+  { key: 'gating', label: 'dash.gate.title',
+    on: (cfg) => (cfg.gatedChannels?.length ?? 0) > 0,
+    perms: [['ManageRoles', 'Manage Roles'], ['ManageChannels', 'Manage Channels']] },
+  { key: 'honeypot', label: 'dash.guild.cardHoneypot',
+    on: (cfg, hpMode) => Boolean(cfg.honeypotChannelId) && hpMode !== 'disarmed',
+    perms: [['BanMembers', 'Ban Members'], ['ManageMessages', 'Manage Messages']] },
+  { key: 'escalation', label: 'dash.guild.cardHoneypot',
+    on: (cfg, hpMode, opts) => Boolean(cfg.honeypotChannelId) && hpMode === 'armed' && opts.escalate,
+    perms: [['KickMembers', 'Kick Members']] },
+  { key: 'banlist', label: 'dash.guild.cardModeration',
+    on: (cfg) => Boolean(cfg.banShare),
+    perms: [['BanMembers', 'Ban Members']] },
+  { key: 'appeals', label: 'dash.guild.cardModeration',
+    on: (cfg) => Boolean(cfg.appealEnabled),
+    perms: [['BanMembers', 'Ban Members']] },
+  { key: 'compromised', label: 'dash.guild.cardCompromised',
+    on: (cfg, hpMode, opts) => opts.comp.enabled,
+    perms: [] }, // action-specific, added below
+];
+
+// Which enabled features are missing a guild-level permission.
+// `has(flagName)` answers whether the bot holds that permission (Administrator
+// short-circuits). Returns [{ key, label, missing: ['Kick Members', ...] }].
+export function missingFeaturePerms(cfg, has, { hpMode, escalate, comp }) {
+  const out = [];
+  for (const f of FEATURE_REQUIREMENTS) {
+    if (!f.on(cfg, hpMode, { escalate, comp })) continue;
+    const need = [...f.perms];
+    if (f.key === 'compromised') {
+      // whatever action this server chose has to be possible
+      if (comp.action === 'kick') need.push(['KickMembers', 'Kick Members']);
+      if (comp.action === 'ban') need.push(['BanMembers', 'Ban Members']);
+      if (comp.action === 'quarantine') need.push(['ManageRoles', 'Manage Roles']);
+      if (comp.deleteMessages) need.push(['ManageMessages', 'Manage Messages']);
+    }
+    const missing = need.filter(([flag]) => !has(flag)).map(([, name]) => name);
+    if (missing.length) out.push({ key: f.key, label: f.label, missing: [...new Set(missing)] });
+  }
+  return out;
+}
+
 // Health check for a verify-enabled server: returns EVERY problem it finds as
 // { level, msg }, most severe first (empty array = healthy). 'block' issues make
 // core actions fail or cause harm at scale, so grandfather() refuses on them;
@@ -902,13 +957,16 @@ export async function preflight(guild, cfg, loc = cfg?.locale) {
   const locked = lockedCategories(guild, cfg, me);
   if (locked.length) push('warn', 'dash.act.pfCategoryLocked', { n: locked.length, list: locked.map((c) => c.name).join(', ') });
   const comp = compromisedSettings(cfg);
+  // One pass over every enabled feature: anything switched on that cannot work
+  // for want of a permission gets named, with the permission it needs.
+  const gaps = missingFeaturePerms(cfg, (flag) => me.permissions.has(PermissionFlagsBits[flag]),
+    { hpMode: honeypotMode(cfg), escalate: raidSettings(cfg).escalate, comp });
+  if (gaps.length) {
+    push('warn', 'dash.act.pfFeaturePerms', {
+      list: gaps.map((g) => `${t(g.label, loc)} → ${g.missing.join(', ')}`).join(' · '),
+    });
+  }
   if (comp.enabled) {
-    const NEED = { kick: [PermissionFlagsBits.KickMembers, 'Kick Members'], ban: [PermissionFlagsBits.BanMembers, 'Ban Members'] };
-    const need = NEED[comp.action];
-    if (need && !me.permissions.has(need[0])) push('warn', 'dash.act.pfCompActionPerm', { perm: need[1], action: comp.action });
-    if (comp.action === 'quarantine' && !me.permissions.has(PermissionFlagsBits.ManageRoles)) {
-      push('warn', 'dash.act.pfCompActionPerm', { perm: 'Manage Roles', action: comp.action });
-    }
     const postable = memberPostableChannels(guild, cfg);
     const blind = postable.filter((ch) => !ch.permissionsFor(me)?.has(PermissionFlagsBits.ViewChannel));
     if (blind.length) push('warn', 'dash.act.pfCompBlind', { n: blind.length, total: postable.length, list: blind.slice(0, 5).map((c) => '#' + c.name).join(', ') });

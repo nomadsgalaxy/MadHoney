@@ -132,7 +132,9 @@
     "compromised_kick": "🚨 **Kompromitovaný účet byl vyhozen.** <@{id}> (`{id}`) během několika sekund rozeslal stejnou zprávu do **{n} kanálů** — příznak uneseného účtu. Jakmile si účet zabezpečí, může se znovu připojit.",
     "compromised_ban": "🚨 **Kompromitovaný účet byl zabanován.** <@{id}> (`{id}`) během několika sekund rozeslal stejnou zprávu do **{n} kanálů** — příznak uneseného účtu.",
     "compromised_quarantine": "🚨 **Kompromitovaný účet byl umístěn do karantény.** <@{id}> (`{id}`) během několika sekund rozeslal stejnou zprávu do **{n} kanálů** — příznak uneseného účtu. Byla mu odebrána ověřovací role; pro návrat se musí znovu ověřit.",
-    "compromised_notify": "⚠️ **Možný kompromitovaný účet.** <@{id}> (`{id}`) během několika sekund rozeslal stejnou zprávu do **{n} kanálů**. Označeno k vaší kontrole — zasáhněte ručně."
+    "compromised_notify": "⚠️ **Možný kompromitovaný účet.** <@{id}> (`{id}`) během několika sekund rozeslal stejnou zprávu do **{n} kanálů**. Označeno k vaší kontrole — zasáhněte ručně.",
+    "reportKicked": "🥾 **Vyhozen(a) (první provinění).** {tag} (`{id}`) napsal(a) do honeypotu (<#{channel}>). Vyhození se dá vzít zpět - skutečný člen se může znovu připojit a ověřit se. Pokud je to spam bot, chytí se do pasti znovu a dostane ban.",
+    "raidEngaged": "⚠️ **Aktivován režim raidu** - {n}× úlovek z honeypotu za {secs} s. Chycené účty se teď vyhazují, nebanují, a NEPŘIDÁVAJÍ se na sdílený seznam banů, dokud je nepotvrdí moderátor. Pokud jsou to tvoji vlastní členové, někdo jim pravděpodobně řekl, ať do honeypotu něco napíšou."
   },
   "dash": {
     "lang": "Jazyk",
@@ -523,7 +525,6 @@
       "gLineCustom": "PONECHÁNO BEZE ZMĚNY - vlastní pravidla viditelnosti ({n}): {list}. Tyto kanály jsou skryté před konkrétními rolemi; jejich uzamčením by se po ověření zobrazily i těmto členům. Pokud je přesto chcete uzamknout, vyberte je na panelu brány.",
       "anCustom": "Nový kanál #{channel} NEBYL automaticky uzamčen: má vlastní pravidla viditelnosti (je skrytý před konkrétními rolemi), takže jeho uzamčení by ho mohlo zpřístupnit členům, před kterými jste ho skryli. Pokud ho přesto chcete uzamknout, udělejte to z ovládacího panelu.",
       "pfArmedNoBanner": "Váš honeypot kanál (past na spam) je OZBROJENÝ, ale varovný banner není zveřejněn. Neoznačená past vypadá jako běžný kanál — skutečný člen, který tam napíše, je okamžitě zabanován. Zveřejněte banner z karty Honeypot, nebo past přepněte do režimu kontroly.",
-      "pfCompActionPerm": "Detekce kompromitovaných účtů je nastavena na „{action}“, ale nemám tady oprávnění {perm}. Když zachytím unesený účet, můžu ho jen nahlásit. Udělte oprávnění {perm} mé roli, nebo změňte akci na kartě Kompromitované účty.",
       "pfCompBlind": "Nevidím {n} z {total} kanálů, kam můžou vaši členové psát ({list}), takže by je kompromitovaný účet mohl spamovat, aniž bych si toho všiml. Spusťte znovu „Uzamknout kanály“ — automaticky mi to obnoví přístup.",
       "pfCompNoDelete": "{n} z {total} kanálů, kam můžou vaši členové psát ({list}), vidím, ale nemůžu v nich uklízet: chybí mi tam oprávnění Spravovat zprávy. Zachycený spam tam zůstane viset. Udělte oprávnění Spravovat zprávy mé roli, nebo vypněte „Smazat spamové zprávy“.",
       "raNone": "Přístup bota je už ve všech uzamčených kanálech v pořádku.",
@@ -533,7 +534,8 @@
       "svBlocked": "Mám na sobě roli ověřeného, kvůli které nevidím vlastní honeypot, ale nepodařilo se mi předtím zajistit si přístup k některým kanálům (počet: {n}): {list} - proto jsem roli raději nechal být, než abych o tyto kanály přišel.",
       "pfBotHasVerified": "Mám na sobě roli „{role}“. Správně nastavený honeypot se před touto rolí skrývá, takže s ní nevidím vlastní past - ta zůstává ozbrojená a nic nechytí. Při restartu si tuto roli automaticky odebírám; pokud se pořád vrací, něco mi ji uděluje.",
       "pfCategoryLocked": "Nevidím kategorie (počet: {n}): {list}, takže nemůžu spravovat žádný kanál uvnitř nich. Discord vyžaduje přístup ke kategorii, teprve potom jde měnit její kanály, a sám si ten přístup udělit nemůžu. V Nastavení serveru udělte mé roli u těchto kategorií oprávnění „Zobrazit kanál“.",
-      "svCantRemove": "Mám na sobě roli „{role}“, kvůli které nevidím vlastní honeypot, ale nemůžu si ji sám odebrat: {err}. Musí mi ji odebrat administrátor."
+      "svCantRemove": "Mám na sobě roli „{role}“, kvůli které nevidím vlastní honeypot, ale nemůžu si ji sám odebrat: {err}. Musí mi ji odebrat administrátor.",
+      "pfFeaturePerms": "Některé funkce jsou zapnuté, ale nemohou fungovat - chybí mi oprávnění, které každá z nich potřebuje: {list}. Udělte je mé roli v Nastavení serveru › Role."
     }
   },
   "landing": {

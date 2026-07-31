@@ -78,7 +78,9 @@
     "compromised_kick": "🚨 **Cuenta comprometida expulsada.** <@{id}> (`{id}`) difundió el mismo mensaje en **{n} canales** en cuestión de segundos — la señal de una cuenta secuestrada. Puede volver a entrar una vez que asegure su cuenta.",
     "compromised_ban": "🚨 **Cuenta comprometida baneada.** <@{id}> (`{id}`) difundió el mismo mensaje en **{n} canales** en cuestión de segundos — la señal de una cuenta secuestrada.",
     "compromised_quarantine": "🚨 **Cuenta comprometida en cuarentena.** <@{id}> (`{id}`) difundió el mismo mensaje en **{n} canales** en cuestión de segundos — la señal de una cuenta secuestrada. Se le retiró el rol de verificado; debe verificarse de nuevo para volver.",
-    "compromised_notify": "⚠️ **Posible cuenta comprometida.** <@{id}> (`{id}`) difundió el mismo mensaje en **{n} canales** en cuestión de segundos. Marcada para tu revisión — toma medidas manualmente."
+    "compromised_notify": "⚠️ **Posible cuenta comprometida.** <@{id}> (`{id}`) difundió el mismo mensaje en **{n} canales** en cuestión de segundos. Marcada para tu revisión — toma medidas manualmente.",
+    "reportKicked": "🥾 **Expulsión (primera infracción).** {tag} (`{id}`) publicó en el honeypot (<#{channel}>). Una expulsión es reversible - un miembro real puede volver a entrar y verificarse. Si es un bot de spam, volverá a caer en la trampa y será baneado.",
+    "raidEngaged": "⚠️ **Modo raid activado** - {n} capturas del honeypot en {secs}s. A las cuentas capturadas se las expulsa en lugar de banearlas, y NO se añaden a la lista de baneos compartida hasta que un moderador las confirme. Si son tus propios miembros, es probable que alguien les haya dicho que escribieran algo en el honeypot."
   },
   "setup": {
     "title": "## Configuración de MadHoney",
@@ -523,7 +525,6 @@
       "gLineCustom": "SIN TOCAR - reglas de visibilidad personalizadas ({n}): {list}. Estos canales están ocultos para roles específicos; restringirlos los haría visibles para esos miembros una vez verificados. Selecciónalos en el panel de restricción si aun así quieres restringirlos.",
       "anCustom": "El nuevo canal #{channel} NO se restringió automáticamente: tiene reglas de visibilidad personalizadas (oculto para roles específicos), por lo que restringirlo podría exponerlo a miembros a los que se lo habías ocultado. Restríngelo desde el panel si quieres que quede restringido.",
       "pfArmedNoBanner": "Tu canal trampa (honeypot) está ARMADO pero su banner de advertencia no está publicado. Una trampa sin señalizar parece un canal normal — un miembro real que publique ahí será baneado al instante. Publica el banner desde la tarjeta Honeypot o cambia la trampa al modo Revisión.",
-      "pfCompActionPerm": "La detección de cuentas comprometidas está configurada en «{action}», pero no tengo el permiso {perm} aquí. Si se detecta una cuenta secuestrada, solo puedo informar de ella. Concede {perm} a mi rol o cambia la acción en la tarjeta Cuentas comprometidas.",
       "pfCompBlind": "No puedo ver {n} de {total} canales en los que tus miembros pueden publicar ({list}), así que una cuenta comprometida podría inundarlos de spam sin ser detectada. Vuelve a ejecutar «Restringir canales» — restaura mi acceso automáticamente.",
       "pfCompNoDelete": "Puedo ver, pero no limpiar, {n} de {total} canales en los que tus miembros pueden publicar ({list}): me falta Gestionar mensajes ahí. El spam atrapado seguirá visible. Concede Gestionar mensajes a mi rol o desactiva «Eliminar los mensajes de spam».",
       "raNone": "El acceso del bot ya es correcto en todos los canales restringidos.",
@@ -533,7 +534,8 @@
       "svBlocked": "Llevo puesto el rol de verificado, que me deja ciego ante mi propio honeypot, pero antes no pude asegurar mi acceso a {n} canal(es) ({list}), así que no lo he tocado en lugar de perderlos de vista.",
       "pfBotHasVerified": "Tengo el rol «{role}». Un honeypot bien configurado se oculta a ese rol, así que llevarlo puesto me deja ciego ante mi propia trampa: sigue armada y no atrapa nada. Me lo quito automáticamente al reiniciar; si vuelve a aparecer, algo me lo está otorgando.",
       "pfCategoryLocked": "No puedo ver {n} categoría(s) ({list}), así que no puedo gestionar ningún canal que esté dentro. Discord exige acceso a la categoría antes de poder cambiar sus canales, y ese acceso no me lo puedo conceder yo. Dale a mi rol el permiso Ver canal en esa categoría en Configuración del servidor.",
-      "svCantRemove": "Llevo el rol «{role}», que me deja ciego ante mi propio honeypot, pero no puedo quitármelo: {err}. Un administrador tiene que retirármelo."
+      "svCantRemove": "Llevo el rol «{role}», que me deja ciego ante mi propio honeypot, pero no puedo quitármelo: {err}. Un administrador tiene que retirármelo.",
+      "pfFeaturePerms": "Algunas funciones están activadas pero no pueden funcionar: me falta el permiso que necesita cada una: {list}. Concédelos a mi rol en Configuración del servidor › Roles."
     }
   },
   "landing": {
