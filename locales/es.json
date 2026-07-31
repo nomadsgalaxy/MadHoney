@@ -528,7 +528,12 @@
       "pfCompNoDelete": "Puedo ver, pero no limpiar, {n} de {total} canales en los que tus miembros pueden publicar ({list}): me falta Gestionar mensajes ahí. El spam atrapado seguirá visible. Concede Gestionar mensajes a mi rol o desactiva «Eliminar los mensajes de spam».",
       "raNone": "El acceso del bot ya es correcto en todos los canales restringidos.",
       "raDone": "He restaurado mi acceso a {fixed} de {found} canales restringidos en los que me había quedado a ciegas.{failedPart}",
-      "raFailed": " No pude corregir {n}: {list}"
+      "raFailed": " No pude corregir {n}: {list}",
+      "svDropped": "Me he quitado el rol de verificado (me deja ciego ante mi propio honeypot). Antes fijé mi acceso en {pinned} canal(es), así que no se perdió nada.",
+      "svBlocked": "Llevo puesto el rol de verificado, que me deja ciego ante mi propio honeypot, pero antes no pude asegurar mi acceso a {n} canal(es) ({list}), así que no lo he tocado en lugar de perderlos de vista.",
+      "pfBotHasVerified": "Tengo el rol «{role}». Un honeypot bien configurado se oculta a ese rol, así que llevarlo puesto me deja ciego ante mi propia trampa: sigue armada y no atrapa nada. Me lo quito automáticamente al reiniciar; si vuelve a aparecer, algo me lo está otorgando.",
+      "pfCategoryLocked": "No puedo ver {n} categoría(s) ({list}), así que no puedo gestionar ningún canal que esté dentro. Discord exige acceso a la categoría antes de poder cambiar sus canales, y ese acceso no me lo puedo conceder yo. Dale a mi rol el permiso Ver canal en esa categoría en Configuración del servidor.",
+      "svCantRemove": "Llevo el rol «{role}», que me deja ciego ante mi propio honeypot, pero no puedo quitármelo: {err}. Un administrador tiene que retirármelo."
     }
   },
   "landing": {

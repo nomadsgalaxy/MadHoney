@@ -528,7 +528,12 @@
       "pfCompNoDelete": "Ich kann {n} von {total} Kanälen, in denen deine Mitglieder posten können, zwar sehen, aber nicht aufräumen ({list}): Mir fehlt dort die Berechtigung Nachrichten verwalten. Erwischter Spam bleibt stehen. Gib meiner Rolle die Berechtigung Nachrichten verwalten oder schalte \"Die Spam-Nachrichten löschen\" aus.",
       "raNone": "Der Bot-Zugriff ist bereits auf jedem gesperrten Kanal korrekt.",
       "raDone": "Meinen Zugriff auf {fixed} von {found} gesperrten Kanälen wiederhergestellt, die ich nicht mehr sehen konnte.{failedPart}",
-      "raFailed": " Bei {n} konnte ich den Zugriff nicht wiederherstellen: {list}"
+      "raFailed": " Bei {n} konnte ich den Zugriff nicht wiederherstellen: {list}",
+      "svDropped": "Ich habe mir die Verifiziert-Rolle selbst entzogen (sie macht mich blind für meinen eigenen Honeypot). Zuvor habe ich meinen Zugriff auf {pinned} Kanälen abgesichert, damit nichts verloren geht.",
+      "svBlocked": "Ich trage die Verifiziert-Rolle, die mich für meinen eigenen Honeypot blind macht, aber ich konnte meinen Zugriff auf {n} Kanäle ({list}) nicht zuerst absichern - deshalb habe ich die Rolle behalten, statt diese Kanäle aus dem Blick zu verlieren.",
+      "pfBotHasVerified": "Ich habe die Rolle \"{role}\". Ein korrekt eingerichteter Honeypot verbirgt sich vor dieser Rolle - solange ich sie trage, bin ich blind für meine eigene Falle: Sie bleibt scharf und fängt nichts. Beim Neustart entferne ich sie mir automatisch; wenn sie immer wieder auftaucht, wird sie mir von irgendetwas erneut zugewiesen.",
+      "pfCategoryLocked": "Ich kann {n} Kategorie(n) nicht sehen ({list}) und kann deshalb keinen Kanal darin verwalten. Discord verlangt Zugriff auf eine Kategorie, bevor deren Kanäle geändert werden können, und den kann ich mir nicht selbst geben. Gib meiner Rolle in den Servereinstellungen die Berechtigung Kanal ansehen für diese Kategorie.",
+      "svCantRemove": "Ich trage die Rolle \"{role}\", die mich für meinen eigenen Honeypot blind macht, kann sie mir aber nicht selbst entziehen: {err}. Ein Admin muss sie mir abnehmen."
     }
   },
   "landing": {

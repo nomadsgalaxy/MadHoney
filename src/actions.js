@@ -629,7 +629,7 @@ export async function ungateChannels(guild, cfg, loc = cfg?.locale) {
     const channels = await guild.channels.fetch();
     ids = channels.filter((ch) => {
       if (!ch) return false;
-      const ow = ch.permissionOverwrites.cache;
+      const ow = ch.permissionOverwrites?.cache ?? new Map();
       const everyoneDenied = ow.get(everyone.id)?.deny.has(PermissionFlagsBits.ViewChannel);
       const someRoleAllows = [...ow.values()].some((o) => o.id !== everyone.id && o.allow.has(PermissionFlagsBits.ViewChannel));
       return everyoneDenied && !someRoleAllows;
@@ -743,6 +743,108 @@ export function memberPostableChannels(guild, cfg) {
   return out;
 }
 
+
+// ---- permission resolution we can reason about (and unit-test) ----
+// Discord resolves a channel as: base role perms -> @everyone overwrite ->
+// OR of role denies then OR of role allows -> member overwrite. Administrator
+// short-circuits everything. Categories do NOT cascade at runtime - a child
+// only inherits by being synced - but Discord still requires access to the
+// PARENT before it will let you edit a child's overwrites, which is why a
+// category the bot cannot see makes its children unmanageable.
+const ALL_PERMS = (1n << 64n) - 1n;
+export function resolveChannelPerms({ basePerms, everyoneOverwrite, roleOverwrites = [], memberOverwrite }) {
+  let p = BigInt(basePerms);
+  if ((p & PermissionFlagsBits.Administrator) === PermissionFlagsBits.Administrator) return ALL_PERMS;
+  if (everyoneOverwrite) p = (p & ~BigInt(everyoneOverwrite.deny)) | BigInt(everyoneOverwrite.allow);
+  let allow = 0n, deny = 0n;
+  for (const o of roleOverwrites) { allow |= BigInt(o.allow); deny |= BigInt(o.deny); }
+  p = (p & ~deny) | allow;
+  if (memberOverwrite) p = (p & ~BigInt(memberOverwrite.deny)) | BigInt(memberOverwrite.allow);
+  return p;
+}
+// The bot's effective permissions on a channel if it did NOT hold `dropRoleId`.
+function botPermsWithout(guild, me, ch, dropRoleId) {
+  const roleIds = [...me.roles.cache.keys()].filter((id) => id !== dropRoleId && id !== guild.id);
+  let base = guild.roles.everyone.permissions.bitfield;
+  for (const id of roleIds) base |= guild.roles.cache.get(id)?.permissions.bitfield ?? 0n;
+  const ow = ch.permissionOverwrites.cache;
+  return resolveChannelPerms({
+    basePerms: base,
+    everyoneOverwrite: ow.get(guild.id) && { allow: ow.get(guild.id).allow.bitfield, deny: ow.get(guild.id).deny.bitfield },
+    roleOverwrites: roleIds.filter((id) => ow.has(id)).map((id) => ({ allow: ow.get(id).allow.bitfield, deny: ow.get(id).deny.bitfield })),
+    memberOverwrite: ow.get(me.id) && { allow: ow.get(me.id).allow.bitfield, deny: ow.get(me.id).deny.bitfield },
+  });
+}
+
+// INVARIANT: MadHoney must never hold a server's verified role.
+// A correctly configured honeypot DENIES View to the verified role, so a bot
+// wearing it goes blind on its own trap - the trap stays armed and silently
+// catches nothing. The role gets stuck there when an admin grants it by hand,
+// or when repairBotAccess's temporary borrow is interrupted mid-run.
+// Dropping it is only safe once the bot's access no longer depends on it, so we
+// pin an explicit overwrite on anything it would otherwise lose first.
+export async function dropStrayVerifiedRole(guild, cfg, loc = cfg?.locale) {
+  if (!cfg?.verifiedRoleId) return null;
+  const me = await guild.members.fetchMe();
+  if (!me.roles.cache.has(cfg.verifiedRoleId)) return null;
+  const role = await guild.roles.fetch(cfg.verifiedRoleId).catch(() => null);
+  if (!role) return null;
+  const botTarget = me.roles.botRole ?? me;
+  const wouldLose = [];
+  for (const ch of guild.channels.cache.values()) {
+    // threads are in this cache too and carry no overwrites of their own -
+    // they inherit from the parent channel, so there is nothing to pin on them
+    if (!ch || ch.type === ChannelType.GuildCategory || ch.isThread?.() || !ch.permissionOverwrites) continue;
+    const now = ch.permissionsFor(me)?.has(PermissionFlagsBits.ViewChannel);
+    if (!now) continue;
+    const after = (botPermsWithout(guild, me, ch, cfg.verifiedRoleId) & PermissionFlagsBits.ViewChannel) === PermissionFlagsBits.ViewChannel;
+    if (!after) wouldLose.push(ch);
+  }
+  const failed = [];
+  for (const ch of wouldLose) {
+    try {
+      await ch.permissionOverwrites.edit(botTarget, { ViewChannel: true, ReadMessageHistory: true, ManageMessages: true },
+        { reason: 'MadHoney: pin bot access before dropping a stray verified role' });
+    } catch {
+      try {
+        await ch.permissionOverwrites.edit(botTarget, { ViewChannel: true, ReadMessageHistory: true },
+          { reason: 'MadHoney: pin bot access before dropping a stray verified role' });
+      } catch (e) { failed.push(`#${ch.name}`); }
+    }
+  }
+  // Refuse to drop the role if we could not secure every channel it was providing.
+  if (failed.length) return t('dash.act.svBlocked', loc, { n: failed.length, list: failed.slice(0, 5).join(', ') });
+  try {
+    await me.roles.remove(role, 'MadHoney: the bot must not hold the verified role (it blinds the honeypot)');
+  } catch (e) {
+    return t('dash.act.svCantRemove', loc, { role: role.name, err: e.message });
+  }
+  return t('dash.act.svDropped', loc, { role: role.name, pinned: wouldLose.length });
+}
+
+// Categories the bot cannot see that contain channels it is supposed to manage.
+// Discord refuses child-overwrite edits without access to the parent, so those
+// channels are unmanageable. Most are still self-fixable: repairBotAccess can
+// briefly borrow the verified role, and that role can usually see the category.
+// Only categories hidden from the verified role TOO are a dead end that needs a
+// human, so those are all we report - warning about the rest would cry wolf on
+// servers where pressing Apply genuinely fixes it.
+export function lockedCategories(guild, cfg, me) {
+  const verified = cfg?.verifiedRoleId ? guild.roles.cache.get(cfg.verifiedRoleId) : null;
+  const relevant = new Set([...(cfg?.gatedChannels ?? []), ...memberPostableChannels(guild, cfg).map((c) => c.id)]);
+  const out = new Map();
+  for (const id of relevant) {
+    const ch = guild.channels.cache.get(id);
+    if (!ch?.parentId) continue;
+    const cat = guild.channels.cache.get(ch.parentId);
+    if (!cat || out.has(cat.id)) continue;
+    if (cat.permissionsFor(me)?.has(PermissionFlagsBits.ViewChannel)) continue;      // visible: fine
+    if (verified && cat.permissionsFor(verified)?.has(PermissionFlagsBits.ViewChannel)) continue; // reachable by borrowing the role
+    out.set(cat.id, cat);
+  }
+  return [...out.values()];
+}
+
 // Health check for a verify-enabled server: returns EVERY problem it finds as
 // { level, msg }, most severe first (empty array = healthy). 'block' issues make
 // core actions fail or cause harm at scale, so grandfather() refuses on them;
@@ -794,6 +896,11 @@ export async function preflight(guild, cfg, loc = cfg?.locale) {
   // Compromised-account detection has its own requirements, and they differ by
   // the action the server chose. Silent failure is the danger here: without
   // View the blast is never seen, and without Manage Messages the spam stays up.
+  // The bot wearing the verified role silently blinds it on a correct honeypot.
+  if (me.roles.cache.has(cfg.verifiedRoleId)) push('warn', 'dash.act.pfBotHasVerified', { role: role.name });
+  // A category the bot cannot see makes every channel inside it unmanageable.
+  const locked = lockedCategories(guild, cfg, me);
+  if (locked.length) push('warn', 'dash.act.pfCategoryLocked', { n: locked.length, list: locked.map((c) => c.name).join(', ') });
   const comp = compromisedSettings(cfg);
   if (comp.enabled) {
     const NEED = { kick: [PermissionFlagsBits.KickMembers, 'Kick Members'], ban: [PermissionFlagsBits.BanMembers, 'Ban Members'] };

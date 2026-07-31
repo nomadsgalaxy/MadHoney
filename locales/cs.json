@@ -528,7 +528,12 @@
       "pfCompNoDelete": "{n} z {total} kanálů, kam můžou vaši členové psát ({list}), vidím, ale nemůžu v nich uklízet: chybí mi tam oprávnění Spravovat zprávy. Zachycený spam tam zůstane viset. Udělte oprávnění Spravovat zprávy mé roli, nebo vypněte „Smazat spamové zprávy“.",
       "raNone": "Přístup bota je už ve všech uzamčených kanálech v pořádku.",
       "raDone": "Obnovil jsem si přístup k {fixed} z {found} uzamčených kanálů, které jsem přestal vidět.{failedPart}",
-      "raFailed": " Nepodařilo se opravit {n}: {list}"
+      "raFailed": " Nepodařilo se opravit {n}: {list}",
+      "svDropped": "Odebral jsem si roli ověřeného (kvůli ní nevidím vlastní honeypot). Nejdřív jsem si ale napevno zajistil přístup ke kanálům (počet: {pinned}), takže se nic neztratilo.",
+      "svBlocked": "Mám na sobě roli ověřeného, kvůli které nevidím vlastní honeypot, ale nepodařilo se mi předtím zajistit si přístup k některým kanálům (počet: {n}): {list} - proto jsem roli raději nechal být, než abych o tyto kanály přišel.",
+      "pfBotHasVerified": "Mám na sobě roli „{role}“. Správně nastavený honeypot se před touto rolí skrývá, takže s ní nevidím vlastní past - ta zůstává ozbrojená a nic nechytí. Při restartu si tuto roli automaticky odebírám; pokud se pořád vrací, něco mi ji uděluje.",
+      "pfCategoryLocked": "Nevidím kategorie (počet: {n}): {list}, takže nemůžu spravovat žádný kanál uvnitř nich. Discord vyžaduje přístup ke kategorii, teprve potom jde měnit její kanály, a sám si ten přístup udělit nemůžu. V Nastavení serveru udělte mé roli u těchto kategorií oprávnění „Zobrazit kanál“.",
+      "svCantRemove": "Mám na sobě roli „{role}“, kvůli které nevidím vlastní honeypot, ale nemůžu si ji sám odebrat: {err}. Musí mi ji odebrat administrátor."
     }
   },
   "landing": {

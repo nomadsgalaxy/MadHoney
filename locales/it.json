@@ -528,7 +528,12 @@
       "pfCompNoDelete": "Posso vedere ma non ripulire {n} dei {total} canali in cui i tuoi membri possono scrivere ({list}): lì mi manca il permesso Gestisci messaggi. Lo spam individuato resterà visibile. Concedi Gestisci messaggi al mio ruolo, oppure disattiva «Elimina i messaggi di spam».",
       "raNone": "L'accesso del bot è già corretto su ogni canale con gating.",
       "raDone": "Ho ripristinato il mio accesso a {fixed} dei {found} canali con gating che non riuscivo più a vedere.{failedPart}",
-      "raFailed": " Non sono riuscito a sistemarne {n}: {list}"
+      "raFailed": " Non sono riuscito a sistemarne {n}: {list}",
+      "svDropped": "Mi sono tolto il ruolo verificato: mi impedisce di vedere il mio stesso canale trappola (honeypot). Prima ho fissato il mio accesso su {pinned} canali, così non è andato perso nulla.",
+      "svBlocked": "Ho il ruolo verificato, che mi impedisce di vedere il mio stesso canale trappola (honeypot), ma prima non sono riuscito a mettere al sicuro il mio accesso a {n} canali ({list}) - quindi l'ho lasciato dov'è, invece di perdere di vista quei canali.",
+      "pfBotHasVerified": "Ho il ruolo \"{role}\". Un canale trappola (honeypot) configurato correttamente si nasconde a quel ruolo, quindi averlo mi impedisce di vedere la mia stessa trappola - resta armata e non cattura nulla. Lo rimuovo automaticamente a ogni riavvio; se continua a tornare, vuol dire che qualcosa me lo sta assegnando.",
+      "pfCategoryLocked": "Non riesco a vedere {n} categoria/e ({list}), quindi non posso gestire nessun canale che ne fa parte. Discord richiede l'accesso a una categoria prima che i suoi canali possano essere modificati, e non posso concedermelo da solo. In Impostazioni server, concedi al mio ruolo Visualizza canale su ogni categoria elencata.",
+      "svCantRemove": "Ho il ruolo \"{role}\", che mi impedisce di vedere il mio stesso honeypot, ma non riesco a togliermelo: {err}. Serve che un amministratore me lo rimuova."
     }
   },
   "landing": {

@@ -528,7 +528,12 @@
       "pfCompNoDelete": "Consigo ver, mas não limpar, {n} de {total} canais em que seus membros podem postar ({list}): falta a permissão Gerenciar Mensagens neles. O spam flagrado vai continuar lá. Conceda Gerenciar Mensagens ao meu cargo ou desative \"Excluir as mensagens de spam\".",
       "raNone": "O acesso do bot já está correto em todos os canais restringidos.",
       "raDone": "Restaurei meu acesso a {fixed} de {found} canais restringidos que eu não conseguia mais ver.{failedPart}",
-      "raFailed": " Não consegui corrigir {n}: {list}"
+      "raFailed": " Não consegui corrigir {n}: {list}",
+      "svDropped": "Removi de mim mesmo o cargo de verificado (ele me deixa cego para o meu próprio honeypot). Antes disso, fixei meu acesso em {pinned} canais para que nada fosse perdido.",
+      "svBlocked": "Estou com o cargo de verificado, o que me deixa cego para o meu próprio honeypot, mas não consegui garantir meu acesso a {n} canais antes ({list}) - então deixei o cargo como está, em vez de perder esses canais de vista.",
+      "pfBotHasVerified": "Estou com o cargo \"{role}\". Um honeypot bem configurado se esconde desse cargo, então tê-lo me deixa cego para a minha própria armadilha - ela continua armada e não pega nada. Removo esse cargo automaticamente ao reiniciar; se ele continuar voltando, algo está concedendo esse cargo a mim.",
+      "pfCategoryLocked": "Não consigo ver {n} categoria({list}), então não consigo gerenciar nenhum canal dentro dela. O Discord exige acesso a uma categoria para que os canais dentro dela possam ser alterados, e não posso conceder isso a mim mesmo. Dê ao meu cargo a permissão Ver Canal nessa categoria em Configurações do Servidor.",
+      "svCantRemove": "Estou com o cargo \"{role}\", que me deixa cego para o meu próprio honeypot, mas não consigo removê-lo de mim: {err}. Um administrador precisa tirá-lo de mim."
     }
   },
   "landing": {

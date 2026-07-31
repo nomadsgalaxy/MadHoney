@@ -528,7 +528,12 @@
       "pfCompNoDelete": "I can see but not clean up {n} of {total} channels your members can post in ({list}): I am missing Manage Messages there. Caught spam will stay up. Grant Manage Messages to my role, or turn off \"Delete the spam messages\".",
       "raNone": "Bot access is already correct on every gated channel.",
       "raDone": "Restored my access to {fixed} of {found} gated channels I had gone blind on.{failedPart}",
-      "raFailed": " Could not fix {n}: {list}"
+      "raFailed": " Could not fix {n}: {list}",
+      "svDropped": "Removed the verified role from myself (it makes me blind to my own honeypot). Pinned my access on {pinned} channels first so nothing was lost.",
+      "svBlocked": "I am wearing the verified role, which blinds me to my own honeypot, but I could not secure my access to {n} channels first ({list}) - so I left it alone rather than lose sight of them.",
+      "pfBotHasVerified": "I am holding the \"{role}\" role. A correctly set up honeypot hides itself from that role, so wearing it makes me blind to my own trap - it stays armed and catches nothing. I remove this automatically on restart; if it keeps coming back, something is granting it to me.",
+      "pfCategoryLocked": "I cannot see {n} category({list}), so I cannot manage any channel inside it. Discord requires access to a category before its channels can be changed, and I cannot grant myself that. Give my role View Channel on that category in Server Settings.",
+      "svCantRemove": "I am wearing the \"{role}\" role, which blinds me to my own honeypot, but I cannot remove it from myself: {err}. An admin needs to take it off me."
     }
   },
   "landing": {

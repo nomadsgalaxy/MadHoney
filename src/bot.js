@@ -20,7 +20,7 @@ import { renderBanner, DEFAULT_BANNER, FONTS } from './banner.js';
 const store = await import(process.env.MADHONEY_STORE ?? './store.js');
 const { getGuild, saveGuild, logBan, bans, bannedElsewhere, appealableGuildIds, banEpoch, hasAppealed, recordAppeal, reBanSource, incidentOf, resolveIncident } = store;
 import { makeIncidentId } from './incident.js';
-import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, gateNewChannel, ungateChannels, grandfather, syncBans, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
+import { postVerifyPanel, postBanner, refreshVerifyPanel, refreshBanner, gateChannels, gateNewChannel, ungateChannels, grandfather, syncBans, dropStrayVerifiedRole, explainError, roleColorMap, DEFAULT_VERIFY_TEXT } from './actions.js';
 import { startDashboard } from './dashboard.js';
 import { t } from './i18n.js';
 
@@ -1183,6 +1183,19 @@ client.once(Events.ClientReady, async (c) => {
       } catch (e) { console.error(`[${guild.name}] gate catch-up failed:`, e.message); }
     }
   }, 15000); // after honeypot catch-up; caches settled
+
+  // Invariant sweep: the bot must never wear a server's verified role. A correct
+  // honeypot denies View to that role, so wearing it makes the trap silently
+  // inert. It gets stuck there when an admin grants it by hand or when
+  // repairBotAccess's temporary borrow is killed mid-run - so check every boot.
+  setTimeout(async () => {
+    for (const guild of c.guilds.cache.values()) {
+      try {
+        const r = await dropStrayVerifiedRole(guild, getGuild(guild.id) ?? {});
+        if (r) console.log(`[${guild.name}] ${r}`);
+      } catch (e) { console.error(`[${guild.name}] stray-role sweep failed:`, e.message); }
+    }
+  }, 20000).unref?.();
 
   // Resume grandfather / ban-sync jobs a restart interrupted. Both are
   // idempotent (skip members already handled) and self-clear their pending flag

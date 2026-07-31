@@ -528,7 +528,12 @@
       "pfCompNoDelete": "Je vois {n} des {total} salons où vos membres peuvent publier ({list}), mais je ne peux pas les nettoyer : il me manque la permission Gérer les messages dans ces salons. Le spam détecté restera en place. Accordez la permission Gérer les messages à mon rôle, ou désactivez « Supprimer les messages de spam ».",
       "raNone": "L'accès du bot est déjà correct sur tous les salons filtrés.",
       "raDone": "J'ai rétabli mon accès à {fixed} des {found} salons filtrés que je ne voyais plus.{failedPart}",
-      "raFailed": " Impossible d'en corriger {n} : {list}"
+      "raFailed": " Impossible d'en corriger {n} : {list}",
+      "svDropped": "Je me suis retiré le rôle vérifié (il me rend aveugle à mon propre honeypot). Je me suis d'abord accordé explicitement l'accès à {pinned} salons, pour ne rien perdre de vue.",
+      "svBlocked": "Je porte le rôle vérifié, ce qui me rend aveugle à mon propre honeypot, mais je n'ai pas pu sécuriser au préalable mon accès à {n} salons ({list}) — je n'y ai donc pas touché plutôt que de perdre ces salons de vue.",
+      "pfBotHasVerified": "Je porte le rôle « {role} ». Un honeypot correctement configuré se masque à ce rôle : le porter me rend donc aveugle à mon propre piège — il reste armé et n'attrape rien. Je le retire automatiquement au redémarrage ; s'il revient sans cesse, c'est que quelque chose me l'attribue.",
+      "pfCategoryLocked": "Je ne vois pas {n} catégorie({list}), je ne peux donc gérer aucun salon qui s'y trouve. Discord exige l'accès à une catégorie avant de pouvoir modifier ses salons, et je ne peux pas me l'accorder moi-même. Accordez à mon rôle la permission « Voir les salons » sur cette catégorie dans les Paramètres du serveur.",
+      "svCantRemove": "Je porte le rôle « {role} », qui me rend aveugle à mon propre honeypot, mais je ne peux pas me le retirer : {err}. Un administrateur doit me l'enlever."
     }
   },
   "landing": {

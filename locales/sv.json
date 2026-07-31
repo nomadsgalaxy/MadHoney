@@ -528,7 +528,12 @@
       "pfCompNoDelete": "Jag kan se men inte städa upp {n} av {total} kanaler som dina medlemmar kan posta i ({list}): jag saknar Hantera meddelanden där. Fångat spam blir kvar. Ge Hantera meddelanden till min roll, eller stäng av \"Ta bort spammeddelandena\".",
       "raNone": "Bottens åtkomst är redan korrekt på alla spärrade kanaler.",
       "raDone": "Återställde min åtkomst till {fixed} av {found} spärrade kanaler som jag inte längre kunde se.{failedPart}",
-      "raFailed": " Kunde inte åtgärda {n}: {list}"
+      "raFailed": " Kunde inte åtgärda {n}: {list}",
+      "svDropped": "Tog bort den verifierade rollen från mig själv (den gör mig blind för min egen honeypot). Jag låste först fast min åtkomst på {pinned} kanaler så att inget gick förlorat.",
+      "svBlocked": "Jag bär den verifierade rollen, vilket gör mig blind för min egen honeypot, men jag kunde inte säkra min åtkomst till {n} kanaler först ({list}) - så jag lät rollen sitta kvar hellre än att tappa sikten över dem.",
+      "pfBotHasVerified": "Jag har rollen \"{role}\". En korrekt uppsatt honeypot döljer sig för den rollen, så när jag bär den blir jag blind för min egen fälla - den förblir aktiverad och fångar ingenting. Jag tar bort den automatiskt vid omstart; om den hela tiden kommer tillbaka är det något som tilldelar mig den.",
+      "pfCategoryLocked": "Jag kan inte se {n} kategori(er) ({list}), så jag kan inte hantera någon av kanalerna där. Discord kräver åtkomst till en kategori innan dess kanaler kan ändras, och det kan jag inte ge mig själv. Ge min roll Visa kanal på den kategorin i Serverinställningar.",
+      "svCantRemove": "Jag bär rollen \"{role}\" som gör mig blind för min egen honeypot, men jag kan inte ta bort den själv: {err}. En admin behöver ta bort den från mig."
     }
   },
   "landing": {
