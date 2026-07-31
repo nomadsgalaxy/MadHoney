@@ -952,11 +952,16 @@ client.on(Events.MessageCreate, async (msg) => {
   const burst = rset.enabled
     ? recordCatch(raidStore, msg.guildId, now, rset)
     : { raid: false, engaged: false, count: 1 };
-  // The offence ladder decides what happens. A first catch is never a ban and
-  // never reaches the shared list - it kicks, and a real spam bot proves itself
-  // by coming straight back. See raid.js.
-  const prior = priorOffenses(bans(msg.guildId), msg.guildId, msg.author.id);
-  const verdict = chooseAction({ prior, raid: burst.raid, escalate: rset.escalate });
+  // An isolated catch is a spam bot: banned and shared, as before. Only inside a
+  // BURST does MadHoney downgrade to a reversible kick and stop sharing, because a
+  // burst is the only signal that has ever indicated a misconfiguration rather
+  // than spam (measured over every catch on record - see raid.js).
+  const allRows = bans();
+  const prior = priorOffenses(allRows, msg.guildId, msg.author.id);
+  // Caught on some OTHER server already? Then a burst here does not make them
+  // innocent - reBanSource returns the guild whose ban is still unresolved.
+  const knownSpammer = Boolean(reBanSource(msg.author.id, msg.guildId));
+  const verdict = chooseAction({ prior, raid: burst.raid, knownSpammer, escalate: rset.escalate });
   if (!verdict.share) noShare = true;
   logBan({ id: msg.author.id, tag: msg.author.tag, guildId: msg.guildId, channel: msg.channel.name, at: new Date(now).toISOString(), incidentId, ...(noShare ? { noShare: true } : {}), ...(burst.raid ? { raid: true } : {}), offense: prior + 1 });
   if (burst.engaged) {

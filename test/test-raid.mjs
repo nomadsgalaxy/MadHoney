@@ -8,7 +8,7 @@ import { raidSettings, recordCatch, inRaid, sweep, priorOffenses, chooseAction }
 
 // --- settings: sane defaults, clamped ---
 const d = raidSettings(undefined);
-assert.deepEqual([d.enabled, d.threshold, d.windowSec, d.cooldownSec, d.escalate], [true, 5, 60, 600, true]);
+assert.deepEqual([d.enabled, d.threshold, d.windowSec, d.cooldownSec, d.escalate], [true, 5, 180, 600, true]);
 // settings now live under compromised (raid is an extension of that feature)
 assert.equal(raidSettings({ compromised: { raid: { threshold: 9 } } }).threshold, 9);
 assert.equal(raidSettings({ raid: { threshold: 7 } }).threshold, 7, 'legacy top-level raid config still honoured');
@@ -104,42 +104,57 @@ assert.equal(priorOffenses([row('u', 'g'), row('u', 'g', { unbanned: true })], '
 // ...and offences after a reversal start counting again
 assert.equal(priorOffenses([row('u', 'g'), row('u', 'g', { unbanned: true }), row('u', 'g')], 'g', 'u'), 1);
 
-// THE RULE THE OPERATOR ASKED FOR: first offence never bans, never syncs
-assert.deepEqual(chooseAction({ prior: 0 }), { action: 'kick', share: false, reason: 'first offence' });
-// a spam bot proves itself by returning: second offence bans AND feeds the list
-assert.deepEqual(chooseAction({ prior: 1 }), { action: 'ban', share: true, reason: 'offence 2' });
-assert.equal(chooseAction({ prior: 5 }).action, 'ban');
-// a raid never upgrades the action, and keeps even repeats off the shared list
-assert.deepEqual(chooseAction({ prior: 0, raid: true }), { action: 'kick', share: false, reason: 'first offence' });
-assert.equal(chooseAction({ prior: 3, raid: true }).share, false, 'a burst never feeds the network');
-// escalation can be turned off for a server that wants the old instant ban
-assert.deepEqual(chooseAction({ prior: 0, escalate: false }), { action: 'ban', share: true, reason: 'escalation disabled' });
-assert.equal(chooseAction({ prior: 0, escalate: false, raid: true }).share, false);
+// ---- what happens to a catch ----
+// Measured over every catch on record: only 1% of (server,account) pairs are ever
+// caught twice, so a blanket first-offence kick would stop banning ~99% of spam
+// bots and starve the shared list. The reversible action is therefore gated on a
+// BURST - the only signal that has ever indicated a misconfiguration.
 
-// KORWIN REPLAY: 33 distinct accounts, one catch each -> all kicked, none shared
+// THE 99% CASE: an isolated catch is a spam bot. Ban it, and protect the network.
+assert.deepEqual(chooseAction({}), { action: 'ban', share: true, reason: 'catch' });
+assert.deepEqual(chooseAction({ prior: 0, raid: false }), { action: 'ban', share: true, reason: 'catch' });
+
+// Inside a burst the cause is unknown -> reversible, and nothing is shared.
+assert.deepEqual(chooseAction({ raid: true }), { action: 'kick', share: false, reason: 'burst, first offence' });
+// a repeat inside the burst bans, but an unconfirmed burst still never shares
+assert.deepEqual(chooseAction({ raid: true, prior: 1 }), { action: 'ban', share: false, reason: 'burst, repeat offence' });
+// an account already on the shared list is not made innocent by a burst
+assert.deepEqual(chooseAction({ raid: true, knownSpammer: true }), { action: 'ban', share: true, reason: 'already on the shared list' });
+// a server can opt out of the reversible step entirely
+assert.deepEqual(chooseAction({ raid: true, escalate: false }), { action: 'ban', share: false, reason: 'burst, repeat offence' });
+
+// KORWIN REPLAY: 33 distinct accounts in one burst -> nothing banned, nothing shared
 {
-  const ledger = [];
-  let bans = 0, shared = 0;
+  const store = new Map(); const ledger = [];
+  let bans = 0, shared = 0, kicks = 0;
   for (let i = 0; i < 33; i++) {
     const uid = 'member' + i;
-    const v = chooseAction({ prior: priorOffenses(ledger, 'korwin', uid), raid: true, escalate: true });
-    if (v.action === 'ban') bans++;
+    const b = recordCatch(store, 'korwin', i * 11000, O);
+    const v = chooseAction({ prior: priorOffenses(ledger, 'korwin', uid), raid: b.raid, escalate: true });
+    if (v.action === 'ban') bans++; else kicks++;
     if (v.share) shared++;
     ledger.push(row(uid, 'korwin'));
   }
-  assert.equal(bans, 0, 'not one of the 33 would have been banned');
-  assert.equal(shared, 0, 'not one would have reached the shared ban list');
+  // the first four arrive before the burst trips, so they ban as normal catches
+  assert.equal(bans, 4, 'only the pre-burst catches ban');
+  assert.equal(kicks, 29, 'once the burst is detected the rest are kicked');
+  assert.equal(shared, 4, 'the burst itself never reaches the shared list');
 }
 
-// A REAL SPAM BOT: same account trips the trap twice -> kicked, then banned+shared
+// NORMAL WEEK REPLAY: isolated catches on quiet servers all ban and all share
 {
-  const ledger = [];
-  const first = chooseAction({ prior: priorOffenses(ledger, 'g', 'bot'), escalate: true });
-  ledger.push(row('bot', 'g'));
-  const second = chooseAction({ prior: priorOffenses(ledger, 'g', 'bot'), escalate: true });
-  assert.equal(first.action, 'kick');
-  assert.equal(second.action, 'ban');
-  assert.equal(second.share, true, 'the confirmed catch is what protects the network');
+  const store = new Map(); const ledger = [];
+  let bans = 0, shared = 0;
+  for (let i = 0; i < 20; i++) {                       // one catch per hour
+    const uid = 'spambot' + i;
+    const b = recordCatch(store, 'quiet', i * 3600_000, O);
+    const v = chooseAction({ prior: priorOffenses(ledger, 'quiet', uid), raid: b.raid, escalate: true });
+    if (v.action === 'ban') bans++;
+    if (v.share) shared++;
+    ledger.push(row(uid, 'quiet'));
+  }
+  assert.equal(bans, 20, 'every ordinary spam bot is still banned');
+  assert.equal(shared, 20, 'and still feeds the shared ban list');
 }
 
 console.log('ok');

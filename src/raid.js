@@ -26,7 +26,7 @@ export function raidSettings(cfg) {
     escalate: r.escalate !== false, // first offence kicks, repeat bans (default on)
     enabled: r.enabled !== false,                                            // default on
     threshold: Math.max(2, Math.min(50, Number(r.threshold) || 5)),          // catches...
-    windowSec: Math.max(5, Math.min(600, Number(r.windowSec) || 60)),        // ...within this window
+    windowSec: Math.max(5, Math.min(600, Number(r.windowSec) || 180)),       // ...within this window (a few minutes)
     cooldownSec: Math.max(30, Math.min(3600, Number(r.cooldownSec) || 600)), // quiet time before standing down
   };
 }
@@ -82,12 +82,27 @@ export function priorOffenses(rows, guildId, userId) {
   return n;
 }
 
-// What to do about a catch. `prior` is the count BEFORE this one.
-//   first offence  -> kick, keep it local (nothing is proven yet)
-//   repeat offence -> ban, and let it feed the shared list
-// A raid never upgrades the action, and always keeps the catch local.
-export function chooseAction({ prior = 0, raid = false, escalate = true } = {}) {
-  if (!escalate) return { action: 'ban', share: !raid, reason: 'escalation disabled' };
-  if (prior < 1) return { action: 'kick', share: false, reason: 'first offence' };
-  return { action: 'ban', share: !raid, reason: `offence ${prior + 1}` };
+// What to do about a catch.
+//
+// Measured against every catch on record (106 of them, 2026-07-31): only 1% of
+// (server, account) pairs ever tripped a trap twice. So a blanket "kick on the
+// first offence" would mean 104 of 105 spam bots were never banned and never
+// reached the shared list - it would quietly gut the network ban list, which is
+// the entire point of it. Account age cannot rescue the idea either: 81% of
+// genuine catches are on accounts older than 30 days.
+//
+// What DID separate the KORWiN false positives from every normal catch was not
+// the individual account - it was the BURST. 104 of 105 real catches arrived
+// alone. So a lone catch is treated as what it almost always is, a spam bot:
+// banned, and shared. Only inside a burst, when there is finally a reason to
+// doubt, does MadHoney downgrade to the reversible action and stop sharing.
+export function chooseAction({ prior = 0, raid = false, knownSpammer = false, escalate = true } = {}) {
+  // Normal operation: an isolated catch is a spam bot. Ban it and protect the network.
+  if (!raid) return { action: 'ban', share: true, reason: 'catch' };
+  // Already caught on another server - the burst does not make it innocent.
+  if (knownSpammer) return { action: 'ban', share: true, reason: 'already on the shared list' };
+  // Inside a burst the cause is unknown, so take the action we can undo...
+  if (escalate && prior < 1) return { action: 'kick', share: false, reason: 'burst, first offence' };
+  // ...and ban on a repeat, but still keep an unconfirmed burst off the network.
+  return { action: 'ban', share: false, reason: 'burst, repeat offence' };
 }
