@@ -574,10 +574,10 @@
     "f2P": "Pojmenuj návnadu jako běžný kanál (<code>general-2</code>, <code>chat-2</code>) a nevybíravý bot vejde rovnou dovnitř. Vypadá to jen jako další místo ke spamování.",
     "f3H": "Nedokážou přečíst varování",
     "f3P": "Jediným obsahem honeypotu je obrázek. Člověk si přečte „sem nepiš“ a couvne; bot nedokáže rozpoznat obrázek, takže napíše stejně a spustí past.",
-    "f4H": "Žádný člověk se nechytí",
-    "f4P": "Role ověřeného skryje honeypot před každým, kdo prošel captchou. Skuteční členové ten kanál nikdy ani nevidí, takže jediné, co v něm kdy přistane, je bot.",
+    "f4H": "Chyby se dají vzít zpět",
+    "f4P": "Role verified skrývá honeypot před každým, kdo prošel captchou, takže tví členové ten kanál ani nevidí. Účet, který tam napíše před ověřením, past spustit může - proto se při dávce úlovků kickuje místo banování, dokud se nepodívá moderátor.",
     "showEyebrow": "Návrhář banneru",
-    "showH3": "Žádný člověk nemá výmluvu.",
+    "showH3": "Aby se varování nedalo minout.",
     "showP": "MadHoney vygeneruje výstražný banner, který je připnutý v honeypotu: tvůj nadpis, text, barvy, fonty, dokonce i logo tvé komunity. Navrhni ho přes <code>/madhoney banner</code> nebo v dashboardu. Ten, na který se díváš, vykresluje živě bot.",
     "featEyebrow": "Vše zahrnuto",
     "featH2": "Malá vosa, rychlé žihadlo.",
@@ -587,8 +587,8 @@
     "feat2P": "Každý ban se nahlásí do kanálu týmu: kdo, kdy a co napsal. Tlačítko <b>Zrušit ban</b> na jedno kliknutí, pokud drát spustil zvědavý člověk.",
     "feat3H": "Univerzální seznam banů",
     "feat3P": "Každý úlovek honeypotu, napříč všemi servery, přistane na jednom seznamu. Zapoj se a známí spammeři jsou zabanováni ve chvíli, kdy se připojí k tvému serveru (nebo všichni najednou přes Zabanovat ze seznamu). Kdykoli se můžeš odhlásit - tvoje vlastní úlovky zůstanou tvoje. Vrácení zpět odebere uživatele ze seznamu všude.",
-    "feat4H": "Nečte tvoje zprávy",
-    "feat4P": "Past se spustí podle toho, <b>kam</b> byla zpráva napsána, nikdy podle toho, co říká. Žádná externí databáze, žádná analytika. Tým a vlastníci jsou vždy vyňati.",
+    "feat4H": "Čte co nejméně",
+    "feat4P": "Honeypot se nikdy nedívá na to, co zpráva říká, jen na to, že padla do pasti. Detekce kompromitovaných účtů je jediná výjimka: porovnává členovy vlastní nedávné zprávy, aby odhalila ukradený účet - jen v paměti, nikdy se nezapisuje na disk. Žádné profilování, žádná analytika. Moderátoři a vlastníci jsou vždy vyňati.",
     "feat5H": "Webový dashboard",
     "feat5P": "Přihlas se přes Discord a spravuj jakýkoli server, kde máš <b>Spravovat server</b>: konfiguraci, ověřovací zprávu, návrháře banneru, akce nasazení a log banů.",
     "feat6H": "Dostupný zdrojový kód",
@@ -639,6 +639,10 @@
     "tour3H": "Zachyť ukradený účet.",
     "tour3P": "Když někdo unese účet důvěryhodného člena, rozešle stejnou zprávu naráz do všech kanálů. Nastav, kolik kanálů a jak rychle se počítá jako spamová vlna a co s tím má MadHoney udělat.",
     "tour4H": "Past, která lidi varuje.",
-    "tour4P": "Navrhni si výstražný banner připnutý v honeypotu — text, barvy, font, logo, zkreslení. Skuteční členové vidí jasné varování; boti, kteří ho nepřečtou, vejdou rovnou dovnitř."
+    "tour4P": "Navrhni si výstražný banner připnutý v honeypotu — text, barvy, font, logo, zkreslení. Skuteční členové vidí jasné varování; boti, kteří ho nepřečtou, vejdou rovnou dovnitř.",
+    "feat7H": "Odhalí ukradené účty",
+    "feat7P": "Ukradený účet je už ověřený a server mu už věří, takže ho žádná kontrola u dveří nezastaví. Když začne během několika sekund rozsévat stejnou zprávu napříč tvými kanály, MadHoney ten vzorec pozná a zasáhne - nahlásí to, kickne, dá do karantény s nutností se znovu ověřit, nebo zabanuje. Ty rozhoduješ, server po serveru.",
+    "feat8H": "Záchranné brzdy",
+    "feat8P": "Když honeypot spustí víc než 5krát za 3 minuty, režim raidu kickuje místo banování a nepřidá nic na společný seznam, dokud to moderátor nepotvrdí - špatných pár minut na jednom serveru tak nikdy nemůže zabanovat nikoho v celé síti. Kontrola stavu tě navíc upozorní, když je funkce zapnutá, ale chybí jí potřebné oprávnění."
   }
 }

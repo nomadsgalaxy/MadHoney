@@ -574,10 +574,10 @@
     "f2P": "Ponle al señuelo el nombre de un canal normal (<code>general-2</code>, <code>chat-2</code>) y un bot indiscriminado entra derecho. Le parece un sitio más donde hacer spam.",
     "f3H": "No pueden leer la advertencia",
     "f3P": "El único contenido del honeypot es una imagen. Un humano lee \"no publiques aquí\" y se retira; un bot no puede interpretar una imagen, así que publica de todos modos y activa la trampa.",
-    "f4H": "Ningún humano cae en la trampa",
-    "f4P": "El rol de verificado oculta el honeypot a todos los que superaron el captcha. Los miembros reales ni siquiera ven el canal, así que lo único que cae en él es un bot.",
+    "f4H": "Los errores se pueden deshacer",
+    "f4P": "El rol verificado oculta el honeypot a todo el que ha pasado el captcha, así que tus miembros ni ven el canal. Una cuenta que escriba ahí antes de verificarse aún puede activarlo, y por eso una ráfaga de capturas se expulsa en vez de banear hasta que un moderador lo revise.",
     "showEyebrow": "Diseñador de banners",
-    "showH3": "Ningún humano tiene excusa.",
+    "showH3": "Haz que la advertencia no se pueda ignorar.",
     "showP": "MadHoney genera el banner de peligro que queda fijado en el honeypot: tu titular, el texto del cuerpo, los colores, las fuentes, incluso el logo de tu comunidad. Diséñalo con <code>/madhoney banner</code> o en el panel. El que estás viendo lo renderiza el bot en vivo.",
     "featEyebrow": "Todo incluido",
     "featH2": "Avispa pequeña, picadura rápida.",
@@ -587,8 +587,8 @@
     "feat2P": "Cada baneo se informa en un canal del equipo: quién, cuándo y qué publicó. Botón de <b>Desbanear</b> con un solo clic si un humano curioso cayó en la trampa.",
     "feat3H": "Lista universal de baneos",
     "feat3P": "Cada captura del honeypot, en todos los servidores, cae en una sola lista. Adhiérete y los spammers conocidos son baneados en cuanto entran en el tuyo (o todos a la vez con Banear desde la lista). Cancela cuando quieras - tus propias capturas siguen siendo tuyas. Un Deshacer elimina a un usuario de la lista en todas partes.",
-    "feat4H": "No lee tus mensajes",
-    "feat4P": "La trampa se activa por <b>dónde</b> se publicó un mensaje, nunca por lo que dice. Sin base de datos externa, sin analíticas. El equipo y los propietarios siempre están exentos.",
+    "feat4H": "Lee lo menos posible",
+    "feat4P": "El honeypot nunca mira lo que dice un mensaje, solo que se publicó en la trampa. La detección de cuentas comprometidas es la única excepción: compara los mensajes recientes del propio miembro para detectar una cuenta robada, solo en memoria, nunca escrita en disco. Sin perfilado, sin analítica. El equipo y los propietarios siempre están exentos.",
     "feat5H": "Panel web",
     "feat5P": "Inicia sesión con Discord y gestiona cualquier servidor donde tengas <b>Gestionar servidor</b>: configuración, mensaje de verificación, diseñador de banners, acciones de despliegue y el registro de baneos.",
     "feat6H": "Código disponible",
@@ -639,6 +639,10 @@
     "tour3H": "Detecta una cuenta robada.",
     "tour3P": "Cuando secuestran la cuenta de un miembro de confianza, esta difunde el mismo mensaje en todos los canales a la vez. Tú decides cuántos canales y en cuánto tiempo cuentan como ráfaga, y qué debe hacer MadHoney al respecto.",
     "tour4H": "Una trampa que avisa a los humanos.",
-    "tour4P": "Diseña el banner de peligro que queda fijado en tu honeypot — texto, colores, fuente, logo, distorsión. Los miembros reales ven un aviso claro; los bots que no pueden leerlo entran de cabeza."
+    "tour4P": "Diseña el banner de peligro que queda fijado en tu honeypot — texto, colores, fuente, logo, distorsión. Los miembros reales ven un aviso claro; los bots que no pueden leerlo entran de cabeza.",
+    "feat7H": "Detecta cuentas robadas",
+    "feat7P": "Una cuenta robada ya está verificada y ya tiene tu confianza, así que ningún control en la puerta la detiene. Cuando lanza el mismo mensaje por todos tus canales en segundos, MadHoney reconoce el patrón y actúa: avisar, expulsar, poner en cuarentena para que tenga que verificarse de nuevo, o banear. Tú decides, en cada servidor.",
+    "feat8H": "Frenos de seguridad",
+    "feat8P": "Si el honeypot se activa más de 5 veces en 3 minutos, el modo raid expulsa en vez de banear y no añade nada a la lista compartida hasta que un moderador lo confirme: unos malos minutos en un servidor nunca podrán banear a nadie en toda la red. La comprobación de estado también te avisa cuando una función está activada pero le falta un permiso que necesita."
   }
 }

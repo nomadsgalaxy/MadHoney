@@ -574,10 +574,10 @@
     "f2P": "Dê à isca o nome de um canal comum (<code>general-2</code>, <code>chat-2</code>) e um bot indiscriminado entra direto. Parece só mais um lugar para spammar.",
     "f3H": "Eles não conseguem ler o aviso",
     "f3P": "O único conteúdo do honeypot é uma imagem. Um humano lê \"não poste aqui\" e recua; um bot não consegue interpretar uma imagem, então posta mesmo assim e cai na armadilha.",
-    "f4H": "Nenhum humano é pego",
-    "f4P": "O cargo Verified esconde o honeypot de todos que passaram no captcha. Membros reais nunca chegam a ver o canal, então a única coisa que cai nele é um bot.",
+    "f4H": "Erros podem ser desfeitos",
+    "f4P": "O cargo verificado esconde o honeypot de todo mundo que passou pelo captcha, então seus membros nem veem o canal. Uma conta que postar lá antes de se verificar ainda pode acioná-lo, e é por isso que uma rajada de capturas é expulsa em vez de banida até um moderador olhar.",
     "showEyebrow": "Designer de banner",
-    "showH3": "Nenhum humano tem desculpa.",
+    "showH3": "Deixe o aviso impossível de ignorar.",
     "showP": "O MadHoney gera o banner de alerta que fica fixado no honeypot: seu título, texto do corpo, cores, fontes, até o logo da sua comunidade. Crie com <code>/madhoney banner</code> ou no painel. O que você está vendo é renderizado ao vivo pelo bot.",
     "featEyebrow": "Tudo incluído",
     "featH2": "Vespa pequena, ferroada rápida.",
@@ -587,8 +587,8 @@
     "feat2P": "Todo banimento é reportado a um canal da equipe: quem, quando e o que a pessoa postou. Botão <b>Desbanir</b> com um clique caso um humano curioso caia na armadilha.",
     "feat3H": "Lista universal de banimentos",
     "feat3P": "Cada captura de honeypot, em todos os servidores, vai parar em uma só lista. Ative e os spammers conhecidos são banidos no momento em que entram no seu (ou todos de uma vez com Banir da Lista). Desative quando quiser - suas próprias capturas continuam suas. Um Desfazer remove um usuário da lista em todos os lugares.",
-    "feat4H": "Não lê suas mensagens",
-    "feat4P": "A armadilha dispara pelo <b>onde</b> a mensagem foi postada, nunca pelo que ela diz. Sem banco de dados externo, sem analytics. Equipe e donos são sempre isentos.",
+    "feat4H": "Lê o mínimo possível",
+    "feat4P": "O honeypot nunca olha o que uma mensagem diz, só que ela foi postada na armadilha. A detecção de contas comprometidas é a única exceção: ela compara as mensagens recentes do próprio membro para identificar uma conta roubada, só em memória, nunca gravada em disco. Sem perfilamento, sem analytics. Staff e proprietários estão sempre isentos.",
     "feat5H": "Painel web",
     "feat5P": "Entre com o Discord e gerencie qualquer servidor onde você tem <b>Gerenciar Servidor</b>: configuração, mensagem de verificação, designer de banner, ações de implantação e o log de banimentos.",
     "feat6H": "Código disponível",
@@ -639,6 +639,10 @@
     "tour3H": "Flagre uma conta roubada.",
     "tour3P": "Quando a conta de um membro de confiança é sequestrada, ela dispara a mesma mensagem em todos os canais de uma vez. Defina quantos canais e em quanto tempo contam como um disparo, e o que o MadHoney deve fazer a respeito.",
     "tour4H": "Uma armadilha que avisa os humanos.",
-    "tour4P": "Crie o banner de alerta fixado no seu honeypot — texto, cores, fonte, logo, distorção. Membros reais veem um aviso claro; bots que não conseguem lê-lo entram direto."
+    "tour4P": "Crie o banner de alerta fixado no seu honeypot — texto, cores, fonte, logo, distorção. Membros reais veem um aviso claro; bots que não conseguem lê-lo entram direto.",
+    "feat7H": "Pega contas roubadas",
+    "feat7P": "Uma conta roubada já está verificada e já tem confiança, então nenhuma checagem na porta a barra. Quando ela despeja a mesma mensagem em todos os seus canais em segundos, o MadHoney reconhece o padrão e age: avisar, expulsar, colocar em quarentena para forçar nova verificação, ou banir. Você decide, por servidor.",
+    "feat8H": "Freios de segurança",
+    "feat8P": "Se o honeypot disparar mais de 5 vezes em 3 minutos, o modo raid expulsa em vez de banir e não adiciona nada à lista compartilhada até um moderador confirmar - alguns minutos ruins em um servidor nunca conseguem banir ninguém na rede toda. A verificação de saúde também avisa quando um recurso está ligado mas falta uma permissão de que ele precisa."
   }
 }

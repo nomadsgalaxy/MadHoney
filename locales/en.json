@@ -574,10 +574,10 @@
     "f2P": "Name the decoy like a normal channel (<code>general-2</code>, <code>chat-2</code>) and an indiscriminate bot walks straight in. It looks like just another place to spam.",
     "f3H": "They can't read the warning",
     "f3P": "The honeypot's only content is an image. A human reads \"don't post here\" and backs off; a bot can't parse a picture, so it posts anyway and trips the trap.",
-    "f4H": "No human gets caught",
-    "f4P": "The verified role hides the honeypot from everyone who passed the captcha. Real members never even see the channel, so the only thing that ever lands in it is a bot.",
+    "f4H": "Mistakes are reversible",
+    "f4P": "The verified role hides the honeypot from everyone who has passed the captcha, so your members never even see the channel. An account that posts there before verifying can still trip it, which is why a burst of catches is kicked rather than banned until a moderator looks.",
     "showEyebrow": "Banner designer",
-    "showH3": "No human has an excuse.",
+    "showH3": "Make the warning unmissable.",
     "showP": "MadHoney generates the hazard banner that sits pinned in the honeypot: your headline, body text, colors, fonts, even your community's logo. Design it with <code>/madhoney banner</code> or in the dashboard. The one you're looking at is rendered live by the bot.",
     "featEyebrow": "Everything included",
     "featH2": "Small wasp, quick sting.",
@@ -587,8 +587,8 @@
     "feat2P": "Every ban is reported to a staff channel: who, when, and what they posted. One-click <b>Unban</b> button if a curious human tripped the wire.",
     "feat3H": "Universal ban list",
     "feat3P": "Every honeypot catch, across every server, lands on one list. Opt in and known spammers are banned the moment they join yours (or all at once with Ban from List). Opt out anytime - your own catches stay yours. An Undo removes a user from the list everywhere.",
-    "feat4H": "Doesn't read your messages",
-    "feat4P": "The trap fires on <b>where</b> a message was posted, never on what it says. No external database, no analytics. Staff and owners are always exempt.",
+    "feat4H": "Reads as little as it can",
+    "feat4P": "The honeypot never looks at what a message says, only that it was posted in the trap. Compromised-account detection is the one exception: it compares a member's own recent messages to spot a hijacked account, in memory only, never written to disk. No profiling, no analytics. Staff and owners are always exempt.",
     "feat5H": "Web dashboard",
     "feat5P": "Log in with Discord and manage any server where you have <b>Manage Server</b>: config, verify message, banner designer, deploy actions, and the ban log.",
     "feat6H": "Source Available",
@@ -639,6 +639,10 @@
     "tour3H": "Catch a stolen account.",
     "tour3P": "When a trusted member gets hijacked, it blasts the same message into every channel at once. Set how many channels and how fast counts as a blast, and what MadHoney should do about it.",
     "tour4H": "A trap that warns humans.",
-    "tour4P": "Design the hazard banner pinned in your honeypot — wording, colours, font, logo, distortion. Real members see a clear warning; bots that cannot read it walk straight in."
+    "tour4P": "Design the hazard banner pinned in your honeypot — wording, colours, font, logo, distortion. Real members see a clear warning; bots that cannot read it walk straight in.",
+    "feat7H": "Catches hijacked accounts",
+    "feat7P": "A stolen account is already verified and already trusted, so no door check stops it. When one blasts the same message across your channels within seconds, MadHoney spots the pattern and acts - report it, kick, quarantine so they must re-verify, or ban. Your choice, per server.",
+    "feat8H": "Safety rails",
+    "feat8P": "If the honeypot fires more than 5 times in 3 minutes, raid mode kicks instead of banning and adds nothing to the shared list until a moderator confirms it - a bad few minutes on one server can never ban anyone network-wide. The health check also warns you when a feature is switched on but missing a permission it needs."
   }
 }

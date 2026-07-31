@@ -574,10 +574,10 @@
     "f2P": "Namnge lockbetet som en vanlig kanal (<code>general-2</code>, <code>chat-2</code>) så går en urskillningslös bott rakt in. Det ser bara ut som ännu ett ställe att spamma på.",
     "f3H": "De kan inte läsa varningen",
     "f3P": "Honeypottens enda innehåll är en bild. En människa läser \"posta inte här\" och backar undan; en bott kan inte tolka en bild, så den postar ändå och utlöser fällan.",
-    "f4H": "Ingen människa fastnar",
-    "f4P": "Den verifierade rollen döljer honeypotten för alla som klarade captchan. Riktiga medlemmar ser aldrig ens kanalen, så det enda som någonsin landar i den är en bott.",
+    "f4H": "Misstag går att ångra",
+    "f4P": "Den verifierade rollen döljer honeypotten för alla som klarat captchan, så dina medlemmar ser inte ens kanalen. Ett konto som postar där innan det verifierat sig kan ändå utlösa den, och därför blir en skur av fångster utkastad i stället för bannad tills en moderator hunnit titta.",
     "showEyebrow": "Bannerdesigner",
-    "showH3": "Ingen människa har någon ursäkt.",
+    "showH3": "Gör varningen omöjlig att missa.",
     "showP": "MadHoney genererar varningsbannern som sitter fäst i honeypotten: din rubrik, brödtext, färger, teckensnitt, till och med din communitys logotyp. Designa den med <code>/madhoney banner</code> eller i panelen. Den du tittar på renderas live av botten.",
     "featEyebrow": "Allt ingår",
     "featH2": "Liten geting, snabbt stick.",
@@ -587,8 +587,8 @@
     "feat2P": "Varje banning rapporteras till en personalkanal: vem, när och vad de postade. En <b>Avbanna</b>-knapp med ett klick om en nyfiken människa råkade utlösa fällan.",
     "feat3H": "Universell banlista",
     "feat3P": "Varje honeypot-fångst, över alla servrar, landar på en lista. Välj att delta så bannas kända spammare i samma stund de går med i din (eller alla på en gång med Banna från lista). Avsluta när som helst - dina egna fångster förblir dina. En Ångra tar bort en användare från listan överallt.",
-    "feat4H": "Läser inte dina meddelanden",
-    "feat4P": "Fällan utlöses av <b>var</b> ett meddelande postades, aldrig av vad det säger. Ingen extern databas, ingen analys. Personal och ägare är alltid undantagna.",
+    "feat4H": "Läser så lite som möjligt",
+    "feat4P": "Honeypotten tittar aldrig på vad ett meddelande säger, bara på att det postades i fällan. Upptäckt av kapade konton är det enda undantaget: den jämför medlemmens egna senaste meddelanden för att känna igen ett kapat konto, bara i minnet, aldrig skrivet till disk. Ingen profilering, ingen analys. Staben och ägare är alltid undantagna.",
     "feat5H": "Webbpanel",
     "feat5P": "Logga in med Discord och hantera vilken server som helst där du har <b>Hantera server</b>: konfiguration, verifieringsmeddelande, bannerdesigner, driftsättningsåtgärder och banningloggen.",
     "feat6H": "Källkod tillgänglig",
@@ -639,6 +639,10 @@
     "tour3H": "Fånga ett kapat konto.",
     "tour3P": "När en betrodd medlems konto kapas spammar det ut samma meddelande i alla kanaler på en gång. Ställ in hur många kanaler och hur snabbt som räknas som en spamvåg, och vad MadHoney ska göra åt det.",
     "tour4H": "En fälla som varnar människor.",
-    "tour4P": "Designa varningsbannern som sitter fäst i din honeypot — ordval, färger, teckensnitt, logotyp, förvrängning. Riktiga medlemmar ser en tydlig varning; bottar som inte kan läsa den går rakt in."
+    "tour4P": "Designa varningsbannern som sitter fäst i din honeypot — ordval, färger, teckensnitt, logotyp, förvrängning. Riktiga medlemmar ser en tydlig varning; bottar som inte kan läsa den går rakt in.",
+    "feat7H": "Fångar kapade konton",
+    "feat7P": "Ett stulet konto är redan verifierat och redan betrott, så ingen kontroll vid dörren stoppar det. När det skickar samma meddelande i alla dina kanaler inom sekunder känner MadHoney igen mönstret och agerar - rapportera, kasta ut, karantän så att kontot måste verifiera sig igen, eller banna. Du väljer, per server.",
+    "feat8H": "Säkerhetsbromsar",
+    "feat8P": "Om honeypotten utlöses mer än 5 gånger på 3 minuter kastar raidläget ut i stället för att banna och lägger inte till något på den delade listan förrän en moderator bekräftat - några dåliga minuter på en server kan därför aldrig banna någon i hela nätverket. Hälsokontrollen varnar dig också när en funktion är påslagen men saknar en behörighet den behöver."
   }
 }

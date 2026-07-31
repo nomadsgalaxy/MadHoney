@@ -6,7 +6,7 @@ export const TERMS = `
 <h1><img src="/logo.svg?v=3" alt="">Terms of <span>Service</span></h1>
 <p><a href="/">← home</a></p>
 <div class="card">
-<p><small>Effective 2026-07-05. MadHoney is operated by <a href="https://nomadsgalaxy.com" target="_blank" rel="noopener">Nomads Galaxy</a> ("we").
+<p><small>Effective 2026-07-31. MadHoney is operated by <a href="https://nomadsgalaxy.com" target="_blank" rel="noopener">Nomads Galaxy</a> ("we").
 "The service" means the hosted MadHoney Discord bot and the dashboard at
 madhoney.nomadsgalaxy.com.</small></p>
 
@@ -19,9 +19,13 @@ time.</p>
 <h2>Your responsibilities</h2>
 <p>You need the Manage Server permission in a Discord server to configure
 MadHoney there. What the bot does in your server, it does on your
-instruction: bans issued through the honeypot or automated spam /
-compromised-account detection, channel gating, and role changes are your
-moderation decisions, and the Undo button exists for a reason. You are responsible for complying with
+instruction: bans, kicks and quarantines issued through the honeypot or
+automated spam / compromised-account detection, channel gating, and role
+changes are your moderation decisions, and the Undo button exists for a
+reason. Automatic safeguards - raid mode downgrading a burst to a kick, or a
+health check refusing to run something unsafe - reduce the damage a
+misconfiguration can do, but they do not make the configuration ours. Review
+what your server catches. You are responsible for complying with
 <a href="https://discord.com/terms" target="_blank" rel="noopener">Discord's Terms of Service</a> and
 Community Guidelines.</p>
 <p>If your community includes members who rely on text-to-speech or screen
@@ -68,18 +72,35 @@ export const PRIVACY = `
 <h1><img src="/logo.svg?v=3" alt="">Privacy <span>Policy</span></h1>
 <p><a href="/">← home</a></p>
 <div class="card">
-<p><small>Effective 2026-07-05. This covers the hosted MadHoney bot and the
+<p><small>Effective 2026-07-31. This covers the hosted MadHoney bot and the
 dashboard at madhoney.nomadsgalaxy.com, operated by <a href="https://nomadsgalaxy.com" target="_blank" rel="noopener">Nomads Galaxy</a>.</small></p>
 
 <h2>What we store</h2>
-<p>Two files, and that's the whole database:</p>
+<p>Three tables, and that's the whole database:</p>
 <p><b>Server configuration</b> - for each server: the chosen role and channel
 IDs, your verify message, banner design settings, your per-channel gating
-choices, and whether ban sharing is on.</p>
-<p><b>Ban log</b> - when the honeypot bans someone (or an admin undoes a
-ban): the Discord user ID, username, server ID, channel name, and timestamp.
+choices, whether ban sharing is on, and your compromised-account and raid-mode
+settings. So that your own staff can see who changed what, we also record the
+Discord ID, username and timestamp of the dashboard user who first set the
+server up and of whoever last changed a setting.</p>
+<p><b>Ban log</b> - when MadHoney acts on an account (or an admin undoes it):
+the Discord user ID, username, server ID, channel name, and timestamp. Kicks
+and quarantines are recorded here too, not only bans. Each entry also carries
+an incident ID, so the several messages of one spam blast are grouped as one
+event rather than looking like several offenders; a count of how many times
+that account has been caught in that server; and flags noting whether the entry
+was held back from the shared ban list or happened during a detected burst.
 Ban entries are what powers the log channel, the dashboard's ban list, and
 (only for opted-in servers) cross-server ban sharing.</p>
+<p><b>Appeals</b> - if a server turns appeals on: that a given user appealed a
+given ban, and when. Not the text of the appeal.</p>
+
+<h2>Where it lives</h2>
+<p>The database is <b>Cloudflare D1</b>, so Cloudflare stores the above on our
+behalf and <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">their privacy policy</a>
+covers that. The bot keeps a mirror copy on its own machine so it can keep
+working if D1 is unreachable. Nothing goes anywhere else - there is no
+third-party analytics, logging or moderation service in the path.</p>
 
 <h2>Message content</h2>
 <p>The spam trap fires on <i>where</i> a message is posted - a decoy honeypot
@@ -106,16 +127,21 @@ with permission flags, and use them only to show you the servers you can
 manage. Sessions live in server memory and disappear on logout or when the
 bot restarts. The only cookie is a session ID; there are no tracking
 cookies.</p>
-<p>The site is served through Cloudflare (their edge handles TLS and
-caching; <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">their policy</a>
-applies to that hop) and loads fonts from Google Fonts.</p>
+<p>The site is served through Cloudflare's edge, which handles TLS and caching,
+and loads fonts from Google Fonts.</p>
 
 <h2>The universal ban list and your data</h2>
 <p>If a MadHoney honeypot bans you in any server, the record (your Discord
 user ID) lands on the universal ban list. Servers that opted in to the list
 may ban you when you join them. An admin unbanning you removes that effect
-everywhere. If you believe you're on the list wrongly, ask the server that
-banned you to undo it, or
+everywhere.</p>
+<p>Two things deliberately keep entries <i>off</i> that list. If a server's
+honeypot fires many times in a few minutes, MadHoney treats the burst as
+unexplained: it kicks rather than bans, and adds nobody to the shared list
+until one of that server's moderators confirms it - so a single
+misconfigured server cannot ban you everywhere. Servers that have not
+finished setting up don't contribute to the list at all. If you believe
+you're on the list wrongly, ask the server that banned you to undo it, or
 <a href="https://github.com/nomadsgalaxy/MadHoney/issues" target="_blank" rel="noopener">open a GitHub issue</a>
 and we'll look at the record.</p>
 

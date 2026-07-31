@@ -574,10 +574,10 @@
     "f2P": "Chiama l'esca come un canale normale (<code>general-2</code>, <code>chat-2</code>) e un bot indiscriminato ci entra dritto dentro. Sembra solo un altro posto dove spammare.",
     "f3H": "Non sanno leggere l'avviso",
     "f3P": "L'unico contenuto dell'honeypot è un'immagine. Un umano legge \"non pubblicare qui\" e si tira indietro; un bot non sa interpretare un'immagine, quindi pubblica lo stesso e fa scattare la trappola.",
-    "f4H": "Nessun umano viene catturato",
-    "f4P": "Il ruolo verificato nasconde l'honeypot a chiunque abbia superato il captcha. I membri reali non vedono nemmeno il canale, quindi l'unica cosa che ci finisce dentro è un bot.",
+    "f4H": "Gli errori si possono annullare",
+    "f4P": "Il ruolo verificato nasconde l'honeypot a chiunque abbia superato il captcha, quindi i tuoi membri non vedono nemmeno il canale. Un account che scrive lì prima di verificarsi può comunque farlo scattare: per questo una raffica di catture viene espulsa invece che bannata, finché un moderatore non controlla.",
     "showEyebrow": "Designer del banner",
-    "showH3": "Nessun umano ha scuse.",
+    "showH3": "Rendi l'avviso impossibile da ignorare.",
     "showP": "MadHoney genera il banner di pericolo che resta fissato nell'honeypot: il tuo titolo, il testo, i colori, i font, persino il logo della tua community. Progettalo con <code>/madhoney banner</code> o dalla dashboard. Quello che stai guardando è generato in tempo reale dal bot.",
     "featEyebrow": "Tutto incluso",
     "featH2": "Vespa piccola, puntura fulminea.",
@@ -587,8 +587,8 @@
     "feat2P": "Ogni ban viene segnalato in un canale dello staff: chi, quando e cosa ha pubblicato. Un pulsante <b>Sbanna</b> con un clic se un umano curioso fa scattare il filo.",
     "feat3H": "Lista di ban universale",
     "feat3P": "Ogni cattura dell'honeypot, su ogni server, finisce in un'unica lista. Attivala e gli spammer noti vengono bannati nel momento in cui entrano nel tuo (o tutti insieme con Banna dalla lista). Disattivala quando vuoi - le tue catture restano tue. Un Annulla rimuove un utente dalla lista ovunque.",
-    "feat4H": "Non legge i tuoi messaggi",
-    "feat4P": "La trappola scatta in base a <b>dove</b> è stato pubblicato un messaggio, mai in base a cosa dice. Nessun database esterno, nessuna analisi. Staff e proprietari sono sempre esenti.",
+    "feat4H": "Legge il meno possibile",
+    "feat4P": "L'honeypot non guarda mai cosa dice un messaggio, solo che è stato scritto nella trappola. Il rilevamento degli account compromessi è l'unica eccezione: confronta i messaggi recenti del membro stesso per riconoscere un account rubato, solo in memoria, mai scritto su disco. Nessuna profilazione, nessuna analisi. Staff e proprietari sono sempre esclusi.",
     "feat5H": "Dashboard web",
     "feat5P": "Accedi con Discord e gestisci qualsiasi server in cui hai <b>Gestisci server</b>: configurazione, messaggio di verifica, designer del banner, azioni di deploy e il registro dei ban.",
     "feat6H": "Codice disponibile",
@@ -639,6 +639,10 @@
     "tour3H": "Becca un account rubato.",
     "tour3P": "Quando a un membro fidato rubano l'account, lo stesso messaggio parte in tutti i canali insieme. Imposta quanti canali e in quanto tempo contano come ondata, e cosa deve fare MadHoney quando succede.",
     "tour4H": "Una trappola che avvisa gli umani.",
-    "tour4P": "Progetta il banner di pericolo che resta fissato nel tuo honeypot — testo, colori, font, logo, distorsione. I membri veri vedono un avviso chiaro; i bot, che non riescono a leggerlo, entrano dritti dentro."
+    "tour4P": "Progetta il banner di pericolo che resta fissato nel tuo honeypot — testo, colori, font, logo, distorsione. I membri veri vedono un avviso chiaro; i bot, che non riescono a leggerlo, entrano dritti dentro.",
+    "feat7H": "Riconosce gli account rubati",
+    "feat7P": "Un account rubato è già verificato e già considerato affidabile, nessun controllo all'ingresso lo ferma. Quando spara lo stesso messaggio in tutti i tuoi canali in pochi secondi, MadHoney riconosce lo schema e agisce: segnalare, espellere, mettere in quarantena così deve verificarsi di nuovo, o bannare. Scegli tu, server per server.",
+    "feat8H": "Freni di sicurezza",
+    "feat8P": "Se l'honeypot scatta più di 5 volte in 3 minuti, la modalità raid espelle invece di bannare e non aggiunge nulla alla lista condivisa finché un moderatore non conferma: pochi minuti difficili su un server non possono mai bannare nessuno su tutta la rete. Il controllo di stato ti avvisa anche quando una funzione è attiva ma le manca un permesso necessario."
   }
 }

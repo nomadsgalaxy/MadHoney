@@ -574,10 +574,10 @@
     "f2P": "Benenne den Köder wie einen normalen Kanal (<code>general-2</code>, <code>chat-2</code>), und ein wahlloser Bot marschiert direkt hinein. Er sieht aus wie nur ein weiterer Ort zum Spammen.",
     "f3H": "Sie können die Warnung nicht lesen",
     "f3P": "Der einzige Inhalt des Honeypots ist ein Bild. Ein Mensch liest \"hier nicht posten\" und lässt die Finger davon; ein Bot kann ein Bild nicht auswerten, also postet er trotzdem und löst die Falle aus.",
-    "f4H": "Kein Mensch tappt hinein",
-    "f4P": "Die Verifiziert-Rolle verbirgt den Honeypot vor allen, die das Captcha bestanden haben. Echte Mitglieder sehen den Kanal nie, sodass immer nur ein Bot darin landet.",
+    "f4H": "Fehler lassen sich zurücknehmen",
+    "f4P": "Die Verified-Rolle verbirgt den Honeypot vor allen, die das Captcha bestanden haben - deine Mitglieder sehen den Kanal gar nicht. Ein Konto, das dort vor der Verifizierung schreibt, kann die Falle trotzdem auslösen. Genau deshalb wird bei einer Serie von Fängen gekickt statt gebannt, bis ein Moderator nachsieht.",
     "showEyebrow": "Banner-Designer",
-    "showH3": "Kein Mensch hat eine Ausrede.",
+    "showH3": "Mach die Warnung unübersehbar.",
     "showP": "MadHoney erzeugt das Warnbanner, das im Honeypot angepinnt ist: deine Überschrift, dein Textkörper, Farben, Schriftarten, sogar das Logo deiner Community. Gestalte es mit <code>/madhoney banner</code> oder im Dashboard. Das, das du gerade siehst, wird live vom Bot gerendert.",
     "featEyebrow": "Alles inklusive",
     "featH2": "Kleine Wespe, schneller Stich.",
@@ -587,8 +587,8 @@
     "feat2P": "Jeder Bann wird an einen Team-Kanal gemeldet: wer, wann und was gepostet wurde. Ein-Klick-<b>Entbannen</b>-Button, falls ein neugieriger Mensch die Falle ausgelöst hat.",
     "feat3H": "Universelle Bannliste",
     "feat3P": "Jeder Honeypot-Fang, über alle Server hinweg, landet auf einer Liste. Aktiviere sie, und bekannte Spammer werden in dem Moment gebannt, in dem sie deinem Server beitreten (oder alle auf einmal mit \"Aus Liste bannen\"). Deaktiviere sie jederzeit - deine eigenen Fänge bleiben deine. Ein Rückgängig entfernt einen Nutzer überall von der Liste.",
-    "feat4H": "Liest deine Nachrichten nicht",
-    "feat4P": "Die Falle schnappt danach zu, <b>wo</b> eine Nachricht gepostet wurde, nie danach, was sie sagt. Keine externe Datenbank, keine Analyse. Team und Inhaber sind immer ausgenommen.",
+    "feat4H": "Liest so wenig wie möglich",
+    "feat4P": "Der Honeypot schaut nie darauf, was eine Nachricht sagt, nur darauf, dass sie in der Falle gepostet wurde. Die Erkennung übernommener Konten ist die einzige Ausnahme: Sie vergleicht die eigenen letzten Nachrichten eines Mitglieds, um ein gekapertes Konto zu erkennen - nur im Arbeitsspeicher, nie auf die Festplatte geschrieben. Kein Profiling, keine Analyse. Team und Inhaber sind immer ausgenommen.",
     "feat5H": "Web-Dashboard",
     "feat5P": "Melde dich mit Discord an und verwalte jeden Server, auf dem du <b>Server verwalten</b> hast: Konfiguration, Verifizierungs-Nachricht, Banner-Designer, Bereitstellungs-Aktionen und das Bann-Log.",
     "feat6H": "Quelltext verfügbar",
@@ -639,6 +639,10 @@
     "tour3H": "Fang einen gekaperten Account.",
     "tour3P": "Wird ein vertrauenswürdiges Mitglied gekapert, feuert der Account dieselbe Nachricht auf einen Schlag in jeden Kanal. Leg fest, ab wie vielen Kanälen und wie schnell hintereinander das als Welle zählt, und was MadHoney dagegen tun soll.",
     "tour4H": "Eine Falle, die Menschen warnt.",
-    "tour4P": "Gestalte das Warnbanner, das in deinem Honeypot angepinnt ist — Text, Farben, Schrift, Logo, Verzerrung. Echte Mitglieder sehen eine klare Warnung; Bots, die sie nicht lesen können, marschieren direkt hinein."
+    "tour4P": "Gestalte das Warnbanner, das in deinem Honeypot angepinnt ist — Text, Farben, Schrift, Logo, Verzerrung. Echte Mitglieder sehen eine klare Warnung; Bots, die sie nicht lesen können, marschieren direkt hinein.",
+    "feat7H": "Erkennt gekaperte Konten",
+    "feat7P": "Ein gestohlenes Konto ist schon verifiziert und geniesst schon Vertrauen, keine Kontrolle an der Tür hält es auf. Wenn es dieselbe Nachricht innerhalb von Sekunden in alle deine Kanäle schleudert, erkennt MadHoney das Muster und handelt - melden, kicken, in Quarantäne stellen, sodass eine erneute Verifizierung nötig ist, oder bannen. Deine Entscheidung, pro Server.",
+    "feat8H": "Sicherheitsbremsen",
+    "feat8P": "Löst der Honeypot mehr als 5 Mal in 3 Minuten aus, kickt der Raid-Modus statt zu bannen und trägt nichts in die gemeinsame Liste ein, bis ein Moderator es bestätigt - ein paar schlechte Minuten auf einem Server können so niemals jemanden netzwerkweit bannen. Die Statusprüfung warnt dich außerdem, wenn eine Funktion aktiv ist, ihr aber eine nötige Berechtigung fehlt."
   }
 }

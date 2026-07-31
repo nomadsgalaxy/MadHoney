@@ -35,10 +35,10 @@
     "f2P": "Give the honeypot channel a usual name (<code>general-2</code>, <code>chat-2</code>). To a spam bot, it is one more place to spam. The spam bot goes in.",
     "f3H": "They cannot read the warning",
     "f3P": "The honeypot channel contains one image only. A human reads \"do not post here\" and stops. A spam bot cannot read a picture, so it posts and starts the trap.",
-    "f4H": "No human gets caught",
-    "f4P": "The verified role hides the honeypot channel from each member who completed the captcha. Real members do not see the channel. Only a spam bot can post in it.",
+    "f4H": "You can reverse a mistake",
+    "f4P": "The verified role hides the honeypot channel from each member who completed the captcha. Your members do not see the channel. An account that posts there before it verifies can still start the trap. For this reason, MadHoney kicks a burst of catches. It does not ban them until a moderator looks.",
     "showEyebrow": "Banner designer",
-    "showH3": "No human has an excuse.",
+    "showH3": "Make the warning easy to see.",
     "showP": "MadHoney makes the warning banner that stays in the honeypot channel. You set the headline, the text, the colors, the fonts, and your community logo. Design it with <code>/madhoney banner</code> or in the dashboard. The bot made the banner that you see here, live.",
     "featEyebrow": "Everything included",
     "featH2": "Small wasp, quick sting.",
@@ -48,8 +48,8 @@
     "feat2P": "MadHoney reports each ban to a staff channel: who, when, and the message. If a curious human started the trap, click <b>Unban</b> one time.",
     "feat3H": "Universal ban list",
     "feat3P": "Each honeypot catch, from each server, goes to one list. Opt in, and MadHoney bans known spammers when they join your server. You can also ban all of them at one time with Ban from List. Opt out at any time. Your catches then stay yours. Undo removes a user from the list on all servers.",
-    "feat4H": "Does not read your messages",
-    "feat4P": "The trap fires on <b>where</b> a message is, not on its text. There is no external database and there are no analytics. Staff and owners are always exempt.",
+    "feat4H": "It reads as little as possible",
+    "feat4P": "The honeypot does not look at the text of a message. It looks only at the channel the message is in. Compromised-account detection is the one exception. It compares the recent messages of one member to find a stolen account. This occurs in memory only. MadHoney does not write the text to a disk. There is no profiling and there are no analytics. Staff and owners are always exempt.",
     "feat5H": "Web dashboard",
     "feat5P": "Log in with Discord. Manage each server where you have <b>Manage Server</b>: configuration, verify message, banner designer, deploy actions, and the ban log.",
     "feat6H": "Source Available",
@@ -100,6 +100,10 @@
     "tour3H": "Catch a stolen account.",
     "tour3P": "A thief with a member account sends the same message to each channel at one time. You set the number of channels and the number of seconds that count as an attack. You also set what MadHoney must do.",
     "tour4H": "A trap that warns humans.",
-    "tour4P": "Design the warning banner in your honeypot channel: text, colors, font, logo, and distortion. Real members see a clear warning. A spam bot cannot read it and goes in."
+    "tour4P": "Design the warning banner in your honeypot channel: text, colors, font, logo, and distortion. Real members see a clear warning. A spam bot cannot read it and goes in.",
+    "feat7H": "It finds stolen accounts",
+    "feat7P": "A stolen account is already verified and already has trust. A check at the door cannot stop it. The account then sends the same message to many channels in a few seconds. MadHoney finds this pattern and does one of four actions: it makes a report, it kicks the account, it puts the account in quarantine to make it verify again, or it bans the account. You select the action for each server.",
+    "feat8H": "Safety brakes",
+    "feat8P": "The honeypot can start more than 5 times in 3 minutes. Raid mode then kicks each account. It does not ban them. It adds nothing to the shared list until a moderator agrees. Thus a few bad minutes on one server cannot ban a person on all servers. The health check also gives a warning if a function is on but does not have a necessary permission."
   }
 }

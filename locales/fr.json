@@ -574,10 +574,10 @@
     "f2P": "Nomme le leurre comme un salon normal (<code>general-2</code>, <code>chat-2</code>) et un bot sans discernement y entre tout droit. Ça ressemble juste à un endroit de plus où spammer.",
     "f3H": "Ils ne peuvent pas lire l'avertissement",
     "f3P": "Le seul contenu du honeypot est une image. Un humain lit « ne publie pas ici » et fait marche arrière ; un bot ne peut pas analyser une image, alors il publie quand même et déclenche le piège.",
-    "f4H": "Aucun humain ne se fait piéger",
-    "f4P": "Le rôle vérifié masque le honeypot à tous ceux qui ont réussi le captcha. Les vrais membres ne voient même jamais le salon, la seule chose qui y atterrit est donc un bot.",
+    "f4H": "Les erreurs se rattrapent",
+    "f4P": "Le rôle vérifié cache le honeypot à tous ceux qui ont passé le captcha : tes membres ne voient même pas le salon. Un compte qui y écrit avant de se vérifier peut quand même le déclencher, et c'est pourquoi une rafale de captures est expulsée plutôt que bannie jusqu'à ce qu'un modérateur regarde.",
     "showEyebrow": "Concepteur de bannière",
-    "showH3": "Aucun humain n'a d'excuse.",
+    "showH3": "Rends l'avertissement impossible à manquer.",
     "showP": "MadHoney génère la bannière d'avertissement épinglée dans le honeypot : ton titre, ton texte, tes couleurs, tes polices, et même le logo de ta communauté. Conçois-la avec <code>/madhoney banner</code> ou dans le tableau de bord. Celle que tu regardes est rendue en direct par le bot.",
     "featEyebrow": "Tout est inclus",
     "featH2": "Petite guêpe, piqûre rapide.",
@@ -587,8 +587,8 @@
     "feat2P": "Chaque bannissement est signalé dans un salon d'équipe : qui, quand et ce qu'il a publié. Un bouton <b>Débannir</b> en un clic si un humain curieux a déclenché le piège.",
     "feat3H": "Liste de bannissement universelle",
     "feat3P": "Chaque capture honeypot, sur tous les serveurs, atterrit sur une seule liste. Adhère et les spammeurs connus sont bannis dès qu'ils rejoignent le tien (ou tous d'un coup avec Bannir depuis la liste). Retire-toi à tout moment - tes propres captures restent les tiennes. Une annulation retire un utilisateur de la liste partout.",
-    "feat4H": "Ne lit pas tes messages",
-    "feat4P": "Le piège se déclenche selon l'<b>endroit</b> où un message a été publié, jamais selon son contenu. Aucune base de données externe, aucune analyse. L'équipe et les propriétaires sont toujours exemptés.",
+    "feat4H": "En lit le moins possible",
+    "feat4P": "Le honeypot ne regarde jamais ce que dit un message, seulement qu'il a été posté dans le piège. La détection de comptes compromis est la seule exception : elle compare les messages récents du membre lui-même pour repérer un compte piraté, en mémoire uniquement, jamais écrit sur disque. Aucun profilage, aucune analyse. L'équipe et les propriétaires sont toujours exemptés.",
     "feat5H": "Tableau de bord web",
     "feat5P": "Connecte-toi avec Discord et gère n'importe quel serveur où tu as <b>Gérer le serveur</b> : configuration, message de vérification, concepteur de bannière, actions de déploiement et le journal des bannissements.",
     "feat6H": "Source disponible",
@@ -639,6 +639,10 @@
     "tour3H": "Repère un compte piraté.",
     "tour3P": "Quand le compte d'un membre de confiance est piraté, il balance le même message dans tous les salons d'un coup. Définis à partir de combien de salons et à quelle vitesse ça compte comme une rafale, et ce que MadHoney doit en faire.",
     "tour4H": "Un piège qui prévient les humains.",
-    "tour4P": "Conçois la bannière d'avertissement épinglée dans ton honeypot — texte, couleurs, police, logo, distorsion. Les vrais membres sont clairement prévenus ; les bots qui ne savent pas la lire y entrent tout droit."
+    "tour4P": "Conçois la bannière d'avertissement épinglée dans ton honeypot — texte, couleurs, police, logo, distorsion. Les vrais membres sont clairement prévenus ; les bots qui ne savent pas la lire y entrent tout droit.",
+    "feat7H": "Repère les comptes piratés",
+    "feat7P": "Un compte volé est déjà vérifié et déjà digne de confiance, aucun contrôle à la porte ne l'arrête. Quand il balance le même message dans tous tes salons en quelques secondes, MadHoney reconnaît le schéma et agit : signaler, expulser, mettre en quarantaine pour forcer une nouvelle vérification, ou bannir. À toi de choisir, serveur par serveur.",
+    "feat8H": "Freins de sécurité",
+    "feat8P": "Si le honeypot se déclenche plus de 5 fois en 3 minutes, le mode raid expulse au lieu de bannir et n'ajoute rien à la liste partagée avant confirmation d'un modérateur : quelques mauvaises minutes sur un serveur ne peuvent jamais bannir qui que ce soit sur tout le réseau. Le bilan de santé te prévient aussi quand une fonction est activée mais qu'il lui manque une permission nécessaire."
   }
 }
