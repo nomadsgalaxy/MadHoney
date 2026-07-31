@@ -596,7 +596,7 @@
     "startEyebrow": "Začínáme",
     "startH2": "Nastraženo za pět minut.",
     "startLi1": "<b><a href=\"%%INVITE%%\" target=\"_blank\" rel=\"noopener\">Pozvi MadHoney</a></b> a uděl požadovaná oprávnění.",
-    "startLi2": "Vytvoř roli <b>Verified</b> (role MadHoney musí sedět <b>nad</b> ní) a návnadový kanál jako <b>#general-2</b>.",
+    "startLi2": "Vytvoř roli <b>Verified</b> a návnadový kanál jako <b>#general-2</b>. Role MadHoney musí být <b>nad</b> rolí Verified.",
     "startLi3": "Spusť <b><code>/madhoney setup</code></b> a vyber roli, svůj kanál s pravidly, návnadu a volitelný log kanál týmu.",
     "startLi4": "Spusť <b><code>/madhoney deploy</code></b> a proklikej se: přidělit stávajícím → vyvěsit panely → uzamknout (nanečisto, pak použít).",
     "startAdd": "＋ Přidat MadHoney na svůj server",

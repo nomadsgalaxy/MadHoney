@@ -596,7 +596,7 @@
     "startEyebrow": "Inizia",
     "startH2": "Armato in cinque minuti.",
     "startLi1": "<b><a href=\"%%INVITE%%\" target=\"_blank\" rel=\"noopener\">Invita MadHoney</a></b> e concedi i permessi richiesti.",
-    "startLi2": "Crea un ruolo <b>Verified</b> (il ruolo di MadHoney deve stare <b>sopra</b> di esso) e un canale esca come <b>#general-2</b>.",
+    "startLi2": "Crea un ruolo <b>Verified</b> e un canale esca come <b>#general-2</b>. Il ruolo di MadHoney deve stare <b>sopra</b> il ruolo Verified.",
     "startLi3": "Esegui <b><code>/madhoney setup</code></b> e scegli il ruolo, il tuo canale delle regole, l'esca e un canale di log per lo staff opzionale.",
     "startLi4": "Esegui <b><code>/madhoney deploy</code></b> e clicca passo dopo passo: assegna il ruolo ai membri esistenti → pubblica i pannelli → gating (prova a vuoto, poi applica).",
     "startAdd": "＋ Aggiungi MadHoney al tuo server",

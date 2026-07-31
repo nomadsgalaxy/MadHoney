@@ -12,17 +12,17 @@ import { readFileSync, existsSync } from 'node:fs';
 
 // Catalog codes we ship. Each needs a locales/<code>.json (except en, the base).
 export const SUPPORTED = ['en', 'es', 'fr', 'de', 'pt-BR', 'it', 'uk', 'sv', 'cs'];
-// Preview catalogs: selectable in the dashboard picker for proofreading, but not
-// offered as a server bot language and exempt from the translation parity test.
-// 737-MaxQ = the landing copy rewritten in ASD-STE100 Simplified Technical
-// English, so the operator can proofread the style in place on the real site.
-export const PREVIEW_LOCALES = ['737-MaxQ'];
+// Preview catalogs: selectable in the dashboard picker for proofreading a style
+// variant in place on the real site, but not offered as a server bot language and
+// exempt from the translation parity test. Empty right now - the mechanism stays
+// because a preview code need not be a valid BCP-47 tag, which is what intlLocale
+// below guards against.
+export const PREVIEW_LOCALES = [];
 
 // Human names, for the dashboard/command locale picker.
 export const LOCALE_NAMES = {
   en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch',
   'pt-BR': 'Português (BR)', it: 'Italiano', uk: 'Українська', sv: 'Svenska', cs: 'Čeština',
-  '737-MaxQ': '737-MaxQ',
 };
 
 const DIR = new URL('../locales/', import.meta.url);

@@ -596,7 +596,7 @@
     "startEyebrow": "Loslegen",
     "startH2": "In fünf Minuten scharf.",
     "startLi1": "<b><a href=\"%%INVITE%%\" target=\"_blank\" rel=\"noopener\">Lade MadHoney ein</a></b> und erteile die angeforderten Berechtigungen.",
-    "startLi2": "Erstelle eine <b>Verified</b>-Rolle (MadHoneys Rolle muss <b>darüber</b> stehen) und einen Köder-Kanal wie <b>#general-2</b>.",
+    "startLi2": "Erstelle eine <b>Verified</b>-Rolle und einen Köder-Kanal wie <b>#general-2</b>. MadHoneys eigene Rolle muss <b>über</b> der Verified-Rolle stehen.",
     "startLi3": "Führe <b><code>/madhoney setup</code></b> aus und wähle die Rolle, deinen Regel-Kanal, den Köder und einen optionalen Team-Log-Kanal.",
     "startLi4": "Führe <b><code>/madhoney deploy</code></b> aus und klicke dich durch: freischalten → Panels posten → sperren (Probelauf, dann anwenden).",
     "startAdd": "＋ MadHoney zu deinem Server hinzufügen",

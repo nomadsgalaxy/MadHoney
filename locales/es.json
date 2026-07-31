@@ -596,7 +596,7 @@
     "startEyebrow": "Empezar",
     "startH2": "Armado en cinco minutos.",
     "startLi1": "<b><a href=\"%%INVITE%%\" target=\"_blank\" rel=\"noopener\">Invita a MadHoney</a></b> y otorga los permisos solicitados.",
-    "startLi2": "Crea un rol <b>Verified</b> (el rol de MadHoney debe estar <b>por encima</b> de él) y un canal señuelo como <b>#general-2</b>.",
+    "startLi2": "Crea un rol <b>Verified</b> y un canal señuelo como <b>#general-2</b>. El rol de MadHoney debe estar <b>por encima</b> del rol Verified.",
     "startLi3": "Ejecuta <b><code>/madhoney setup</code></b> y elige el rol, tu canal de normas, el señuelo y un canal de registro del equipo opcional.",
     "startLi4": "Ejecuta <b><code>/madhoney deploy</code></b> y ve haciendo clic: otorgar rol a miembros actuales → publicar paneles → restringir (simulación, luego aplicar).",
     "startAdd": "＋ Añadir MadHoney a tu servidor",

@@ -596,7 +596,7 @@
     "startEyebrow": "Começar",
     "startH2": "Armado em cinco minutos.",
     "startLi1": "<b><a href=\"%%INVITE%%\" target=\"_blank\" rel=\"noopener\">Convide o MadHoney</a></b> e conceda as permissões solicitadas.",
-    "startLi2": "Crie um cargo <b>Verified</b> (o cargo do MadHoney deve ficar <b>acima</b> dele) e um canal isca como <b>#general-2</b>.",
+    "startLi2": "Crie um cargo <b>Verified</b> e um canal isca como <b>#general-2</b>. O cargo do MadHoney precisa ficar <b>acima</b> do cargo Verified.",
     "startLi3": "Execute <b><code>/madhoney setup</code></b> e escolha o cargo, seu canal de regras, a isca e um canal de log da equipe opcional.",
     "startLi4": "Execute <b><code>/madhoney deploy</code></b> e vá clicando: conceder cargo → publicar painéis → restringir (simulação e depois aplicar).",
     "startAdd": "＋ Adicionar o MadHoney ao seu servidor",

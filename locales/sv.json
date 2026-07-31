@@ -596,7 +596,7 @@
     "startEyebrow": "Kom igång",
     "startH2": "Aktiverad på fem minuter.",
     "startLi1": "<b><a href=\"%%INVITE%%\" target=\"_blank\" rel=\"noopener\">Bjud in MadHoney</a></b> och ge de begärda behörigheterna.",
-    "startLi2": "Skapa en <b>Verified</b>-roll (MadHoneys roll måste ligga <b>ovanför</b> den) och en lockkanal som <b>#general-2</b>.",
+    "startLi2": "Skapa en <b>Verified</b>-roll och en lockkanal som <b>#general-2</b>. MadHoneys egen roll måste ligga <b>ovanför</b> Verified-rollen.",
     "startLi3": "Kör <b><code>/madhoney setup</code></b> och välj rollen, din regelkanal, lockbetet och en valfri personalloggkanal.",
     "startLi4": "Kör <b><code>/madhoney deploy</code></b> och klicka dig igenom: ge befintliga rollen → posta paneler → spärra (testkörning, sedan verkställ).",
     "startAdd": "＋ Lägg till MadHoney på din server",

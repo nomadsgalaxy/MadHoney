@@ -596,7 +596,7 @@
     "startEyebrow": "Commencer",
     "startH2": "Armé en cinq minutes.",
     "startLi1": "<b><a href=\"%%INVITE%%\" target=\"_blank\" rel=\"noopener\">Invite MadHoney</a></b> et accorde les permissions demandées.",
-    "startLi2": "Crée un rôle <b>Verified</b> (le rôle de MadHoney doit se trouver <b>au-dessus</b>) et un salon leurre comme <b>#general-2</b>.",
+    "startLi2": "Crée un rôle <b>Verified</b> et un salon leurre comme <b>#general-2</b>. Le rôle de MadHoney doit se trouver <b>au-dessus</b> du rôle Verified.",
     "startLi3": "Lance <b><code>/madhoney setup</code></b> et choisis le rôle, ton salon de règlement, le leurre et un salon de journal d'équipe facultatif.",
     "startLi4": "Lance <b><code>/madhoney deploy</code></b> et parcours les étapes : attribuer aux membres existants → publier les panneaux → filtrer (test à blanc, puis appliquer).",
     "startAdd": "＋ Ajouter MadHoney à ton serveur",
