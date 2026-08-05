@@ -20,7 +20,8 @@
     "posAgain": "✅ Correct ! Encore une pour être sûr — manche {n} sur {total}.",
     "posWrong": "❌ Ce n'est pas cet emplacement. Voici un nouveau puzzle — {left} essais restants.",
     "testMode": "🧪 **Mode test** — tu fais partie de l'équipe et tu es déjà vérifié, cet essai ne modifiera donc aucun rôle.",
-    "testPassed": "🧪 Test réussi ! Un membre recevrait maintenant le rôle vérifié."
+    "testPassed": "🧪 Test réussi ! Un membre recevrait maintenant le rôle vérifié.",
+    "successPlain": "Vérifié ✅ Bienvenue !"
   },
   "appeal": {
     "button": "Faire appel auprès de {guild}",

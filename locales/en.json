@@ -20,7 +20,8 @@
     "posAgain": "✅ Correct! One more to be sure — round {n} of {total}.",
     "posWrong": "❌ Not that slot. Here is a fresh puzzle — {left} tries left.",
     "testMode": "🧪 **Test mode** — you are staff and already verified, so this run will not change any roles.",
-    "testPassed": "🧪 Test passed! A member would receive the verified role now."
+    "testPassed": "🧪 Test passed! A member would receive the verified role now.",
+    "successPlain": "Verified ✅ Welcome!"
   },
   "appeal": {
     "button": "Appeal to {guild}",

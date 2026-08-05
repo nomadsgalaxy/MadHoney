@@ -20,7 +20,8 @@
     "posAgain": "✅ Correto! Mais uma para confirmar - rodada {n} de {total}.",
     "posWrong": "❌ Não é esse encaixe. Aqui vai um quebra-cabeça novo - faltam {left} tentativas.",
     "testMode": "🧪 **Modo de teste** - você é da equipe e já está verificado, então esta execução não vai alterar nenhum cargo.",
-    "testPassed": "🧪 Teste aprovado! Um membro receberia o cargo de verificado agora."
+    "testPassed": "🧪 Teste aprovado! Um membro receberia o cargo de verificado agora.",
+    "successPlain": "Verificado ✅ Bem-vindo(a)!"
   },
   "appeal": {
     "button": "Recorrer a {guild}",

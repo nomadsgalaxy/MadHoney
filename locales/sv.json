@@ -20,7 +20,8 @@
     "posAgain": "✅ Rätt! En till för säkerhets skull - omgång {n} av {total}.",
     "posWrong": "❌ Inte den luckan. Här är ett nytt pussel - {left} försök kvar.",
     "testMode": "🧪 **Testläge** - du är personal och redan verifierad, så den här körningen ändrar inga roller.",
-    "testPassed": "🧪 Testet godkänt! En medlem skulle få den verifierade rollen nu."
+    "testPassed": "🧪 Testet godkänt! En medlem skulle få den verifierade rollen nu.",
+    "successPlain": "Verifierad ✅ Välkommen!"
   },
   "appeal": {
     "button": "Överklaga till {guild}",

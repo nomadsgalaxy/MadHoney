@@ -20,7 +20,8 @@
     "posAgain": "✅ Správně! Ještě jednou pro jistotu — kolo {n} z {total}.",
     "posWrong": "❌ To není ta správná pozice. Tady je nová skládačka — zbývající pokusy: {left}.",
     "testMode": "🧪 **Testovací režim** — patříš do týmu a už jsi ověřen(a), takže tento průchod nezmění žádné role.",
-    "testPassed": "🧪 Test prošel! Člen by teď dostal roli ověřeného."
+    "testPassed": "🧪 Test prošel! Člen by teď dostal roli ověřeného.",
+    "successPlain": "Ověřeno ✅ Vítej!"
   },
   "appeal": {
     "button": "Odvolat se u {guild}",

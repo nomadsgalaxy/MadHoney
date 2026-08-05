@@ -20,7 +20,8 @@
     "posAgain": "✅ Corretto! Ancora uno per sicurezza — round {n} di {total}.",
     "posWrong": "❌ Non è quello slot. Ecco un puzzle nuovo — {left} tentativi rimasti.",
     "testMode": "🧪 **Modalità test** — fai parte dello staff e sei già verificato, quindi questa prova non cambierà alcun ruolo.",
-    "testPassed": "🧪 Test superato! Un membro a questo punto riceverebbe il ruolo verificato."
+    "testPassed": "🧪 Test superato! Un membro a questo punto riceverebbe il ruolo verificato.",
+    "successPlain": "Verificato ✅ Benvenuto!"
   },
   "appeal": {
     "button": "Fai ricorso a {guild}",

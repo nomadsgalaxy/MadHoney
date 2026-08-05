@@ -20,7 +20,8 @@
     "posAgain": "✅ Richtig! Noch eins zur Sicherheit — Runde {n} von {total}.",
     "posWrong": "❌ Nicht dieses Feld. Hier ist ein neues Puzzle — noch {left} Versuche.",
     "testMode": "🧪 **Testmodus** — du gehörst zum Team und bist bereits verifiziert, daher ändert dieser Durchlauf keine Rollen.",
-    "testPassed": "🧪 Test bestanden! Ein Mitglied würde jetzt die Verifiziert-Rolle erhalten."
+    "testPassed": "🧪 Test bestanden! Ein Mitglied würde jetzt die Verifiziert-Rolle erhalten.",
+    "successPlain": "Verifiziert ✅ Willkommen!"
   },
   "appeal": {
     "button": "Einspruch bei {guild}",

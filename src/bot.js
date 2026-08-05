@@ -749,6 +749,14 @@ client.on(Events.InteractionCreate, async (i) => {
 
 // ---------- onboarding: point new servers at the dashboard ----------
 
+// Keep the cached guild name current so the edge worker's welcome message does
+// not go stale after a server is renamed.
+client.on(Events.GuildUpdate, (oldGuild, newGuild) => {
+  if (oldGuild.name !== newGuild.name && getGuild(newGuild.id)) {
+    try { saveGuild(newGuild.id, { name: newGuild.name }); } catch { /* best-effort */ }
+  }
+});
+
 client.on(Events.GuildCreate, async (guild) => {
   console.log(`Joined ${guild.name} (${guild.id})`);
   try {
@@ -1228,6 +1236,18 @@ client.once(Events.ClientReady, async (c) => {
       } catch (e) { console.error(`[${guild.name}] gate catch-up failed:`, e.message); }
     }
   }, 15000); // after honeypot catch-up; caches settled
+
+  // Stamp each guild's NAME into its config. Only the gateway knows guild names;
+  // the edge worker has no cache and cannot get one from the interaction payload,
+  // so without this it had nothing to greet a new member with and rendered
+  // "Welcome to ." - the one message every single member sees. Written only when
+  // it changed, so a restart is not 50 pointless writes.
+  for (const guild of c.guilds.cache.values()) {
+    try {
+      const cur = getGuild(guild.id);
+      if (cur && cur.name !== guild.name) saveGuild(guild.id, { name: guild.name });
+    } catch (e) { console.error(`[${guild.name}] name stamp failed:`, e.message); }
+  }
 
   // Invariant sweep: the bot must never wear a server's verified role. A correct
   // honeypot denies View to that role, so wearing it makes the trap silently

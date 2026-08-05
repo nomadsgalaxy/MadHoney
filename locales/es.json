@@ -20,7 +20,8 @@
     "posAgain": "✅ ¡Correcto! Una más para estar seguros — ronda {n} de {total}.",
     "posWrong": "❌ Esa ranura no es. Aquí tienes un puzle nuevo — {left} intentos restantes.",
     "testMode": "🧪 **Modo de prueba** — eres del equipo y ya estás verificado, así que esta ejecución no cambiará ningún rol.",
-    "testPassed": "🧪 ¡Prueba superada! Un miembro recibiría ahora el rol de verificado."
+    "testPassed": "🧪 ¡Prueba superada! Un miembro recibiría ahora el rol de verificado.",
+    "successPlain": "Verificado ✅ ¡Bienvenido!"
   },
   "appeal": {
     "button": "Apelar a {guild}",
